@@ -40,19 +40,45 @@ body {
     font-size: 45px;
     color: #fff;
     text-shadow: 2px 2px 8px #000;
+    background-color: rgba(0, 0, 0, 0.25);
+    border-radius: 15px 15px 0 0;
 }
 
 .loginBottom {
+    padding: 15px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
 }
+
 .loginBottom input{
     margin: 5px;
 }
 
-div.email {
-    display: flex;
-    
+.loginTd {
+    padding: 10px;
+}
+
+table .loginButtonAlign {
+    align-content: center;
+    justify-content: center;
+}
+
+.loginButtons {
+    height: 35px;
+    width: 75px;
+}
+
+.label {
+    color: #fff;
+    text-shadow: 2px 2px 8px #000;
+    font-weight: bold;
+    font-size: 25px;
+}
+
+td .input {
+    height: 30px;
+    width: 275px;
+    font-size: 15px;
 }
