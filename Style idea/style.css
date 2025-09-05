@@ -1,0 +1,58 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0px;
+}
+
+.bgLayer1 {
+    height: 100vh;
+    background: radial-gradient(circle at left,#faedfc 25%, #b7dee0);
+}
+
+.bgLayer2 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    background: radial-gradient(circle at bottom,#c1c5ff 25%, #00000000, #00000000);
+}
+
+.bgLoginBoxLayer1 {
+    background-color: rgb(73, 114, 114);
+    height: 650px;
+    width:25%;
+    min-width: 500px;
+    border-radius: 15px;
+    box-shadow: 0 0 16px 10px rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.bgLoginBoxLayer2 {
+    height: 100%;
+    border-radius: 15px;
+    background: radial-gradient(circle at bottom, #bee0e0, #00000000);
+}
+
+.loginTop {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    padding: 15px;
+    font-size: 45px;
+    color: #fff;
+    text-shadow: 2px 2px 8px #000;
+}
+
+.loginBottom {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.loginBottom input{
+    margin: 5px;
+}
+
+div.email {
+    display: flex;
+    
+}
