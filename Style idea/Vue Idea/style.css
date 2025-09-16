@@ -88,7 +88,9 @@ input:checked + .slider:before {
 }
 .moon{
     filter: invert(100%);
+    transition: filter
 }
 .sun{
     filter: invert(0%);
+    transition: filter
 }
