@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="all" :class="selectedStyle">
+        <div class="gradientBg">
+            <div>
+                <img :src="image" :class="iconClass">
+                <label class="switch">
+                    <input type="checkbox" v-model="isDarkMode">
+                    <span id="button" class="slider round"></span>
+                </label>       
+            </div>
+            <div>
+                <p>The current mode is: {{ selectedStyle }}</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net./npm/vue/dist/vue.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
