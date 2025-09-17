@@ -9,15 +9,17 @@
 <body>
     <div id="all" :class="selectedStyle">
         <div class="gradientBg">
-            <div>
-                <img :src="image" :class="iconClass">
-                <label class="switch">
-                    <input type="checkbox" v-model="isDarkMode">
-                    <span id="button" class="slider round"></span>
-                </label>       
+            <div class="nav">
+                <div class="themechange">
+                    <img :src="image" :class="iconClass">
+                    <label class="switch">
+                        <input type="checkbox" v-model="isDarkMode">
+                        <span id="button" class="slider round"></span>
+                    </label> 
+                </div>      
             </div>
             <div>
-                <p>The current mode is: {{ selectedStyle }}</p>
+                
             </div>
         </div>
     </div>
