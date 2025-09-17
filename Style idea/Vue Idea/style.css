@@ -68,7 +68,7 @@ body {
     width: 16px;
     left: 2px;
     bottom: 2px;
-    background-color: red;
+    background-color: orangered;
     -webkit-transition: .4s;
     transition: .4s;
 }
@@ -104,10 +104,14 @@ input:checked + .slider:before {
 }
 
 .nav{
-    background-color: gray;
+    background-color: orangered;
     margin: 0;
+    height: 38px;
+    display: flex;
+}
+.title{
+    height: 38px;
 }
 .themechange{
-    background-color: red;
     width: 95px;
 }
