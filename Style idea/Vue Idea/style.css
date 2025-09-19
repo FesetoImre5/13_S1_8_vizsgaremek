@@ -94,7 +94,7 @@ input:checked + .slider:before {
 }
 .moon{
     filter: invert(100%);
-    transform: translateX(260%);
+    transform: translateX(257%);
     transition: transform .4s ease, filter .4s ease;
 }
 .sun{
@@ -109,9 +109,74 @@ input:checked + .slider:before {
     height: 38px;
     display: flex;
 }
-.title{
+.fulltitle{
     height: 38px;
 }
 .themechange{
-    width: 95px;
+    width: 10%;
+}
+.icon{
+    width: 90%;
+}
+
+.form{
+    width: 40%;
+    height: 75vh;
+    border-radius: 50px;
+    display: block;
+    margin: 50px auto;
+}
+
+.formlight{
+    background-color: orangered;
+    transition: all .4s ease;
+}
+.formdark{
+    background-color: rgb(145, 39, 0);
+    transition: all .4s ease;
+}
+
+.formSpace{
+    padding: 10px;
+}
+.formSpace p{
+    font-size: 30px;
+}
+.formSpace input{
+    font-size: 30px;
+    border: none;
+    height: 40px;
+}
+/*.formSpace input{
+
+}*/
+.formSpaceDark{
+    color: white;
+    transition: all .4s ease;
+}
+.formSpaceDark input{
+    background-color: rgb(117, 31, 0);
+    color: white;
+    border-left: 2px solid white;
+    border-bottom: 2px solid white;
+    transition: all .4s ease;
+}
+.formSpaceLight{
+    color: black;
+    transition: all .4s ease;
+}
+.formSpaceLight input{
+    background-color: rgb(212, 57, 0);
+    color: black;
+    border-left: 2px solid black;
+    border-bottom: 2px solid black;
+    transition: all .4s ease;
+}
+
+table{
+    width: 100%;
+    text-align: left;
+}
+td{
+    width: 50%;
 }

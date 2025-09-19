@@ -10,7 +10,9 @@
     <div id="all" :class="selectedStyle">
         <div class="gradientBg">
             <div class="nav">
-                <img src="../../Logo/CalentaskerFinWithText.png" class="fulltitle">
+                <div class="icon">
+                    <img src="../../Logo/CalentaskerFinWithText.png" class="fulltitle">
+                </div>
                 <div class="themechange">
                     <img :src="image" :class="iconClass">
                     <label class="switch">
@@ -19,8 +21,46 @@
                     </label> 
                 </div>      
             </div>
-            <div class="form">
-
+            <div :class="formStyle">
+                <table :class="formSpaceStyle">
+                    <tr>
+                        <td>
+                            <p>Username*</p>
+                        </td>
+                        <td>
+                            <input type="text" placeholder="Ashley Apple">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <p>Display name</p>
+                        </td>
+                        <td>
+                            <input type="text" placeholder="AshleyApple99">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <p>Email*</p>
+                        </td>
+                        <td>
+                            <input type="email" placeholder="ashleyapple99@gmail.com">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <p>Password*</p>
+                        </td>
+                        <td>
+                            <input type="password" placeholder="totallySafePassword123">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <h6>*You're required to fill this field</h6>
+                        </td>
+                    </tr>
+                </table>
             </div>
         </div>
     </div>
