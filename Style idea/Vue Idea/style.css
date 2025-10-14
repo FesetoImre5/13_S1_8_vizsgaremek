@@ -254,3 +254,52 @@ table{
 td{
     width: 50%;
 }
+
+
+
+/* ----- LOGREG DIV ----- */
+
+.logRegContain{
+    position: relative;
+    width: 60%;
+    background-color: rgba(255,255,255,0.25);
+    margin: 25px auto;
+    box-sizing: border-box;
+    padding: 50px;
+    border-radius: 50px;
+}
+
+.moveBox{
+    width: 50%;
+    position: absolute;
+    top: 0;
+    right: 0;
+    /*background-color: #9f9f9f;*/
+    height: 100%;
+    border-radius: 50px;
+}
+
+.logRegs{
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.logRegFormTable{
+    width: 50%;
+    border: 1px solid black;
+    margin: 0;
+
+    td{
+        width: 100%;
+    }
+}
+
+.logRegCell{
+    display: flex;
+    flex-direction: column;
+}
+
+.tableRight{
+    text-align: right;
+}
