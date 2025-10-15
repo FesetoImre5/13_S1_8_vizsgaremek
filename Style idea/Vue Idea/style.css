@@ -15,7 +15,7 @@ body {
 /* ----- THEMES ----- */
 
 .lightMode {
-    background-color: white;
+    background-color: rgb(255, 255, 255);
     color: black;
     transition: color 0.5s ease, background-color 0.5s ease;
 }
