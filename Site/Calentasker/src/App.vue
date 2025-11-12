@@ -7,19 +7,23 @@
 </script>
 
 <template>
-  <div id="wrapper">
-    <list-task v-for="x in items">
-      <div>
-        <img :src="x.url">
+  <div>
+    <div class="row">
+      <div class="col-sm-1" style="background-color: red;">
+
       </div>
-      <div>
-        <h3>{{ x.title }}</h3>
-        <p>{{ x.description }}</p>
+      <div class="col-sm-7" style="background-color: blue;">    
+        <div class="TaskList">
+          <list-task></list-task>
+          <list-task></list-task>
+        </div>
       </div>
-    </list-task>
+      <div class="col-sm-4" style="background-color: green;">
+
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
-
 </style>
