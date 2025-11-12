@@ -1,5 +1,4 @@
 from django.db import models
-from django.conf import settings
 from group.models import Group
 from user.models import User
 
@@ -18,22 +17,22 @@ class Task(models.Model):
         ('ARCHIVED', 'Archived'),
     ]
 
-    GroupId = models.ForeignKey(
+    groupid = models.ForeignKey(
         Group,
         on_delete=models.CASCADE,
-        related_name='id',
+        related_name='task_GroupId',
     )
-    created_by_UserId = models.ForeignKey(
+    created_by_userid = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='id',
+        related_name='task_created_UserId',
     )
-    assigned_to_UserId = models.ForeignKey(
+    assigned_to_userid = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         null=True,
         blank=True,
-        related_name='id',
+        related_name='task_assigned_UserId',
     )
     title = models.CharField(max_length=150)
     description = models.CharField(blank=True)
@@ -57,15 +56,15 @@ class Task(models.Model):
         return self.title
 
 class Comment(models.Model):
-    TaskId = models.ForeignKey(
+    taskid = models.ForeignKey(
         Task,
         on_delete=models.CASCADE,
-        related_name='id',
+        related_name='comment_TaskId',
     )
-    UserId = models.ForeignKey(
+    userid = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='id',
+        related_name='comment_UserId',
     )
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -74,12 +73,37 @@ class Comment(models.Model):
         return f"Comment by {self.UserId.username} on {self-TaskId.title}"
 
 class Assigned(models.Model):
-    TaskId = models.IntegerField()
-    UserId = models.IntegerField()
-    assigned_at = models.DateTimeField()
+    taskid = models.ForeignKey(
+        Task,
+        on_delete=models.CASCADE,
+        related_name='assigned_TaskId',
+    )
+    userid = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='assigned_UserId',
+    )
+    assigned_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('taskid', 'userid')
+
+    def __str__(self):
+        return f"{self.UserId.username} assigned to {self.TaskId.title}"
 
 class Attachment(models.Model):
-    TaskId = models.IntegerField()
-    uploaded_by_UserId = models.IntegerField()
-    file_path = models.CharField(max_length=255)
-    uploaded_at = models.DateTimeField()
+    taskid = models.ForeignKey(
+        Task,
+        on_delete=models.CASCADE,
+        related_name='attachment_TaskId',
+    )
+    uploaded_by_userid = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='attachment_UserId',  
+    )
+    file_path = models.FileField(upload_to='attachments/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Attachment for {self.TaskId.title} uploaded by {self.uploaded_by_UserId.username}"
