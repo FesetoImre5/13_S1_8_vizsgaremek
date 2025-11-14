@@ -10,7 +10,7 @@
   <div>
     <div class="row">
       <div class="col-sm-1" style="background-color: red;">
-
+        <list-group></list-group>
       </div>
       <div class="col-sm-7" style="background-color: blue;">    
         <div class="TaskList">

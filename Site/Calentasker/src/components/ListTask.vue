@@ -38,6 +38,7 @@
         border-radius: 15px;
         font-family: Arial, Helvetica, sans-serif;
         width: 100%;
+        margin: 10px 0;
     }
     .TaskImage{
         max-width: 125px;
