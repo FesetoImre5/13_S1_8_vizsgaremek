@@ -26,11 +26,12 @@
 }
 
 .ListGroup img{
-    max-width: 25px;
-    height: 25px;
+    max-width: 50px;
+    height: 50px;
     aspect-ratio: 1/1;
     object-fit: cover;
     background-color: red;
-    margin: 10px;
+    margin: 5px;
+    border-radius: 10px;
 }
 </style>
