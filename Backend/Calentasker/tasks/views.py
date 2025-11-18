@@ -29,12 +29,6 @@ class AttachmentsViewSet(viewsets.ModelViewSet):
     queryset = Attachments.objects.all()
     serializer_class = AttachmentsSerializer
 
-    def perform_create(self, serializer):
-        serializer.save(uploaded_by_userid=self.request.user)
-
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.filter(active=True).order_by('created_at')
     serializer_class = CommentSerializer
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
