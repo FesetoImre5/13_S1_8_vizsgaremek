@@ -1,25 +1,10 @@
 <template>
     <div class="Task">
-        <img height="1000" width="1000" src="https://img.pokemondb.net/artwork/large/eevee.jpg" alt="" class="TaskImage">
+        <img :src="url" alt="" class="TaskImage">
         <div class="TaskText">
-            <h2 class="TaskTitle">
-                Title
-            </h2>
+            <h2 class="TaskTitle">{{title}}</h2>
             <div class="TaskDesc">
-                <p>
-                    This is a somewhat sort, but still padded sentence to function as a Description example. Yaay.
-                    This is a somewhat sort, but still padded sentence to function as a Description example. Yaay.
-                    This is a somewhat sort, but still padded sentence to function as a Description example. Yaay.
-                    This is a somewhat sort, but still padded sentence to function as a Description example. Yaay.
-                    This is a somewhat sort, but still padded sentence to function as a Description example. Yaay.
-                    This is a somewhat sort, but still padded sentence to function as a Description example. Yaay.
-                    This is a somewhat sort, but still padded sentence to function as a Description example. Yaay.
-                    This is a somewhat sort, but still padded sentence to function as a Description example. Yaay.
-                    This is a somewhat sort, but still padded sentence to function as a Description example. Yaay.
-                    This is a somewhat sort, but still padded sentence to function as a Description example. Yaay.
-                    This is a somewhat sort, but still padded sentence to function as a Description example. Yaay.
-                    This is a somewhat sort, but still padded sentence to function as a Description example. Yaay.
-                </p>
+                <p>{{ desc }}</p>
                 <button>Details</button>
             </div>
         </div>
@@ -27,7 +12,22 @@
 </template>
 
 <script>
-
+    export default {
+        props: {
+            url: {
+                type: String,
+                default: "https://www.mariposakids.co.nz/wp-content/uploads/2014/08/image-placeholder2.jpg"
+            },
+            title: {
+                type: String,
+                default: "Placeholder Title"
+            },
+            desc: {
+                type: String,
+                default: "This is a somewhat sort, but still padded sentence to function as a Description example. Yaay."
+            }
+        }
+    }
 </script>
 
 <style scoped>

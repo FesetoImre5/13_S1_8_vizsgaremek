@@ -1,6 +1,6 @@
 <template>
     <div class="ListGroup">
-        <img height="1000" width="1000" src="https://img.pokemondb.net/artwork/large/eevee.jpg" alt="">
+        <img height="1000" width="1000" src="https://www.mariposakids.co.nz/wp-content/uploads/2014/08/image-placeholder2.jpg" alt="">
         <p>Csoportnév</p>
     </div>
 </template>
