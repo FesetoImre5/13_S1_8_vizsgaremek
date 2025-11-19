@@ -6,12 +6,8 @@ from .serializers import GroupSerializer, GroupMemberSerializer
 class GroupViewSet(viewsets.ModelViewSet):
     queryset = Group.objects.filter(active=True).order_by('groupname')
     serializer_class = GroupSerializer
-class GroupMemberViewSet(
-    mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
-    mixins.ListModelMixin,
-    GenericViewSet
-):
+
+class GroupMemberViewSet(viewsets.ModelViewSet):
     queryset = GroupMember.objects.all().order_by('group__groupname')
     serializer_class = GroupMemberSerializer
 

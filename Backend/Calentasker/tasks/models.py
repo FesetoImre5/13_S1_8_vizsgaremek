@@ -54,6 +54,9 @@ class Task(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     active = models.BooleanField(default=True)
 
+    def __str__(self):
+        return self.title
+
 class Assigned(models.Model):
     task = models.ForeignKey(
         Task,

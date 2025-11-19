@@ -12,6 +12,9 @@ class Group(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=True)
 
+    def __str__(self):
+        return self.groupname
+
 class GroupMember(models.Model):
     ROLE_CHOICES = (
         ('member', 'Member'),

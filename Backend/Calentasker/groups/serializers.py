@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Group, GroupMember
 from users.serializers import UserListSerializer
+from users.models import User
 
 class GroupSerializer(serializers.ModelSerializer):
     created_by = UserListSerializer(source = 'created_by_userid',read_only = True)
@@ -21,13 +22,20 @@ class GroupSerializer(serializers.ModelSerializer):
         }
 
 class GroupMemberSerializer(serializers.ModelSerializer):
-    user = UserListSerializer(source = 'users.User', read_only = True)
-    group = GroupSerializer(source = Group, read_only = True)
+    group = serializers.PrimaryKeyRelatedField(
+        queryset = Group.objects.all(),
+        write_only = True,
+        label = 'Member of group',
+    )
+    user = serializers.PrimaryKeyRelatedField(
+        queryset = User.objects.all(),
+        write_only = True,
+        label = 'User'
+    )
+    group_detail = GroupSerializer(source = 'group', read_only = True)
+    user_detail = UserListSerializer(source = 'user', read_only = True)
+
     class Meta:
         model = GroupMember
-        fields = ('group', 'user', 'role', 'joined_at')
-        read_only_fields = ('joined_at',)
-        extra_kwargs = {
-            'group' : {'write_only': True},
-            'user' : {'write_only': True},
-        }
+        fields = ('id', 'user_detail', 'group_detail', 'user', 'group', 'role', 'joined_at')
+        read_only_fields = ('joined_at', 'group_detail', 'user_detail',)
