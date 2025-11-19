@@ -64,7 +64,23 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8080",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500",
 ]
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:8080", 
+    "http://127.0.0.1:8080",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500",
+]
+
 
 ROOT_URLCONF = 'Calentasker.urls'
 
