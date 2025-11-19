@@ -1,16 +1,3 @@
-<template>
-    <div class="Task">
-        <img :src="url" alt="" class="TaskImage">
-        <div class="TaskText">
-            <h2 class="TaskTitle">{{title}}</h2>
-            <div class="TaskDesc">
-                <p>{{ desc }}</p>
-                <button>Details</button>
-            </div>
-        </div>
-    </div>
-</template>
-
 <script>
     export default {
         props: {
@@ -30,8 +17,21 @@
     }
 </script>
 
+<template>
+    <div class="task">
+        <img :src="url" alt="" class="taskImage">
+        <div class="taskText">
+            <h2 class="taskTitle">{{title}}</h2>
+            <div class="taskDesc">
+                <p>{{ desc }}</p>
+                <button>Details</button>
+            </div>
+        </div>
+    </div>
+</template>
+
 <style scoped>
-    .Task {
+    .task {
         display: flex;
         flex-direction: row;
         background-color: gray;
@@ -40,7 +40,7 @@
         width: 100%;
         margin: 10px 0;
     }
-    .TaskImage{
+    .taskImage{
         max-width: 125px;
         height: 125px;
         aspect-ratio: 1/1;
@@ -48,16 +48,16 @@
         background-color: red;
         margin: 10px;
     }
-    .TaskTitle{
+    .taskTitle{
         font-size: 40px;
         margin: 0;
         padding: 10px 0 0 0;
     }
-    .TaskDesc{
+    .taskDesc{
         display: flex;
         flex-direction: row;
     }
-    .TaskDesc p{
+    .taskDesc p{
         margin: 0;
         padding: 10px 10px 0 0;
         display: -webkit-box;
@@ -67,7 +67,7 @@
         -webkit-line-clamp: 3;
         word-break: keep-all;
     }
-    .TaskDesc button{
+    .taskDesc button{
         font-size: 14px;
         font-weight: bold;
         height: 60px;

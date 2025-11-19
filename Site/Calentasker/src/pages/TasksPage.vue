@@ -36,7 +36,7 @@ import ListGroup from '../components/ListGroup.vue'
                 <list-group></list-group>
             </div>
             <div class="col-sm-6" style="background-color: blue;">    
-                <div class="TaskList">
+                <div class="taskList">
                     <list-task 
                         v-for="task in tasks"
                         :url="task.url"

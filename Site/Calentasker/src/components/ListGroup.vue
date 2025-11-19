@@ -1,16 +1,16 @@
+<script>
+
+</script>
+
 <template>
-    <div class="ListGroup">
+    <div class="listGroup">
         <img height="1000" width="1000" src="https://www.mariposakids.co.nz/wp-content/uploads/2014/08/image-placeholder2.jpg" alt="">
         <p>Csoportnév</p>
     </div>
 </template>
 
-<script>
-
-</script>
-
 <style scoped>
-.ListGroup{
+.listGroup{
     display: flex;
     flex-direction: row;
     background-color: gray;
@@ -20,12 +20,12 @@
     margin: 10px 0;
     align-content: center;
 }
-.ListGroup p{
+.listGroup p{
     display: block;
     margin: auto;
 }
 
-.ListGroup img{
+.listGroup img{
     max-width: 50px;
     height: 50px;
     aspect-ratio: 1/1;
