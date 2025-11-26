@@ -22,11 +22,9 @@
         <img :src="url" alt="" class="taskImage">
         <div class="taskText">
             <h2 class="taskTitle">{{title}}</h2>
-            <div class="taskDesc">
-                <p>{{ desc }}</p>
-                <button>Details</button>
-            </div>
+            <p class="taskDesc">{{ desc }}</p>
         </div>
+        <button>Details</button>
     </div>
 </template>
 
@@ -45,7 +43,6 @@
         height: 125px;
         aspect-ratio: 1/1;
         object-fit: cover;
-        background-color: red;
         margin: 10px;
     }
     .taskTitle{
@@ -56,8 +53,6 @@
     .taskDesc{
         display: flex;
         flex-direction: row;
-    }
-    .taskDesc p{
         margin: 0;
         padding: 10px 10px 0 0;
         display: -webkit-box;
@@ -67,11 +62,12 @@
         -webkit-line-clamp: 3;
         word-break: keep-all;
     }
-    .taskDesc button{
+    button{
         font-size: 14px;
         font-weight: bold;
-        height: 60px;
-        margin: 0 10px;
+        margin: 0 0 0 auto;
         padding: 0 20px;
+        border-radius: 0 15px 15px 0;
+        float: right;
     }
 </style>
