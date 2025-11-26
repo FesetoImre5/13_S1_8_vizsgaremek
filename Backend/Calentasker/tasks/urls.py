@@ -3,7 +3,7 @@ from .views import (
     TaskViewSet, 
     AssignedViewSet, 
     AttachmentsViewSet,
-    CommentViewSet
+    CommentViewSet,
 )
 
 router = DefaultRouter()

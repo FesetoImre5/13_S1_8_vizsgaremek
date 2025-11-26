@@ -8,7 +8,7 @@ class GroupViewSet(viewsets.ModelViewSet):
     serializer_class = GroupSerializer
 
 class GroupMemberViewSet(viewsets.ModelViewSet):
-    queryset = GroupMember.objects.all().order_by('group__groupname')
+    queryset = GroupMember.objects.all()
     serializer_class = GroupMemberSerializer
 
     def get_queryset(self):
