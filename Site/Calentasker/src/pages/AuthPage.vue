@@ -16,7 +16,6 @@ export default {
         }
     },
     methods: {
-
         switchMode(newMode) {
             this.mode = newMode;
         }
@@ -33,12 +32,16 @@ export default {
     </div>
 </template>
 
-
 <style scoped>
-/* Class names changed to camelCase: authWrapper, fadeSlide */
 .authWrapper {
     width: 100%;
-    height: 100vh;
+    
+    /* --- THE FIX --- */
+    
+    /* Calculate the remaining height (100% viewport - 70px navbar) */
+    /* This ensures Total Height = Exactly 100vh (No scrolling) */
+    height: calc(100vh - 70px); 
+    
     display: flex;
     justify-content: center;
     align-items: center;

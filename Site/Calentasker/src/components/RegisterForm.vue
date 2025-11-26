@@ -1,3 +1,137 @@
+<script>
+export default {
+    data() {
+        return {
+            email: '',
+            username: '',
+            password: '',
+            firstName: '', // NEW
+            lastName: '',  // NEW
+            showPassword: false,
+            capsLockOn: false,
+            // New state for errors
+            emailError: '',
+            usernameError: '',
+            passwordError: '',
+            firstNameError: '', // NEW
+            lastNameError: '',  // NEW
+            // New focus states for floating label logic
+            isEmailFocused: false,
+            isUsernameFocused: false,
+            isPasswordFocused: false,
+            isFirstNameFocused: false, // NEW
+            isLastNameFocused: false  // NEW
+        };
+    },
+    computed: {
+        strength() {
+            let score = 0;
+            if (this.password.length >= 6) score++;
+            if (/[A-Z]/.test(this.password)) score++;
+            if (/[0-9]/.test(this.password)) score++;
+            if (/[^A-Za-z0-9]/.test(this.password)) score++;
+            if (score <= 1) return { label: 'Weak', color: '#dc2626', width: '33%' };
+            if (score === 2) return { label: 'Medium', color: '#f59e0b', width: '66%' };
+            return { label: 'Strong', color: '#16a34a', width: '100%' };
+        },
+        isFormValid() {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            // Added check for new fields
+            return emailRegex.test(this.email) && 
+                this.username.length > 0 && 
+                this.password.length >= 6 &&
+                this.firstName.length > 0 &&
+                this.lastName.length > 0;
+        }
+    },
+    methods: {
+        checkCapsLock(e) {
+            this.capsLockOn = e.getModifierState && e.getModifierState('CapsLock');
+        },
+        
+        // --- Dedicated Blur Handlers (New) ---
+        handleFirstNameBlur() {
+            this.validateFirstName();
+            this.isFirstNameFocused = false;
+        },
+        handleLastNameBlur() {
+            this.validateLastName();
+            this.isLastNameFocused = false;
+        },
+        handleEmailBlur() {
+            this.validateEmail();
+            this.isEmailFocused = false;
+        },
+        handleUsernameBlur() {
+            this.validateUsername();
+            this.isUsernameFocused = false;
+        },
+        handlePasswordBlur() {
+            this.validatePassword();
+            this.isPasswordFocused = false;
+        },
+        
+        // --- Validation Methods (Existing) ---
+        validateFirstName() {
+            if (this.firstName.trim() === '') {
+                this.firstNameError = 'First Name is required.';
+                return false;
+            }
+            this.firstNameError = '';
+            return true;
+        },
+        validateLastName() {
+            if (this.lastName.trim() === '') {
+                this.lastNameError = 'Last Name is required.';
+                return false;
+            }
+            this.lastNameError = '';
+            return true;
+        },
+        validateEmail() {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(this.email)) {
+                this.emailError = 'Please enter a valid email address.';
+                return false;
+            }
+            this.emailError = '';
+            return true;
+        },
+        validateUsername() {
+            if (this.username.trim() === '') {
+                this.usernameError = 'Username is required.';
+                return false;
+            }
+            this.usernameError = '';
+            return true;
+        },
+        validatePassword() {
+            if (this.password.length < 6) {
+                this.passwordError = 'Password must be at least 6 characters.';
+                return false;
+            }
+            this.passwordError = '';
+            return true;
+        },
+        validateForm() {
+            const emailValid = this.validateEmail();
+            const usernameValid = this.validateUsername();
+            const passwordValid = this.validatePassword();
+            const firstNameValid = this.validateFirstName(); // NEW
+            const lastNameValid = this.validateLastName();   // NEW
+            return emailValid && usernameValid && passwordValid && firstNameValid && lastNameValid;
+        },
+        register() {
+            if (this.validateForm()) {
+                console.log('Registration successful:', this.email, this.username, this.password);
+            } else {
+                console.log('Validation failed. Please check errors.');
+            }
+        }
+    }
+};
+</script>
+
 <template>
     <div class="authCard">
         <h2 class="title">Register</h2>
@@ -88,140 +222,6 @@
         <p class="switchText">Already have an account? <span class="switch" @click="$emit('switchMode', 'login')">Login</span></p>
     </div>
 </template>
-
-<script>
-export default {
-    data() {
-        return {
-            email: '',
-            username: '',
-            password: '',
-            firstName: '', // NEW
-            lastName: '',  // NEW
-            showPassword: false,
-            capsLockOn: false,
-            // New state for errors
-            emailError: '',
-            usernameError: '',
-            passwordError: '',
-            firstNameError: '', // NEW
-            lastNameError: '',  // NEW
-            // New focus states for floating label logic
-            isEmailFocused: false,
-            isUsernameFocused: false,
-            isPasswordFocused: false,
-            isFirstNameFocused: false, // NEW
-            isLastNameFocused: false  // NEW
-        };
-    },
-    computed: {
-        strength() {
-            let score = 0;
-            if (this.password.length >= 6) score++;
-            if (/[A-Z]/.test(this.password)) score++;
-            if (/[0-9]/.test(this.password)) score++;
-            if (/[^A-Za-z0-9]/.test(this.password)) score++;
-            if (score <= 1) return { label: 'Weak', color: '#dc2626', width: '33%' };
-            if (score === 2) return { label: 'Medium', color: '#f59e0b', width: '66%' };
-            return { label: 'Strong', color: '#16a34a', width: '100%' };
-        },
-        isFormValid() {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            // Added check for new fields
-            return emailRegex.test(this.email) && 
-                   this.username.length > 0 && 
-                   this.password.length >= 6 &&
-                   this.firstName.length > 0 &&
-                   this.lastName.length > 0;
-        }
-    },
-    methods: {
-        checkCapsLock(e) {
-            this.capsLockOn = e.getModifierState && e.getModifierState('CapsLock');
-        },
-        
-        // --- Dedicated Blur Handlers (New) ---
-        handleFirstNameBlur() {
-            this.validateFirstName();
-            this.isFirstNameFocused = false;
-        },
-        handleLastNameBlur() {
-            this.validateLastName();
-            this.isLastNameFocused = false;
-        },
-        handleEmailBlur() {
-            this.validateEmail();
-            this.isEmailFocused = false;
-        },
-        handleUsernameBlur() {
-            this.validateUsername();
-            this.isUsernameFocused = false;
-        },
-        handlePasswordBlur() {
-            this.validatePassword();
-            this.isPasswordFocused = false;
-        },
-        
-        // --- Validation Methods (Existing) ---
-        validateFirstName() {
-            if (this.firstName.trim() === '') {
-                this.firstNameError = 'First Name is required.';
-                return false;
-            }
-            this.firstNameError = '';
-            return true;
-        },
-        validateLastName() {
-            if (this.lastName.trim() === '') {
-                this.lastNameError = 'Last Name is required.';
-                return false;
-            }
-            this.lastNameError = '';
-            return true;
-        },
-        validateEmail() {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(this.email)) {
-                this.emailError = 'Please enter a valid email address.';
-                return false;
-            }
-            this.emailError = '';
-            return true;
-        },
-        validateUsername() {
-            if (this.username.trim() === '') {
-                this.usernameError = 'Username is required.';
-                return false;
-            }
-            this.usernameError = '';
-            return true;
-        },
-        validatePassword() {
-            if (this.password.length < 6) {
-                this.passwordError = 'Password must be at least 6 characters.';
-                return false;
-            }
-            this.passwordError = '';
-            return true;
-        },
-        validateForm() {
-            const emailValid = this.validateEmail();
-            const usernameValid = this.validateUsername();
-            const passwordValid = this.validatePassword();
-            const firstNameValid = this.validateFirstName(); // NEW
-            const lastNameValid = this.validateLastName();   // NEW
-            return emailValid && usernameValid && passwordValid && firstNameValid && lastNameValid;
-        },
-        register() {
-            if (this.validateForm()) {
-                console.log('Registration successful:', this.email, this.username, this.password);
-            } else {
-                console.log('Validation failed. Please check errors.');
-            }
-        }
-    }
-};
-</script>
 
 <style scoped>
 .title{

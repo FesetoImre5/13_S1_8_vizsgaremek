@@ -1,53 +1,3 @@
-<template>
-    <div class="authCard">
-        <h2 class="title">Login</h2>
-
-        <!-- Email/Username Input Group -->
-        <div class="inputGroup" :class="{ 'is-active': identifier || isIdentifierFocused }">
-            <input 
-                v-model="identifier" 
-                type="text" 
-                @input="identifierError = ''" 
-                @focus="isIdentifierFocused = true" 
-                @blur="isIdentifierFocused = false"
-            />
-            <label>Email or Username</label>
-        </div>
-        <!-- Inline identifierError message removed -->
-
-        <!-- Password Input Group -->
-        <div class="inputGroup passwordField" :class="{ 'is-active': password || isPasswordFocused }">
-            <input
-                :type="showPassword ? 'text' : 'password'"
-                v-model="password"
-                @keyup="checkCapsLock($event)"
-                @input="passwordError = ''"
-                @focus="isPasswordFocused = true"
-                @blur="isPasswordFocused = false"
-            />
-            <label>Password</label>
-            <button type="button" class="toggle" @click="showPassword = !showPassword">
-                {{ showPassword ? 'Hide' : 'Show' }}
-            </button>
-        </div>
-        <p v-if="capsLockOn" class="capsWarning">Caps Lock is ON</p>
-        <!-- Inline passwordError message removed -->
-
-        <div class="remember">
-            <input type="checkbox" v-model="rememberMe" /> Remember me
-        </div>
-
-        <!-- NEW: General error message appears under 'Remember me' on submission failure -->
-        <p v-if="loginGeneralError" class="errorMessage generalError">{{ loginGeneralError }}</p>
-
-        <!-- Button disabled until fields are filled -->
-        <button class="primaryBtn" @click="login" :disabled="!isFormFilled">Login</button>
-
-        <!-- Only the word "Register" is clickable -->
-        <p class="switchText">No account? <span class="switch" @click="$emit('switchMode', 'register')">Register</span></p>
-    </div>
-</template>
-
 <script>
 export default {
     data() {
@@ -112,6 +62,56 @@ export default {
     }
 };
 </script>
+
+<template>
+    <div class="authCard">
+        <h2 class="title">Login</h2>
+
+        <!-- Email/Username Input Group -->
+        <div class="inputGroup" :class="{ 'is-active': identifier || isIdentifierFocused }">
+            <input 
+                v-model="identifier" 
+                type="text" 
+                @input="identifierError = ''" 
+                @focus="isIdentifierFocused = true" 
+                @blur="isIdentifierFocused = false"
+            />
+            <label>Email or Username</label>
+        </div>
+        <!-- Inline identifierError message removed -->
+
+        <!-- Password Input Group -->
+        <div class="inputGroup passwordField" :class="{ 'is-active': password || isPasswordFocused }">
+            <input
+                :type="showPassword ? 'text' : 'password'"
+                v-model="password"
+                @keyup="checkCapsLock($event)"
+                @input="passwordError = ''"
+                @focus="isPasswordFocused = true"
+                @blur="isPasswordFocused = false"
+            />
+            <label>Password</label>
+            <button type="button" class="toggle" @click="showPassword = !showPassword">
+                {{ showPassword ? 'Hide' : 'Show' }}
+            </button>
+        </div>
+        <p v-if="capsLockOn" class="capsWarning">Caps Lock is ON</p>
+        <!-- Inline passwordError message removed -->
+
+        <div class="remember">
+            <input type="checkbox" v-model="rememberMe" /> Remember me
+        </div>
+
+        <!-- NEW: General error message appears under 'Remember me' on submission failure -->
+        <p v-if="loginGeneralError" class="errorMessage generalError">{{ loginGeneralError }}</p>
+
+        <!-- Button disabled until fields are filled -->
+        <button class="primaryBtn" @click="login" :disabled="!isFormFilled">Login</button>
+
+        <!-- Only the word "Register" is clickable -->
+        <p class="switchText">No account? <span class="switch" @click="$emit('switchMode', 'register')">Register</span></p>
+    </div>
+</template>
 
 <style scoped>
 .title{
