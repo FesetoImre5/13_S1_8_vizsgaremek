@@ -38,7 +38,7 @@ import ListGroup from '../components/ListGroup.vue'
 
 <template>
     <div>
-        <div class="container-fluid">
+        <div class="container-fluid page-wrapper">
             <div class="row">
                 <div class="col-sm-2" style="background-color: red;">
                     <list-group
