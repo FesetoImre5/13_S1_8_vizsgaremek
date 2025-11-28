@@ -22,20 +22,20 @@
 
 <style scoped>
 .listGroup {
-    /* 1. Enable Container Queries */
     container-type: inline-size;
     container-name: group-item;
 
     display: flex;
     flex-direction: row;
-    align-items: center; /* Center vertically */
+    align-items: center;
     background-color: gray;
     border-radius: 15px;
     font-family: Arial, Helvetica, sans-serif;
     width: 100%;
     margin: 10px auto;
-    height: 60px; /* Fixed height helps with transitions */
+    height: 60px;
     overflow: hidden;
+    transition: all 0.3s ease;
 }
 
 .listGroup img {
@@ -43,30 +43,52 @@
     height: 50px;
     aspect-ratio: 1/1;
     object-fit: cover;
-    margin: 5px;
     border-radius: 10px;
-    flex-shrink: 0; /* Prevents image from squishing */
+    flex-shrink: 0;
+    
+    /* DEFAULT STATE (Expanded) */
+    /* We want margin to be 5px */
+    margin: 5px;
+    
+    /* 
+       LOGIC: When returning to this state (Expanding), 
+       transition the margin with 0s duration and 0s delay. 
+       This makes the jump to 5px happen IMMEDIATELY.
+    */
+    transition: margin 0s 0s;
 }
 
 .groupName {
     margin: 0 0 0 10px;
     padding: 0;
     font-size: 20px;
-    white-space: nowrap; /* Don't let text wrap to next line */
-    color: white; /* Added for better visibility on gray */
+    white-space: nowrap;
+    color: white;
+    transition: opacity 0.2s;
 }
 
-/* --- COMPACT STATE (Image Only) --- */
-/* When the component width is smaller than 120px, hide text */
-@container group-item (max-width: 160px) {
+/* --- COLLAPSED STATE --- */
+@container group-item (max-width: 60px) {
     .groupName {
         display: none;
     }
+    
     .listGroup {
-        justify-content: center; /* Center the image horizontally */
+        /* We remove padding so the auto-margins calculate correctly */
+        padding: 0;
     }
+
     .listGroup img {
-        /*margin: 0 auto; /* Remove margin for perfect centering */
+        /* We want the image centered */
+        margin: auto;
+
+        /* 
+           LOGIC: When entering this state (Collapsing),
+           transition the margin with 0s duration BUT 0.3s delay.
+           This forces the image to stay at '5px' until the parent 
+           animation (which takes 0.3s) is finished, then it snaps to center.
+        */
+        transition: margin 0s;
     }
 }
 </style>
