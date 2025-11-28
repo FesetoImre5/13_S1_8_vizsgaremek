@@ -1,4 +1,6 @@
 <script>
+import axios from 'axios';
+
 export default {
     data() {
         return {
@@ -18,7 +20,6 @@ export default {
         };
     },
     computed: {
-        // Button remains disabled until fields have content
         isFormFilled() {
             return this.identifier.trim().length > 0 && this.password.trim().length > 0;
         }
@@ -28,8 +29,7 @@ export default {
             this.capsLockOn = e.getModifierState && e.getModifierState('CapsLock');
         },
 
-        // --- BLUR HANDLERS ---
-        // We only clear focus here. Validation happens on button click.
+        // --- Blur Handlers ---
         handleIdentifierBlur() {
             this.isIdentifierFocused = false;
         },
@@ -37,7 +37,7 @@ export default {
             this.isPasswordFocused = false;
         },
 
-        // --- BASIC CLIENT-SIDE VALIDATION ---
+        // --- Validation ---
         validateIdentifier() {
             if (this.identifier.trim() === '') {
                 this.identifierError = 'Email or Username is required.';
@@ -48,69 +48,69 @@ export default {
         },
         validatePassword() {
             if (this.password.length === 0) {
-                this.passwordError = 'Password is required.';
-                return false;
+                 this.passwordError = 'Password is required.';
+                 return false;
             }
-            // Optional: You can keep length checks here if you want to prevent 
-            // sending obviously short passwords to the server.
             this.passwordError = '';
             return true;
         },
 
-        login() {
+        // --- UPDATED API CONNECTION ---
+        async login() {
             // 1. Reset Errors
             this.identifierError = '';
             this.passwordError = '';
 
-            // 2. Basic Client Validation (Empty fields?)
+            // 2. Validate Locally
             const identifierValid = this.validateIdentifier();
             const passwordValid = this.validatePassword();
 
-            if (!identifierValid || !passwordValid) {
-                return;
-            }
+            if (!identifierValid || !passwordValid) return;
 
-            // ---------------------------------------------------------
-            // MOCK BACKEND LOGIC (Replace this with your real API call)
-            // ---------------------------------------------------------
-            
-            // A. Simulate a database of users
-            const mockUsers = [
-                { username: 'user', email: 'user@example.com', password: 'password123' },
-                { username: 'admin', email: 'admin@test.com', password: 'password123' }
-            ];
+            try {
+                // 3. Send Credentials to Django (Standard Token Auth)
+                const response = await axios.post('http://127.0.0.1:8000/api/login/', {
+                    username: this.identifier, 
+                    password: this.password
+                });
 
-            // B. Determine if input is Email or Username
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            const isEmail = emailRegex.test(this.identifier);
+                const data = response.data;
 
-            // C. Find the user in the "Database"
-            // If isEmail is true, we look for a matching email. Otherwise, matching username.
-            const userFound = mockUsers.find(u => 
-                isEmail ? u.email === this.identifier : u.username === this.identifier
-            );
+                // 4. Success: Store Token and User Data (Matching your working JS)
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user_id', data.user_id);
+                localStorage.setItem('username', data.username);
+                
+                // 5. Configure Axios
+                // Important: Django Default Tokens use "Token <string>", not "Bearer"
+                axios.defaults.headers.common['Authorization'] = `Token ${data.token}`;
+                
+                console.log('Login successful:', data.username);
+                
+                // 6. Emit success to parent or Redirect
+                // this.$router.push('/'); // Uncomment if using router
+                alert("Login Successful!"); // Temporary feedback
 
-            // D. Scenario: User NOT found
-            if (!userFound) {
-                if (isEmail) {
-                    this.identifierError = 'Not registered email';
+            } catch (error) {
+                // 5. Handle Errors
+                if (error.response) {
+                    const data = error.response.data;
+
+                    // Standard Django Auth usually returns "non_field_errors" on bad credentials
+                    if (data.non_field_errors) {
+                        this.passwordError = "Invalid username or password.";
+                    } 
+                    // Or sometimes just a generic detail
+                    else if (data.detail) {
+                        this.passwordError = data.detail;
+                    } 
+                    else {
+                        this.passwordError = "Login failed. Please check credentials.";
+                    }
                 } else {
-                    this.identifierError = 'Not registered username';
+                    this.passwordError = "Network error. Is the server running?";
                 }
-                return; // Stop here
             }
-
-            // E. Scenario: User found, check password
-            if (userFound.password !== this.password) {
-                this.passwordError = 'Incorrect password';
-                return; // Stop here
-            }
-
-            // ---------------------------------------------------------
-            // SUCCESS
-            // ---------------------------------------------------------
-            console.log('Login successful for:', userFound.username);
-            // alert("Login Successful!"); 
         }
     }
 };

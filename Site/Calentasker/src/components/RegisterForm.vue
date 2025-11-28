@@ -1,26 +1,30 @@
 <script>
+import axios from 'axios';
+
 export default {
     data() {
         return {
             email: '',
             username: '',
             password: '',
-            firstName: '', // NEW
-            lastName: '',  // NEW
+            firstName: '',
+            lastName: '',
             showPassword: false,
             capsLockOn: false,
-            // New state for errors
+            
+            // Error states
             emailError: '',
             usernameError: '',
             passwordError: '',
-            firstNameError: '', // NEW
-            lastNameError: '',  // NEW
-            // New focus states for floating label logic
+            firstNameError: '',
+            lastNameError: '',
+            
+            // Focus states (Keeps your animations working)
             isEmailFocused: false,
             isUsernameFocused: false,
             isPasswordFocused: false,
-            isFirstNameFocused: false, // NEW
-            isLastNameFocused: false  // NEW
+            isFirstNameFocused: false,
+            isLastNameFocused: false
         };
     },
     computed: {
@@ -36,7 +40,6 @@ export default {
         },
         isFormValid() {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            // Added check for new fields
             return emailRegex.test(this.email) && 
                 this.username.length > 0 && 
                 this.password.length >= 6 &&
@@ -49,7 +52,7 @@ export default {
             this.capsLockOn = e.getModifierState && e.getModifierState('CapsLock');
         },
         
-        // --- Dedicated Blur Handlers (New) ---
+        // --- Blur Handlers (Preserves your animation logic) ---
         handleFirstNameBlur() {
             this.validateFirstName();
             this.isFirstNameFocused = false;
@@ -71,7 +74,7 @@ export default {
             this.isPasswordFocused = false;
         },
         
-        // --- Validation Methods (Existing) ---
+        // --- Validation Methods ---
         validateFirstName() {
             if (this.firstName.trim() === '') {
                 this.firstNameError = 'First Name is required.';
@@ -117,15 +120,51 @@ export default {
             const emailValid = this.validateEmail();
             const usernameValid = this.validateUsername();
             const passwordValid = this.validatePassword();
-            const firstNameValid = this.validateFirstName(); // NEW
-            const lastNameValid = this.validateLastName();   // NEW
+            const firstNameValid = this.validateFirstName();
+            const lastNameValid = this.validateLastName();
             return emailValid && usernameValid && passwordValid && firstNameValid && lastNameValid;
         },
-        register() {
-            if (this.validateForm()) {
-                console.log('Registration successful:', this.email, this.username, this.password);
-            } else {
-                console.log('Validation failed. Please check errors.');
+
+        // --- NEW: API CONNECTION ---
+        async register() {
+            // 1. Run local validation
+            if (!this.validateForm()) {
+                console.log('Validation failed locally.');
+                return;
+            }
+
+            try {
+                // 2. Prepare payload (Convert your camelCase vars to Django snake_case)
+                const payload = {
+                    username: this.username,
+                    email: this.email,
+                    password: this.password,
+                    first_name: this.firstName,
+                    last_name: this.lastName
+                };
+
+                // 3. Send Request to your Django API
+                // Assuming your screenshot endpoint: /api/users/
+                await axios.post('http://127.0.0.1:8000/api/users/', payload);
+
+                // 4. On Success
+                alert("Account created successfully! Please log in.");
+                this.$emit('switchMode', 'login');
+
+            } catch (error) {
+                // 5. Handle Django Backend Errors
+                if (error.response && error.response.data) {
+                    const data = error.response.data;
+
+                    // Django returns errors as arrays, e.g. { username: ["User exists"] }
+                    if (data.username) this.usernameError = data.username[0];
+                    if (data.email) this.emailError = data.email[0];
+                    if (data.password) this.passwordError = data.password[0];
+                    if (data.first_name) this.firstNameError = data.first_name[0];
+                    if (data.last_name) this.lastNameError = data.last_name[0];
+                } else {
+                    alert("Network error or server is down.");
+                }
             }
         }
     }
