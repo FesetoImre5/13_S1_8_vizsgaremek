@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Registration</title>
+    <!-- Load Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#4f46e5', // Indigo
+                        'secondary': '#10b981', // Green
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom styles for appearance */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+        }
+        .form-container {
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    
+    <div id="registrationApp" class="max-w-md w-full p-8 form-container">
+        <h1 class="text-3xl font-bold mb-6 text-gray-800 text-center">Register Account</h1>
+
+        <!-- Registration Form -->
+        <form id="registrationForm" class="space-y-5">
+            
+            <!-- Username Field -->
+            <div>
+                <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+                <input 
+                    id="username" 
+                    type="text" 
+                    name="username"
+                    required 
+                    class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150"
+                />
+            </div>
+
+            <!-- First name Field -->
+            <div>
+                <label for="firstname" class="block text-sm font-medium text-gray-700">First Name</label>
+                <input 
+                    id="firstname" 
+                    type="text" 
+                    name="firstname"
+                    class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150"
+                />
+            </div>
+
+            <!-- Last name Field -->
+            <div>
+                <label for="lastname" class="block text-sm font-medium text-gray-700">Last Name</label>
+                <input 
+                    id="lastname" 
+                    type="text" 
+                    name="lastname"
+                    class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150"
+                />
+            </div>
+
+            <!-- Email Field -->
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                <input 
+                    id="email" 
+                    type="email" 
+                    name="email"
+                    required 
+                    class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150"
+                />
+            </div>
+
+            <!-- Password Field -->
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                <input 
+                    id="password" 
+                    type="password" 
+                    name="password"
+                    required 
+                    class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150"
+                />
+            </div>
+            
+            <!-- Submit Button -->
+            <button 
+                type="submit" 
+                id="submitBtn"
+                class="w-full py-3 px-4 border border-transparent rounded-lg shadow-md text-lg font-medium text-white 
+                       bg-primary hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-indigo-300 transition duration-150"
+            >
+                Register
+            </button>
+        </form>
+
+        <!-- Status Message Box -->
+        <div id="messageBox" class="mt-6 p-4 rounded-lg hidden transition duration-300" role="alert">
+            <p id="messageText" class="font-medium"></p>
+        </div>
+        
+        <!-- API URL reference -->
+        <div class="mt-6 pt-4 border-t text-xs text-gray-500 text-center">
+            Targeting API: <code id="apiUrlDisplay" class="font-mono text-xs">http://127.0.0.1:8000/api/users/</code>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        // 
+        // 1. Set this to the IP of the computer running your Django backend.
+        //    If running locally, 127.0.0.1 or localhost is fine.
+        const API_BASE_URL = 'http://127.0.0.1:8000/api'; 
+        // 2. The specific endpoint for creating users. ADJUST THIS if your DRF setup uses a different path.
+        const REGISTRATION_ENDPOINT = '/users/'; 
+        // ---------------------
+
+        document.getElementById('apiUrlDisplay').textContent = API_BASE_URL + REGISTRATION_ENDPOINT;
+        const form = document.getElementById('registrationForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const messageBox = document.getElementById('messageBox');
+        const messageText = document.getElementById('messageText');
+
+        /**
+         * Clears and updates the status message box.
+         * @param {string} message - The text to display.
+         * @param {boolean} isSuccess - True for success, false for error.
+         */
+        function showMessage(message, isSuccess) {
+            messageBox.classList.remove('hidden', 'bg-red-100', 'bg-green-100', 'text-red-700', 'text-green-700');
+            messageText.innerHTML = message;
+
+            if (isSuccess) {
+                messageBox.classList.add('bg-secondary/10', 'text-secondary');
+            } else {
+                messageBox.classList.add('bg-red-100', 'text-red-700');
+            }
+        }
+
+        /**
+         * Helper to retrieve the Django CSRF token from the cookie.
+         */
+        function getCookie(name) {
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        return decodeURIComponent(cookie.substring(name.length + 1));
+                    }
+                }
+            }
+            return null;
+        }
+
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            messageBox.classList.add('hidden');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Registering...';
+
+            const formData = new FormData(form);
+            const payload = Object.fromEntries(formData.entries());
+            const registrationUrl = API_BASE_URL + REGISTRATION_ENDPOINT;
+            
+            try {
+                const response = await fetch(registrationUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // CRITICAL: Include the CSRF token for Django
+                        'X-CSRFToken': getCookie('csrftoken'), 
+                    },
+                    credentials: 'include', // Important for sending cookies
+                    body: JSON.stringify(payload),
+                });
+
+                const responseText = await response.text();
+                let responseData;
+                try {
+                    responseData = JSON.parse(responseText);
+                } catch (e) {
+                    responseData = { detail: responseText || "No response body received." };
+                }
+
+                if (response.ok) {
+                    // Success (usually 201 Created)
+                    showMessage(`
+                        <p class="font-bold">Success!</p>
+                        <p>User <strong>${responseData.username || payload.username}</strong> created.</p>
+                        <p class="text-xs mt-1">Status: ${response.status}</p>
+                    `, true);
+                    form.reset(); // Clear the form on success
+                } else {
+                    // Error (e.g., 400 Bad Request due to validation errors)
+                    let errorDetails = JSON.stringify(responseData, null, 2);
+                    showMessage(`
+                        <p class="font-bold">Registration Failed (Status: ${response.status})</p>
+                        <pre class="whitespace-pre-wrap text-sm mt-1">${errorDetails}</pre>
+                    `, false);
+                }
+
+            } catch (err) {
+                console.error('Network Error:', err);
+                showMessage(`
+                    <p class="font-bold">Network Error</p>
+                    <p>Could not connect to the API. Check the URL and server status.</p>
+                `, false);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Register';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -22,6 +22,13 @@ class CommentSerializer(serializers.ModelSerializer):
         label = 'Posted to'
     )
     task_detail = serializers.SerializerMethodField()
+    group = serializers.PrimaryKeyRelatedField(
+        queryset = Group.objects.all(),
+        write_only = True,
+        label = 'in Group',
+        required=False,
+        allow_null=True
+    )
 
     def get_task_detail(self, obj):
         from .serializers import TaskSerializer
@@ -35,6 +42,7 @@ class CommentSerializer(serializers.ModelSerializer):
             'id', 
             'task', 
             'task_detail',
+            'group',
             'user', 
             'user_detail',
             'content', 
