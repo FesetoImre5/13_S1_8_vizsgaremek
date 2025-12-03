@@ -48,8 +48,8 @@ export default {
 .authWrapper {
     width: 100%;
     /* Navbar height offset */
-    margin-top: 70px; 
-    height: calc(100vh - 140px); 
+    margin-top: 0px; 
+    height: calc(100vh - 70px); 
     display: flex;
     justify-content: center;
     align-items: center;

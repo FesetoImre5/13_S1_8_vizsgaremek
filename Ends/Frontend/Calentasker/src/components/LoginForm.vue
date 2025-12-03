@@ -1,6 +1,6 @@
 <script>
 import axios from 'axios';
-import { useAuth } from '../composables/UseAuth.js';
+import { useAuth } from '../composables/UseAuth';
 
 export default {
     data() {
