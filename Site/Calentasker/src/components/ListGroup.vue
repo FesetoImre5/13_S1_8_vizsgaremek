@@ -50,11 +50,7 @@
     /* We want margin to be 5px */
     margin: 5px;
     
-    /* 
-       LOGIC: When returning to this state (Expanding), 
-       transition the margin with 0s duration and 0s delay. 
-       This makes the jump to 5px happen IMMEDIATELY.
-    */
+    /* LOGIC: When returning to this state (Expanding), transition the margin with 0s duration and 0s delay. This makes the jump to 5px happen IMMEDIATELY. */
     transition: margin 0s 0s;
 }
 
@@ -82,12 +78,7 @@
         /* We want the image centered */
         margin: auto;
 
-        /* 
-           LOGIC: When entering this state (Collapsing),
-           transition the margin with 0s duration BUT 0.3s delay.
-           This forces the image to stay at '5px' until the parent 
-           animation (which takes 0.3s) is finished, then it snaps to center.
-        */
+        /* LOGIC: When entering this state (Collapsing), transition the margin with 0s duration BUT 0.3s delay. This forces the image to stay at '5px' until the parent animation (which takes 0.3s) is finished, then it snaps to center. */
         transition: margin 0s;
     }
 }

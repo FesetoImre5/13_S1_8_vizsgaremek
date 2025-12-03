@@ -1,5 +1,14 @@
 <script setup>
-import NavBar from './components/NavBar.vue'
+import { onMounted } from 'vue';
+import NavBar from './components/NavBar.vue';
+import { useAuth } from './composables/UseAuth.js';
+
+// Initialize Authentication Check
+const { checkAuth } = useAuth();
+
+onMounted(() => {
+    checkAuth();
+});
 </script>
 
 <template>
@@ -10,10 +19,9 @@ import NavBar from './components/NavBar.vue'
 </template>
 
 <style>
-/* Global resets if you haven't added them yet */
+/* Global resets */
 body {
   margin: 0; 
   padding-top: 70px; 
 }
-
 </style>
