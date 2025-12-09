@@ -47,7 +47,7 @@ class CommentSerializer(serializers.ModelSerializer):
             'user_detail',
             'content', 
             'created_at', 
-            'active'
+            'active',
         )
         read_only_fields = ('created_at', 'user_detail', 'task_detail', 'active',)
 
@@ -139,6 +139,7 @@ class TaskSerializer(serializers.ModelSerializer):
             'created_by_userid',
             'assigned_to_userid',
             'assignments', 'comments', 'attachments',
+            'imageUrl',
         )
         read_only_fields = ('group_detail', 'created_at', 'updated_at', 'completed_at', 'active',)
         extra_kwargs = {

@@ -8,13 +8,19 @@
             name: {
                 type: String,
                 default: "Group Name"
+            },
+            // NEW PROP: To highlight the selected group
+            isActive: {
+                type: Boolean,
+                default: false
             }
         }
     }
 </script>
 
 <template>
-    <div class="listGroup">
+    <!-- Add active class if selected -->
+    <div class="listGroup" :class="{ 'active-group': isActive }">
         <img :src="url" alt="">
         <p class="groupName">{{name}}</p>
     </div>
@@ -36,6 +42,21 @@
     height: 60px;
     overflow: hidden;
     transition: all 0.3s ease;
+    
+    /* Make it clickable */
+    cursor: pointer;
+    border: 2px solid transparent; 
+}
+
+/* Hover Effect */
+.listGroup:hover {
+    filter: brightness(1.1);
+}
+
+/* Selected State */
+.active-group {
+    background-color: #333; /* Darker background when active */
+    border-color: white;    /* Border to indicate selection */
 }
 
 .listGroup img {
@@ -45,12 +66,7 @@
     object-fit: cover;
     border-radius: 10px;
     flex-shrink: 0;
-    
-    /* DEFAULT STATE (Expanded) */
-    /* We want margin to be 5px */
     margin: 5px;
-    
-    /* LOGIC: When returning to this state (Expanding), transition the margin with 0s duration and 0s delay. This makes the jump to 5px happen IMMEDIATELY. */
     transition: margin 0s 0s;
 }
 
@@ -70,15 +86,11 @@
     }
     
     .listGroup {
-        /* We remove padding so the auto-margins calculate correctly */
         padding: 0;
     }
 
     .listGroup img {
-        /* We want the image centered */
         margin: auto;
-
-        /* LOGIC: When entering this state (Collapsing), transition the margin with 0s duration BUT 0.3s delay. This forces the image to stay at '5px' until the parent animation (which takes 0.3s) is finished, then it snaps to center. */
         transition: margin 0s;
     }
 }

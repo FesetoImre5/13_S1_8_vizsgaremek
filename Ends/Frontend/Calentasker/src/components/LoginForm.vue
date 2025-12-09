@@ -73,7 +73,7 @@ export default {
                 
                 // Alert removed as requested
 
-                this.$router.push('/'); 
+                this.$router.push('/profile'); 
 
             } catch (error) {
                 if (error.response) {

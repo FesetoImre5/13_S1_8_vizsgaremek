@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import URLValidator
 
 class Task(models.Model):
     PRIORITY_CHOICES = (
@@ -52,6 +53,7 @@ class Task(models.Model):
     completed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    imageUrl = models.TextField(validators=[URLValidator()], blank=True, null=True)
     active = models.BooleanField(default=True)
 
     def __str__(self):

@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import URLValidator
 
 class Group(models.Model):
     groupname = models.CharField(max_length=100)
@@ -10,6 +11,7 @@ class Group(models.Model):
         related_name='created_groups',
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    imageUrl = models.TextField(validators=[URLValidator()], blank=True, null=True)
     active = models.BooleanField(default=True)
 
     def __str__(self):
