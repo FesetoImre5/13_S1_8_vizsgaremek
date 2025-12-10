@@ -1,25 +1,21 @@
 <script>
     export default {
         props: {
-            url: {
-                type: String,
-                default: "https://www.mariposakids.co.nz/wp-content/uploads/2014/08/image-placeholder2.jpg"
-            },
-            title: {
-                type: String,
-                default: "Placeholder Title"
-            },
-            desc: {
-                type: String,
-                default: "This is a somewhat sort, but still padded sentence to function as a Description example. Yaay."
-            }
+            id: { type: [Number, String], required: true },
+            url: { type: String, default: "" },
+            title: { type: String, default: "" },
+            desc: { type: String, default: "" }
         },
-        emits: ['click']
+        emits: ['click', 'hover', 'leave'] 
     }
 </script>
 
 <template>
-    <div class="task">
+    <div 
+        class="task"
+        @mouseenter="$emit('hover', id)"
+        @mouseleave="$emit('leave')"
+    >
         <img :src="url" alt="" class="taskImage">
         
         <div class="taskText">
@@ -31,7 +27,7 @@
 </template>
 
 <style scoped>
-    /* ... (Desktop styles remain unchanged) ... */
+    /* --- DESKTOP STYLES --- */
     .task {
         display: flex;
         flex-direction: row;
@@ -44,6 +40,20 @@
         align-items: stretch; 
         position: relative; 
         overflow: hidden; 
+        
+        /* Smooth transition */
+        transition: box-shadow 0.1s ease;
+    }
+
+    /* 
+       FIX: Use INSET shadow.
+       This draws the border INSIDE the card, so it cannot be cut off 
+       by parent containers or margins.
+    */
+    .task:hover {
+        /* inset x-offset y-offset blur spread color */
+        box-shadow: inset 0 0 0 4px orangered; 
+        z-index: 5;
     }
 
     .taskImage{
@@ -98,44 +108,39 @@
         border-radius: 0; 
     }
 
-    /* 
-       --- MOBILE TILE LAYOUT (< 530px) --- 
-    */
+    /* --- MOBILE TILE LAYOUT (< 530px) --- */
     @media (max-width: 530px) {
         .task {
             flex-direction: column;
             margin: 10px 0;
             padding: 0;
-            
             aspect-ratio: 2 / 1; 
             height: auto; 
             max-height: none; 
             width: 100%; 
             min-width: 0; 
-            
             border: 2px solid white;
             
-            /* 1. ADDED: Dark background to the container itself.
-               This fills any sub-pixel gaps between the border and image 
-               so the page background (blue) doesn't leak through. */
+            /* Inset shadow for mobile border fix */
+            box-shadow: inset 0 0 0 1px white !important; 
+            
             background-color: #222; 
-            
             cursor: pointer; 
-            
-            /* Ensure clipping works perfectly on mobile browsers */
             transform: translateZ(0); 
+        }
+        
+        /* Disable hover effect on mobile */
+        .task:hover {
+             box-shadow: inset 0 0 0 1px white !important;
+             z-index: auto;
         }
 
         .taskImage {
             width: 100%;
             height: 100%;
             margin: 0;
-            
-            /* 2. CHANGED: Remove border radius from the child.
-               Let the parent .task (overflow: hidden) handle the clipping.
-               This removes the mismatch gap. */
             border-radius: 0; 
-            
+            background-color: transparent;
             aspect-ratio: auto;
             object-fit: cover; 
             object-position: center; 
@@ -149,10 +154,7 @@
             width: 100%;
             background-color: rgba(50, 50, 50, 0.85); 
             backdrop-filter: blur(2px); 
-            
-            /* 3. CHANGED: Remove border radius here too. */
             border-radius: 0; 
-            
             display: block;
             text-align: center;
         }
@@ -179,7 +181,7 @@
             z-index: 10;
             margin: 0;
             background-color: transparent;
-            border-radius: 0; /* Remove radius here too */
+            border-radius: 0; 
         }
     }
 </style>

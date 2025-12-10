@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import ListTask from '../components/ListTask.vue';
 import ListGroup from '../components/ListGroup.vue';
+import TaskCalendar from '../components/TaskCalendar.vue'; // 1. Import
 
 // State
 const isSidebarExpanded = ref(false);
@@ -11,30 +12,22 @@ const tasks = ref([]);
 const loading = ref(false);
 const selectedGroupId = ref(null);
 
+// 2. State for Hover Logic
+const hoveredTaskId = ref(null);
+
 // --- API ACTIONS ---
 
-// 1. Fetch Groups (UPDATED LOGIC)
 const fetchGroups = async () => {
     try {
-        // Get current user ID to filter the list
         const currentUserId = parseInt(localStorage.getItem('user_id'));
-
-        // Hit the Members endpoint instead of the raw Groups endpoint
         const response = await axios.get('http://127.0.0.1:8000/api/group-members/');
-        
-        // 1. Filter: Find rows where the user_detail.id matches our logged-in ID
         const myMemberships = response.data.filter(item => item.user_detail.id === currentUserId);
-
-        // 2. Map: Extract just the 'group_detail' object from those rows
-        // This converts the list of Memberships into a list of Groups
         groups.value = myMemberships.map(item => item.group_detail);
-
     } catch (error) {
         console.error("Failed to load groups", error);
     }
 };
 
-// 2. Fetch Tasks (Filterable)
 const fetchTasks = async (groupId = null) => {
     loading.value = true;
     try {
@@ -53,9 +46,7 @@ const fetchTasks = async (groupId = null) => {
 
 // --- INTERACTION ---
 
-const toggleSidebar = () => {
-    isSidebarExpanded.value = !isSidebarExpanded.value;
-};
+const toggleSidebar = () => { isSidebarExpanded.value = !isSidebarExpanded.value; };
 
 const handleGroupClick = (groupId) => {
     if (selectedGroupId.value === groupId) {
@@ -66,6 +57,10 @@ const handleGroupClick = (groupId) => {
         fetchTasks(groupId);
     }
 };
+
+// 3. Hover Handlers
+const onTaskHover = (id) => { hoveredTaskId.value = id; };
+const onTaskLeave = () => { hoveredTaskId.value = null; };
 
 // --- HELPERS ---
 
@@ -88,7 +83,6 @@ onMounted(() => {
 });
 </script>
 
-<!-- Template and Style remain exactly the same -->
 <template>
     <div>
         <div class="container-fluid pageWrapper">
@@ -100,7 +94,6 @@ onMounted(() => {
                 >
                     <button class="toggleBtn" @click="toggleSidebar">#</button>
 
-                    <!-- Groups List -->
                     <list-group
                         v-for="group in groups"
                         :key="group.id"
@@ -117,19 +110,33 @@ onMounted(() => {
                         <div v-if="loading" class="text-white p-3">Loading tasks...</div>
                         <div v-else-if="tasks.length === 0" class="text-white p-3">No tasks found.</div>
 
-                        <!-- Tasks List -->
+                        <!-- 
+                            4. Pass ID and Listen for Hover events 
+                        -->
                         <list-task 
                             v-else
                             v-for="task in tasks"
                             :key="task.id"
+                            :id="task.id"
                             :url="getTaskUrl(task)"
                             :title="task.title"
                             :desc="task.description"
+                            @hover="onTaskHover"
+                            @leave="onTaskLeave"
                         />
                     </div>
                 </div>
 
-                <div class="col-sm-4" style="background-color: green;"></div>
+                <!-- 
+                    5. RIGHT COLUMN (Calendar) 
+                    Replaced the green div with TaskCalendar
+                -->
+                <div class="col-sm-4 p-0" style="background-color: #2a2a2a;">
+                    <TaskCalendar 
+                        :tasks="tasks"
+                        :hoveredTaskId="hoveredTaskId"
+                    />
+                </div>
             </div>
         </div>
     </div>

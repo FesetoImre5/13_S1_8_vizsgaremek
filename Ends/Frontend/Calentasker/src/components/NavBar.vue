@@ -12,7 +12,7 @@ const isMenuOpen = ref(false);
 const navLinks = computed(() => {
     if (user.value) {
         return [
-            { name: 'Tasks', path: '/' }
+            { name: 'Tasks', path: '/tasks' }
         ];
     }
     // If not logged in, return empty array (hides the button)
@@ -28,7 +28,7 @@ const navLinks = computed(() => {
             <div class="navLeft">
                 <!-- LOGO -->
                 <div class="logo">
-                    <router-link to="/">
+                    <router-link to="/tasks">
                         <img src="../assets/logo-with-text.svg" alt="Logo">
                     </router-link>
                 </div>
