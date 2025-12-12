@@ -89,12 +89,15 @@ onMounted(() => {
 
 <template>
     <div class="groupsWrapper">
-        <div class="row h-100">
+        <div class="row h-100 g-0"> <!-- g-0 removes bootstrap gutters -->
+            
             <!-- Inner Sidebar: Group List -->
             <div class="col-md-4 groupListCol">
-                <h5>My Groups</h5>
-                <div v-if="loading">Loading...</div>
-                <div class="listContainer">
+                <h5 class="sectionTitle">My Groups</h5>
+                <div v-if="loading" class="p-3 text-muted">Loading...</div>
+                
+                <div class="listContainer customScroll">
+                    <!-- Note: ListGroup component needs styling update too -->
                     <list-group
                         v-for="group in groups"
                         :key="group.id"
@@ -109,35 +112,39 @@ onMounted(() => {
             <!-- Inner Content: Group Details -->
             <div class="col-md-8 detailsCol">
                 <div v-if="!selectedGroup" class="emptyState">
-                    Select a group to manage.
+                    <p>Select a group to manage details</p>
                 </div>
-                <div v-else>
+                <div v-else class="detailsInner">
                     <div class="header">
                         <img :src="getGroupUrl(selectedGroup)" class="gImg">
                         <h3>{{ selectedGroup.groupname }}</h3>
                     </div>
-                    <hr>
+                    
+                    <div class="divider"></div>
                     
                     <!-- Add Member -->
-                    <div class="addArea">
-                        <h6>Add Member</h6>
-                        <div class="d-flex gap-2">
-                            <input v-model="newMemberUsername" class="form-control" placeholder="Username" @keyup.enter="addMember">
-                            <button class="btn btn-dark" @click="addMember">Add</button>
+                    <div class="actionBox">
+                        <label>Add New Member</label>
+                        <div class="inputGroup">
+                            <input v-model="newMemberUsername" type="text" placeholder="Enter username..." @keyup.enter="addMember">
+                            <button @click="addMember">Add</button>
                         </div>
-                        <small v-if="addMemberError" class="text-danger d-block mt-1">{{ addMemberError }}</small>
-                        <small v-if="addMemberSuccess" class="text-success d-block mt-1">{{ addMemberSuccess }}</small>
+                        <small v-if="addMemberError" class="text-danger">{{ addMemberError }}</small>
+                        <small v-if="addMemberSuccess" class="text-success">{{ addMemberSuccess }}</small>
                     </div>
 
                     <!-- Member List -->
-                    <h6 class="mt-4">Members ({{ groupMembers.length }})</h6>
-                    <ul class="list-group list-group-flush">
-                        <li v-for="m in groupMembers" :key="m.id" class="list-group-item d-flex justify-content-between align-items-center">
-                            <span>
-                                <strong>{{ m.user_detail.username }}</strong>
-                                <span v-if="m.isAdmin" class="badge bg-secondary ms-2">Admin</span>
-                            </span>
-                            <button class="btn btn-sm text-danger" @click="removeMember(m.id)">&times;</button>
+                    <h6 class="listHeader">Members ({{ groupMembers.length }})</h6>
+                    <ul class="memberList">
+                        <li v-for="m in groupMembers" :key="m.id" class="memberItem">
+                            <div class="memberInfo">
+                                <div class="avatar">{{ m.user_detail.username.charAt(0) }}</div>
+                                <span>
+                                    <strong>{{ m.user_detail.username }}</strong>
+                                    <span v-if="m.isAdmin" class="adminBadge">ADMIN</span>
+                                </span>
+                            </div>
+                            <button class="removeBtn" @click="removeMember(m.id)">Remove</button>
                         </li>
                     </ul>
                 </div>
@@ -149,40 +156,110 @@ onMounted(() => {
 <style scoped>
 .groupsWrapper {
     height: 100%;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    overflow: hidden;
+    /* No background here, letting it blend or using surface */
+    background: var(--c-bg);
 }
 
 .groupListCol {
-    background: #f8f9fa;
-    border-right: 1px solid #e5e7eb;
-    padding: 20px;
+    background: var(--c-bg);
+    border-right: 1px solid var(--border-color);
+    padding: 20px 10px 20px 20px;
     display: flex;
     flex-direction: column;
-    max-height: 100%;
+    height: 100%;
 }
+
+.sectionTitle { color: var(--c-accent); font-weight: bold; margin-bottom: 20px; }
 
 .listContainer {
     flex-grow: 1;
     overflow-y: auto;
+    padding-right: 10px;
 }
 
 .detailsCol {
-    padding: 30px;
+    padding: 0;
+    background: var(--c-bg);
+    height: 100%;
     overflow-y: auto;
-    max-height: 100%;
 }
+
+.detailsInner { padding: 30px; }
 
 .emptyState {
     height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #aaa;
+    color: var(--c-text-secondary);
+    border: 2px dashed var(--border-color);
+    margin: 20px;
+    border-radius: var(--radius-md);
 }
 
-.gImg { width: 50px; height: 50px; border-radius: 8px; margin-right: 15px; }
-.header { display: flex; align-items: center; }
+/* Header & Images */
+.header { display: flex; align-items: center; margin-bottom: 20px; }
+.gImg { width: 64px; height: 64px; border-radius: var(--radius-md); margin-right: 20px; object-fit: cover; }
+.header h3 { color: var(--c-text-primary); margin: 0; }
+.divider { height: 1px; background: var(--border-color); margin: 20px 0; }
+
+/* Inputs & Actions */
+.actionBox {
+    background: var(--c-surface);
+    padding: 20px;
+    border-radius: var(--radius-md);
+    margin-bottom: 30px;
+    border: 1px solid var(--border-color);
+}
+.actionBox label { display: block; color: var(--c-text-secondary); margin-bottom: 10px; font-size: 0.9rem; }
+.inputGroup { display: flex; gap: 10px; }
+.inputGroup input {
+    flex: 1;
+    background: var(--c-bg);
+    border: 1px solid var(--border-color);
+    color: var(--c-text-primary);
+    padding: 10px 15px;
+    border-radius: 8px;
+    outline: none;
+}
+.inputGroup input:focus { border-color: var(--c-accent); }
+.inputGroup button {
+    background: var(--c-accent);
+    color: white;
+    border: none;
+    padding: 0 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.inputGroup button:hover { opacity: 0.9; }
+
+/* Member List */
+.listHeader { color: var(--c-text-secondary); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 15px; }
+.memberList { list-style: none; padding: 0; }
+.memberItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: var(--c-surface);
+    border: 1px solid var(--border-color);
+    margin-bottom: 10px;
+    border-radius: 10px;
+    transition: transform 0.1s;
+}
+.memberItem:hover { transform: translateX(5px); border-color: var(--c-text-secondary); }
+
+.memberInfo { display: flex; align-items: center; gap: 12px; }
+.avatar {
+    width: 32px; height: 32px; background: var(--c-primary); color: white;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem;
+}
+.adminBadge { font-size: 0.7rem; background: var(--c-accent); color: black; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-weight: bold; }
+.removeBtn { background: transparent; color: var(--c-text-secondary); border: none; cursor: pointer; font-size: 0.9rem; }
+.removeBtn:hover { color: var(--c-primary); text-decoration: underline; }
+
+/* Scrollbar fix for the list */
+.customScroll::-webkit-scrollbar { width: 5px; }
+.customScroll::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
 </style>

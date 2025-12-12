@@ -31,28 +31,27 @@
     .task {
         display: flex;
         flex-direction: row;
-        background-color: gray;
-        border-radius: 15px;
-        font-family: Arial, Helvetica, sans-serif;
+        
+        /* MODERN THEME */
+        background-color: var(--c-surface);
+        border: 1px solid var(--border-color);
+        color: var(--c-text-primary);
+        border-radius: var(--radius-md);
+        
+        font-family: Arial, Helvetica, sans-serif; /* Can swap to 'Inter' if imported global */
         width: 100%;
         margin: 10px 0;
         max-height: 145px;
         align-items: stretch; 
         position: relative; 
         overflow: hidden; 
-        
-        /* Smooth transition */
-        transition: box-shadow 0.1s ease;
+        transition: all 0.2s ease;
     }
 
-    /* 
-       FIX: Use INSET shadow.
-       This draws the border INSIDE the card, so it cannot be cut off 
-       by parent containers or margins.
-    */
+    /* Hover: Use accent color for the inset shadow */
     .task:hover {
-        /* inset x-offset y-offset blur spread color */
-        box-shadow: inset 0 0 0 4px orangered; 
+        transform: translateY(-2px);
+        box-shadow: inset 0 0 0 2px var(--c-accent); 
         z-index: 5;
     }
 
@@ -63,28 +62,31 @@
         object-fit: cover;
         margin: 10px;
         flex-shrink: 0;
-        border-radius: 10px;
+        border-radius: 8px;
         align-self: center;
-        background-color: #fff;
+        background-color: var(--c-bg); /* Darker placeholder bg */
     }
 
     .taskText {
         flex-grow: 1; 
-        padding: 10px;
+        padding: 15px;
         min-width: 0; 
         padding-right: 100px; 
     }
 
     .taskTitle{
-        font-size: 40px;
-        margin: 0;
+        font-size: 24px;
+        font-weight: bold;
+        margin: 0 0 5px 0;
         padding: 0;
         line-height: 1.2;
+        color: var(--c-text-primary);
     }
 
     .taskDesc{
         margin: 0;
-        font-size: 18px;
+        font-size: 16px;
+        color: var(--c-text-secondary);
         display: -webkit-box;
         text-overflow: ellipsis;
         overflow: hidden;
@@ -99,16 +101,28 @@
         padding: 0 20px;
         border: none;
         cursor: pointer;
-        background-color: #ddd; 
+        
+        /* Modern Button Style */
+        background-color: var(--c-surface-hover); 
+        color: var(--c-text-primary);
+        border-left: 1px solid var(--border-color);
+        
         white-space: nowrap;
         position: absolute;
         right: 0;      
         top: 0;        
         height: 100%;  
         border-radius: 0; 
+        transition: background 0.2s;
+    }
+    
+    .task:hover .detailsBtn {
+        background-color: var(--c-accent);
+        color: white;
     }
 
     /* --- MOBILE TILE LAYOUT (< 530px) --- */
+    /* Preserves layout but updates colors */
     @media (max-width: 530px) {
         .task {
             flex-direction: column;
@@ -119,20 +133,20 @@
             max-height: none; 
             width: 100%; 
             min-width: 0; 
-            border: 2px solid white;
             
-            /* Inset shadow for mobile border fix */
-            box-shadow: inset 0 0 0 1px white !important; 
+            /* Update border to use variables */
+            border: 1px solid var(--border-color);
+            background-color: var(--c-surface); 
             
-            background-color: #222; 
+            box-shadow: none !important;
             cursor: pointer; 
             transform: translateZ(0); 
         }
         
-        /* Disable hover effect on mobile */
         .task:hover {
-             box-shadow: inset 0 0 0 1px white !important;
+             box-shadow: none !important;
              z-index: auto;
+             transform: none;
         }
 
         .taskImage {
@@ -152,16 +166,19 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            background-color: rgba(50, 50, 50, 0.85); 
-            backdrop-filter: blur(2px); 
+            
+            /* Dark semi-transparent background */
+            background-color: rgba(18, 18, 18, 0.85); 
+            backdrop-filter: blur(4px); 
+            
             border-radius: 0; 
             display: block;
             text-align: center;
         }
 
         .taskTitle {
-            font-size: 20px;
-            color: white;
+            font-size: 18px;
+            color: var(--c-text-primary);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;

@@ -9,7 +9,6 @@
                 type: String,
                 default: "Group Name"
             },
-            // NEW PROP: To highlight the selected group
             isActive: {
                 type: Boolean,
                 default: false
@@ -19,79 +18,120 @@
 </script>
 
 <template>
-    <!-- Add active class if selected -->
-    <div class="listGroup" :class="{ 'active-group': isActive }">
-        <img :src="url" alt="">
-        <p class="groupName">{{name}}</p>
+    <div class="listGroupWrapper">
+        <!-- The Icon Box -->
+        <div class="listGroup" :class="{ 'active-group': isActive }">
+            <img :src="url" alt="">
+        </div>
+
+        <!-- The Tooltip Bubble (Discord Style) -->
+        <div class="groupNameTooltip">
+            {{ name }}
+        </div>
     </div>
 </template>
 
 <style scoped>
-.listGroup {
-    container-type: inline-size;
-    container-name: group-item;
-
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    background-color: gray;
-    border-radius: 15px;
-    font-family: Arial, Helvetica, sans-serif;
+/* Wrapper to handle positioning */
+.listGroupWrapper {
+    position: relative;
     width: 100%;
-    margin: 10px auto;
-    height: 60px;
-    overflow: hidden;
-    transition: all 0.3s ease;
+    display: flex;
+    justify-content: center;
+    margin: 8px 0;
+}
+
+/* The Icon Container */
+.listGroup {
+    width: 50px; 
+    height: 50px;
     
-    /* Make it clickable */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    background-color: var(--c-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 50%; /* Circle by default */
+    
     cursor: pointer;
-    border: 2px solid transparent; 
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy transition */
+    position: relative;
+    z-index: 2;
 }
 
-/* Hover Effect */
-.listGroup:hover {
-    filter: brightness(1.1);
-}
-
-/* Selected State */
-.active-group {
-    background-color: #333; /* Darker background when active */
-    border-color: white;    /* Border to indicate selection */
+/* Hover Effect: Turns into a rounded square (Discord style) */
+.listGroupWrapper:hover .listGroup,
+.listGroup.active-group {
+    border-radius: 15px; /* Squircle */
+    background-color: var(--c-accent);
+    border-color: var(--c-accent);
 }
 
 .listGroup img {
-    width: 50px;
-    height: 50px;
-    aspect-ratio: 1/1;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    border-radius: 10px;
-    flex-shrink: 0;
-    margin: 5px;
-    transition: margin 0s 0s;
+    border-radius: inherit; /* Follows parent border-radius */
+    transition: border-radius 0.2s;
 }
 
-.groupName {
-    margin: 0 0 0 10px;
-    padding: 0;
-    font-size: 20px;
-    white-space: nowrap;
+/* Selected State */
+.listGroup.active-group {
+    box-shadow: 0 0 10px rgba(249, 115, 22, 0.4);
+}
+
+/* --- TOOLTIP BUBBLE --- */
+.groupNameTooltip {
+    position: absolute;
+    left: 70px; /* Push it to the right of the sidebar */
+    top: 50%;
+    transform: translateY(-50%) scale(0.9);
+    
+    background-color: black;
     color: white;
-    transition: opacity 0.2s;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    white-space: nowrap;
+    
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none; /* Mouse passes through */
+    z-index: 100;
+    
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: all 0.15s ease;
 }
 
-/* --- COLLAPSED STATE --- */
-@container group-item (max-width: 60px) {
-    .groupName {
-        display: none;
+/* Little triangle pointing to the left */
+.groupNameTooltip::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: -6px;
+    margin-top: -6px;
+    border-width: 6px 6px 6px 0;
+    border-style: solid;
+    border-color: transparent black transparent transparent;
+}
+
+/* Show Tooltip on Wrapper Hover */
+.listGroupWrapper:hover .groupNameTooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(-50%) scale(1);
+}
+
+/* --- MOBILE & TOUCH: Disable Tooltip --- */
+@media (max-width: 768px), (hover: none) {
+    .groupNameTooltip {
+        display: none !important;
     }
     
-    .listGroup {
-        padding: 0;
-    }
-
-    .listGroup img {
-        margin: auto;
-        transition: margin 0s;
+    .listGroupWrapper {
+        justify-content: center; /* Ensure centered */
     }
 }
 </style>

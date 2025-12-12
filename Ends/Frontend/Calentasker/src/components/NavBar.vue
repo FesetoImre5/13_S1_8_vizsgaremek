@@ -1,21 +1,17 @@
 <script setup>
 import { ref, computed } from 'vue';
 import UserMenu from './UserMenu.vue';
-import { useAuth } from '../composables/UseAuth'; // 1. Import Auth Composable
+import { useAuth } from '../composables/UseAuth'; 
 
-// 2. Destructure user state
 const { user } = useAuth();
-
 const isMenuOpen = ref(false);
 
-// 3. Make navLinks dynamic based on Auth state
 const navLinks = computed(() => {
     if (user.value) {
         return [
             { name: 'Tasks', path: '/tasks' }
         ];
     }
-    // If not logged in, return empty array (hides the button)
     return []; 
 });
 </script>
@@ -23,18 +19,13 @@ const navLinks = computed(() => {
 <template>
     <nav class="navbar">
         <div class="navbarContainer">
-            
             <!-- GROUP 1 (LEFT): Logo + Tasks Button -->
             <div class="navLeft">
-                <!-- LOGO -->
                 <div class="logo">
                     <router-link to="/tasks">
                         <img src="../assets/logo-with-text.svg" alt="Logo">
                     </router-link>
                 </div>
-
-                <!-- DESKTOP LINKS -->
-                <!-- This will now be empty if not logged in -->
                 <ul class="desktopLinks">
                     <li v-for="link in navLinks" :key="link.name">
                         <router-link :to="link.path" class="navButton">
@@ -49,7 +40,7 @@ const navLinks = computed(() => {
                 <UserMenu />
             </div>
 
-            <!-- HAMBURGER (Visible only on Mobile) -->
+            <!-- HAMBURGER -->
             <div class="hamburgerMenu">
                 <button 
                     class="hamburgerBtn" 
@@ -65,8 +56,6 @@ const navLinks = computed(() => {
         <div class="mobileDropdown" :class="{ 'isOpen': isMenuOpen }">
             <div class="mobileDropdownInner">
                 <ul>
-                    <!-- Mobile Navigation Links -->
-                    <!-- Will also be hidden if not logged in -->
                     <li v-for="link in navLinks" :key="link.name">
                         <router-link 
                             :to="link.path" 
@@ -76,10 +65,8 @@ const navLinks = computed(() => {
                             {{ link.name }}
                         </router-link>
                     </li>
-                    
-                    <!-- User Menu in Dropdown -->
                     <li class="mobileUserMenuWrapper">
-                         <UserMenu />
+                        <UserMenu />
                     </li>
                 </ul>
             </div>
@@ -90,14 +77,16 @@ const navLinks = computed(() => {
 <style scoped>
 /* --- CONFIGURATION --- */
 .navbar {
-    --nav-bg: #222;
-    --nav-text: #fff;
-    --accent: orangered; 
+    /* Mapping to Global Variables defined in App.vue */
+    --nav-bg: var(--c-surface);      /* Dark Gray */
+    --nav-text: var(--c-text-primary);
+    --accent: var(--c-accent);       /* Orange */
     --navbar-height: 70px;
     
     background-color: var(--nav-bg);
     color: var(--nav-text);
     height: var(--navbar-height);
+    border-bottom: 1px solid var(--border-color);
     
     position: fixed;
     top: 0;
@@ -122,14 +111,12 @@ const navLinks = computed(() => {
     gap: 30px; 
 }
 
-/* --- LOGO --- */
 .logo img {
     height: 40px;
     width: auto;
     display: block;
 }
 
-/* --- DESKTOP LINKS --- */
 .desktopLinks {
     display: flex;
     align-items: center;
@@ -144,7 +131,7 @@ const navLinks = computed(() => {
     display: block;
 }
 
-/* --- BUTTON STYLES (Tasks) --- */
+/* --- BUTTON STYLES --- */
 .navButton {
     text-decoration: none;
     color: var(--nav-text);
@@ -158,7 +145,7 @@ const navLinks = computed(() => {
 }
 
 .navButton:hover:not(.router-link-exact-active) {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--c-surface-hover);
 }
 
 .navButton.router-link-exact-active {
@@ -166,18 +153,13 @@ const navLinks = computed(() => {
     color: #fff;
     font-weight: bold;
     transform: translateY(-2px); 
-    box-shadow: 0 4px 10px rgba(255, 69, 0, 0.4);
+    box-shadow: 0 4px 10px rgba(249, 115, 22, 0.4);
 }
 
 .navButton:active,
 .navButton.router-link-exact-active:active {
     transform: translateY(0) !important; 
     filter: brightness(0.85);
-}
-
-.navButton:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
 }
 
 /* --- MOBILE STYLES --- */
@@ -188,13 +170,13 @@ const navLinks = computed(() => {
     display: block;
     padding: 1.2rem;
     text-align: center;
-    border-bottom: 1px solid #444;
+    border-bottom: 1px solid var(--border-color);
     background-color: transparent;
     transition: background-color 0.2s ease;
 }
 
 .mobileButton:hover {
-    background-color: #333;
+    background-color: var(--c-surface-hover);
 }
 
 .mobileButton.router-link-exact-active {
@@ -207,8 +189,7 @@ const navLinks = computed(() => {
 .mobileUserMenuWrapper {
     display: flex;
     justify-content: center;
-    padding: 1.2rem;
-    border-bottom: 1px solid #444;
+    border-bottom: 1px solid var(--border-color);
 }
 
 /* =========================================
@@ -236,7 +217,7 @@ const navLinks = computed(() => {
     .hamburgerIcon {
         width: 30px;
         height: 30px;
-        filter: invert(1);
+        filter: invert(1); /* Invert to make white on dark bg */
         display: block;
     }
     
@@ -264,11 +245,15 @@ const navLinks = computed(() => {
     top: var(--navbar-height);
     left: 0;
     width: 100%;
-    background-color: #2a2a2a;
+    
+    /* Dark Surface */
+    background-color: var(--nav-bg); 
+    border-bottom: 1px solid var(--border-color);
+    
     display: grid;
     grid-template-rows: 0fr;
     transition: grid-template-rows 0.3s ease-out;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
 }
 
 .mobileDropdown.isOpen {

@@ -27,30 +27,43 @@ onMounted(() => {
 </template>
 
 <style>
-/* Global resets */
+:root {
+    /* --- COLOR PALETTE FROM IMAGE --- */
+    --c-bg: #121212;          /* The Almost Black */
+    --c-surface: #1E1E1E;     /* The Dark Gray */
+    --c-surface-hover: #2D2D2D;
+    
+    --c-text-primary: #E5E7EB; /* The Light Gray */
+    --c-text-secondary: #9CA3AF;
+    
+    --c-primary: #DC2626;      /* The Red-Orange */
+    --c-primary-hover: #B91C1C;
+    
+    --c-accent: #F97316;       /* The Bright Orange */
+    
+    /* --- BORDERS & SPACING --- */
+    --border-color: #333333;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --nav-height: 70px;
+}
+
 body {
-  margin: 0; 
-  padding-top: 70px; 
-  overflow-x: hidden; /* Prevents scrollbars from flickering during animation */
-  background-color: #f8f9fa;
+    margin: 0; 
+    padding-top: var(--nav-height); 
+    overflow-x: hidden;
+    background-color: var(--c-bg); /* App is now Dark by default */
+    color: var(--c-text-primary);
+    font-family: 'Inter', Arial, sans-serif; /* Recommend importing Inter font */
 }
 
-/* --- PAGE TRANSITIONS (Matching AuthPage.vue) --- */
+/* Transitions */
+.fadeSlide-enter-active, .fadeSlide-leave-active { transition: all 0.3s ease; }
+.fadeSlide-enter-from, .fadeSlide-leave-to { opacity: 0; transform: translateY(20px); }
 
-/* 1. The Duration and Easing */
-.fadeSlide-enter-active,
-.fadeSlide-leave-active {
-    transition: all 0.4s ease;
-}
-
-/* 2. The Start/End State 
-  - Enter From: Starts invisible and 20px down
-  - Leave To: Ends invisible and 20px down
-  This creates the effect where the old page drops down/fades out, 
-  and the new page rises up/fades in. */
-.fadeSlide-enter-from,
-.fadeSlide-leave-to {
-    opacity: 0;
-    transform: translateY(20px);
-}
+/* Scrollbar Styling for modern look */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--c-bg); }
+::-webkit-scrollbar-thumb { background: var(--c-surface-hover); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--c-accent); }
 </style>

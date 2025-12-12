@@ -3,20 +3,17 @@ import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import ListTask from '../components/ListTask.vue';
 import ListGroup from '../components/ListGroup.vue';
-import TaskCalendar from '../components/TaskCalendar.vue'; // 1. Import
+import TaskCalendar from '../components/TaskCalendar.vue';
 
-// State
-const isSidebarExpanded = ref(false);
+// --- STATE ---
+// Removed "isSidebarExpanded" as we are now using a fixed "Discord-style" sidebar
 const groups = ref([]);
 const tasks = ref([]);
 const loading = ref(false);
 const selectedGroupId = ref(null);
-
-// 2. State for Hover Logic
 const hoveredTaskId = ref(null);
 
-// --- API ACTIONS ---
-
+// --- API ACTIONS (Unchanged) ---
 const fetchGroups = async () => {
     try {
         const currentUserId = parseInt(localStorage.getItem('user_id'));
@@ -32,9 +29,7 @@ const fetchTasks = async (groupId = null) => {
     loading.value = true;
     try {
         let url = 'http://127.0.0.1:8000/api/tasks/';
-        if (groupId) {
-            url += `?group=${groupId}`; 
-        }
+        if (groupId) url += `?group=${groupId}`; 
         const response = await axios.get(url);
         tasks.value = response.data;
     } catch (error) {
@@ -45,9 +40,6 @@ const fetchTasks = async (groupId = null) => {
 };
 
 // --- INTERACTION ---
-
-const toggleSidebar = () => { isSidebarExpanded.value = !isSidebarExpanded.value; };
-
 const handleGroupClick = (groupId) => {
     if (selectedGroupId.value === groupId) {
         selectedGroupId.value = null;
@@ -58,11 +50,8 @@ const handleGroupClick = (groupId) => {
     }
 };
 
-// 3. Hover Handlers
 const onTaskHover = (id) => { hoveredTaskId.value = id; };
 const onTaskLeave = () => { hoveredTaskId.value = null; };
-
-// --- HELPERS ---
 
 const getGroupUrl = (group) => {
     if (group.imageUrl) return group.imageUrl;
@@ -76,7 +65,6 @@ const getTaskUrl = (task) => {
     return 'https://placehold.co/150/gray/white?text=Task';
 };
 
-// --- INIT ---
 onMounted(() => {
     fetchGroups();
     fetchTasks(); 
@@ -87,32 +75,26 @@ onMounted(() => {
     <div>
         <div class="container-fluid pageWrapper">
             <div class="row">
-                <!-- SIDEBAR COLUMN -->
-                <div 
-                    class="col-auto sidebarCol" 
-                    :style="{ width: isSidebarExpanded ? '250px' : '80px' }"
-                >
-                    <button class="toggleBtn" @click="toggleSidebar">#</button>
-
-                    <list-group
-                        v-for="group in groups"
-                        :key="group.id"
-                        :url="getGroupUrl(group)"
-                        :name="group.groupname"
-                        :isActive="selectedGroupId === group.id"
-                        @click="handleGroupClick(group.id)"
-                    />
+                <!-- SIDEBAR COLUMN: Fixed narrow width -->
+                <div class="col-auto sidebarCol">
+                    <div class="sidebarScroll">
+                        <list-group
+                            v-for="group in groups"
+                            :key="group.id"
+                            :url="getGroupUrl(group)"
+                            :name="group.groupname"
+                            :isActive="selectedGroupId === group.id"
+                            @click="handleGroupClick(group.id)"
+                        />
+                    </div>
                 </div>
 
                 <!-- MAIN CONTENT -->
-                <div class="col" style="background-color: blue;">    
-                    <div class="taskList">
-                        <div v-if="loading" class="text-white p-3">Loading tasks...</div>
-                        <div v-else-if="tasks.length === 0" class="text-white p-3">No tasks found.</div>
+                <div class="col mainContentCol">    
+                    <div class="taskList customScroll">
+                        <div v-if="loading" class="p-3 text-white">Loading tasks...</div>
+                        <div v-else-if="tasks.length === 0" class="p-3 text-white">No tasks found.</div>
 
-                        <!-- 
-                            4. Pass ID and Listen for Hover events 
-                        -->
                         <list-task 
                             v-else
                             v-for="task in tasks"
@@ -127,11 +109,8 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <!-- 
-                    5. RIGHT COLUMN (Calendar) 
-                    Replaced the green div with TaskCalendar
-                -->
-                <div class="col-sm-4 p-0" style="background-color: #2a2a2a;">
+                <!-- RIGHT COLUMN (Calendar) -->
+                <div class="col-sm-4 p-0 d-none d-md-block" style="background-color: var(--c-surface);">
                     <TaskCalendar 
                         :tasks="tasks"
                         :hoveredTaskId="hoveredTaskId"
@@ -144,40 +123,47 @@ onMounted(() => {
 
 <style scoped>
 .sidebarCol {
-    background-color: red;
-    transition: width 0.3s ease;
-    padding: 10px;
+    width: 80px !important; /* Fixed width like Discord */
+    background-color: var(--c-surface);
+    border-right: 1px solid var(--border-color);
+    padding: 10px 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    overflow: hidden; 
+    height: calc(100vh - 70px);
+    z-index: 100; /* Ensure tooltip goes over content */
 }
 
-.toggleBtn {
-    width: 40px;
-    height: 40px;
-    margin-bottom: 10px;
-    border-radius: 50%;
-    border: none;
-    background-color: #333;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 1.2rem;
-    flex-shrink: 0;
+.sidebarScroll {
+    width: 100%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Hide scrollbar */
+    scrollbar-width: none; 
 }
-.toggleBtn:hover {
-    background-color: #444;
+.sidebarScroll::-webkit-scrollbar { display: none; }
+
+.mainContentCol {
+    background-color: var(--c-bg);
+    padding: 0 20px;
 }
 
 .taskList {
     height: calc(100vh - 70px);
     overflow-y: auto;
     padding-bottom: 20px;
+    padding-top: 20px;
 }
 
-@media (max-width: 700px) {
-    .toggleBtn { display: none; }
-    .sidebarCol { width: 80px !important; }
+/* Custom Scrollbar for task list */
+.customScroll::-webkit-scrollbar { width: 8px; }
+.customScroll::-webkit-scrollbar-thumb { background: var(--c-surface-hover); border-radius: 4px; }
+
+@media (max-width: 768px) {
+    /* On mobile, keep sidebar small or hide/show via other means. 
+       For now, 80px fits icons comfortably. */
+    .sidebarCol { width: 70px !important; }
 }
 </style>
