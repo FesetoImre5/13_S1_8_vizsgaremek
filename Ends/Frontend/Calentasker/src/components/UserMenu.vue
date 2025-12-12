@@ -85,23 +85,24 @@ const isAuthActive = (mode) => {
             </button>
 
             <!-- Dropdown Menu -->
-            <!-- :class handles the animation state -->
             <div class="dropdownMenu" :class="{ 'is-open': isOpen }">
-                
-                <!-- Inner wrapper required for the CSS Grid animation -->
                 <div class="dropdownInner">
-                    <router-link to="/profile" class="dropdownItem" @click="closeMenu">
+                    
+                    <!-- 1. LINK TO PROFILE (Default Tab) -->
+                    <router-link :to="{ path: '/profile', query: { tab: 'details' } }" class="dropdownItem" @click="closeMenu">
                         Profile
                     </router-link>
-                    <router-link to="/groups" class="dropdownItem" @click="closeMenu">
+
+                    <!-- 2. LINK TO GROUPS (Switch Tab via Query) -->
+                    <router-link :to="{ path: '/profile', query: { tab: 'groups' } }" class="dropdownItem" @click="closeMenu">
                         Groups
                     </router-link>
+
                     <div class="divider"></div>
                     <button class="dropdownItem logout" @click="handleLogout">
                         Log Out
                     </button>
                 </div>
-
             </div>
         </div>
     </div>
@@ -237,23 +238,6 @@ const isAuthActive = (mode) => {
 .dropdownItem.logout:hover { 
     background-color: #2a2a2a;  
 }
-
-/*
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-*/
 
 .divider { 
     height: 1px; 

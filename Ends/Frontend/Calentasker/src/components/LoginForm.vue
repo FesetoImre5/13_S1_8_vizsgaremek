@@ -112,7 +112,7 @@ export default {
         </div>
         <p v-if="capsLockOn" class="capsWarning">Caps Lock is ON</p>
 
-        <div class="remember"><input type="checkbox" v-model="rememberMe" /> Remember me</div>
+        <!--div class="remember"><input type="checkbox" v-model="rememberMe" /> Remember me</div-->
         <button class="primaryBtn" @click="login" :disabled="!isFormFilled">Login</button>
         <p class="switchText">No account? <span class="switch" @click="$emit('switchMode', 'register')">Register</span></p>
     </div>

@@ -1,45 +1,36 @@
 <script setup>
-import { ref, onMounted } from 'vue';
-import axios from 'axios';
-import { useRouter } from 'vue-router';
+import { ref, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router'; // 1. Import useRoute
 import { useAuth } from '../composables/UseAuth';
+import ProfileDetails from '../components/ProfileDetails.vue';
+import ProfileGroups from '../components/ProfileGroups.vue';
 
 const { logout } = useAuth();
 const router = useRouter();
+const route = useRoute(); // 2. Get current route
 
-// State
-const userData = ref(null);
-const loading = ref(true);
-const error = ref('');
+// 3. State defaults to 'details'
+const activeTab = ref('details'); 
 
-// Fetch Data
-const fetchUserProfile = async () => {
-    try {
-        const userId = localStorage.getItem('user_id');
-        if (!userId) {
-            throw new Error("User ID not found locally.");
-        }
+// 4. Watch for URL changes (handles initial load AND navigation from UserMenu)
+watch(
+    () => route.query.tab, 
+    (newTab) => {
+        // If query is 'groups', switch to groups. Otherwise default to details.
+        activeTab.value = newTab === 'groups' ? 'groups' : 'details';
+    },
+    { immediate: true } // Run immediately when page loads
+);
 
-        const response = await axios.get(`http://127.0.0.1:8000/api/users/${userId}/`);
-        userData.value = response.data;
-        console.log("User Data Loaded:", userData.value);
-
-    } catch (err) {
-        console.error(err);
-        error.value = "Failed to load user data.";
-    } finally {
-        loading.value = false;
-    }
+// 5. Helper to switch tabs by updating the URL
+const switchTab = (tabName) => {
+    router.push({ query: { tab: tabName } });
 };
 
 const handleLogout = () => {
     logout();
     router.push('/auth');
 };
-
-onMounted(() => {
-    fetchUserProfile();
-});
 </script>
 
 <template>
@@ -47,35 +38,43 @@ onMounted(() => {
         <div class="row fullHeight">
             
             <!-- LEFT SIDEBAR -->
-            <!-- Bootstrap cols kept as kebab-case -->
             <div class="col-md-3 col-lg-2 sidebar">
                 <div class="sidebarMenu">
-                    <!-- Profile Button (Active) -->
-                    <button class="sidebarBtn active">
+                    
+                    <!-- 6. Update buttons to use switchTab -->
+                    <button 
+                        class="sidebarBtn" 
+                        :class="{ 'active': activeTab === 'details' }"
+                        @click="switchTab('details')"
+                    >
                         Profile Details
                     </button>
 
-                    <!-- Groups Button -->
-                    <button class="sidebarBtn">
+                    <button 
+                        class="sidebarBtn" 
+                        :class="{ 'active': activeTab === 'groups' }"
+                        @click="switchTab('groups')"
+                    >
                         Groups
                     </button>
 
                     <div class="divider"></div>
 
-                    <!-- Log Out Button -->
                     <button class="sidebarBtn logout" @click="handleLogout">
                         Log out
                     </button>
                 </div>
             </div>
 
-            <!-- RIGHT CONTENT AREA (Empty for now) -->
+            <!-- RIGHT CONTENT AREA -->
             <div class="col-md-9 col-lg-10 contentArea">
-                <div class="emptyWorkspace">
-                    <!-- Data is loaded in 'userData' variable -->
-                    <p v-if="loading">Loading user data...</p>
-                    <p v-if="error" class="text-danger">{{ error }}</p>
-                </div>
+                <transition name="fade" mode="out-in">
+                    <keep-alive>
+                        <component 
+                            :is="activeTab === 'details' ? ProfileDetails : ProfileGroups" 
+                        />
+                    </keep-alive>
+                </transition>
             </div>
             
         </div>
@@ -83,25 +82,23 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* (Keep your existing styles) */
 .profileContainer {
-    /* Accounts for the 70px Fixed Navbar */
     height: calc(100vh - 70px);
-    background-color: #f8f9fa; 
+    background-color: #f3f4f6; 
     padding: 0;
     overflow: hidden;
 }
 
-.fullHeight {
-    height: 100%;
-}
+.fullHeight { height: 100%; }
 
-/* --- SIDEBAR STYLES --- */
 .sidebar {
     background-color: white;
     border-right: 1px solid #e5e7eb;
     padding: 20px;
     display: flex;
     flex-direction: column;
+    z-index: 10;
 }
 
 .sidebarMenu {
@@ -121,11 +118,12 @@ onMounted(() => {
     font-size: 1rem;
     transition: all 0.2s ease;
     width: 100%;
+    cursor: pointer;
 }
 
 .sidebarBtn:hover {
     background-color: #f3f4f6;
-    color: orangered; /* Accent color */
+    color: orangered;
 }
 
 .sidebarBtn.active {
@@ -135,13 +133,8 @@ onMounted(() => {
     border-left: 4px solid orangered;
 }
 
-.sidebarBtn.logout {
-    color: #dc2626; 
-}
-
-.sidebarBtn.logout:hover {
-    background-color: #fee2e2;
-}
+.sidebarBtn.logout { color: #dc2626; }
+.sidebarBtn.logout:hover { background-color: #fee2e2; }
 
 .divider {
     height: 1px;
@@ -149,21 +142,12 @@ onMounted(() => {
     margin: 10px 0;
 }
 
-/* --- CONTENT AREA --- */
 .contentArea {
-    padding: 40px;
-    overflow-y: auto; 
+    padding: 30px;
+    overflow: hidden; 
+    height: 100%;
 }
 
-.emptyWorkspace {
-    width: 100%;
-    height: 100%;
-    /* Visual guide for the empty div */
-    border: 2px dashed #e5e7eb; 
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #9ca3af;
-}
+.fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>
