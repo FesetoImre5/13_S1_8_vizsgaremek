@@ -13,11 +13,13 @@ const router = useRouter();
 const groups = ref([]);
 const tasks = ref([]);
 const loading = ref(false);
+
 const selectedGroupId = ref(null);
 const hoveredTaskId = ref(null);
+const selectedTaskId = ref(null);
+const isCalendarModalOpen = ref(false);
 
 // --- API ACTIONS ---
-
 const fetchGroups = async () => {
     try {
         const currentUserId = parseInt(localStorage.getItem('user_id'));
@@ -25,13 +27,9 @@ const fetchGroups = async () => {
         const myMemberships = response.data.filter(item => item.user_detail.id === currentUserId);
         groups.value = myMemberships.map(item => item.group_detail);
 
-        // --- FIX 1: AUTO-SELECT FIRST GROUP ---
-        // If there are groups, and NO group is currently selected in the URL...
         if (groups.value.length > 0 && !route.query.group) {
-            // ...select the first one automatically.
             handleGroupClick(groups.value[0].id);
         }
-
     } catch (error) {
         console.error("Failed to load groups", error);
     }
@@ -52,30 +50,18 @@ const fetchTasks = async (groupId = null) => {
 };
 
 // --- INTERACTION ---
-
 const handleGroupClick = (groupId) => {
-    // Note: We intentionally allow clicking the same group again to keep it selected
-    // or switch to a new one. We only clear if you want a specific "deselect" feature,
-    // but usually, in this layout, one group is always active.
-    
     router.push({ query: { ...route.query, group: groupId } });
 };
 
-// Watch URL changes
 watch(
     () => route.query.group,
     (newGroupId) => {
-        // If URL has an ID, use it.
         if (newGroupId) {
             selectedGroupId.value = newGroupId;
             fetchTasks(newGroupId);
-        } 
-        // If URL is empty, we handle that in fetchGroups (initial load) 
-        // or let it sit empty if you prefer.
-        else {
+        } else {
             selectedGroupId.value = null;
-            // Optional: If you want to show ALL tasks when nothing is selected:
-            // fetchTasks(null); 
         }
     },
     { immediate: true } 
@@ -84,8 +70,24 @@ watch(
 const onTaskHover = (id) => { hoveredTaskId.value = id; };
 const onTaskLeave = () => { hoveredTaskId.value = null; };
 
-// --- HELPERS ---
+const onTaskSelect = (id) => {
+    const width = window.innerWidth;
+    if (width > 530 && width <= 1300) {
+        if (selectedTaskId.value === id) {
+            selectedTaskId.value = null;
+        } else {
+            selectedTaskId.value = id;
+        }
+    }
+};
 
+const toggleCalendarModal = () => {
+    isCalendarModalOpen.value = !isCalendarModalOpen.value;
+};
+
+const goToDetails = () => { console.log("Details clicked"); };
+
+// --- HELPERS ---
 const getGroupUrl = (group) => {
     if (group.imageUrl) return group.imageUrl;
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(group.groupname)}&background=random&color=fff&size=128`;
@@ -98,147 +100,230 @@ const getTaskUrl = (task) => {
     return 'https://placehold.co/150/gray/white?text=Task';
 };
 
-// --- INIT ---
 onMounted(() => {
     fetchGroups();
 });
 </script>
 
 <template>
-    <div>
-        <div class="container-fluid pageWrapper">
-            <!-- 
-                FIX 2: Added 'full-height-row' class to ensure 
-                the columns stretch to the bottom 
-            -->
-            <div class="row full-height-row">
-                
-                <!-- SIDEBAR COLUMN -->
-                <div class="col-auto sidebarCol">
-                    <div class="sidebarScroll">
-                        <list-group
-                            v-for="group in groups"
-                            :key="group.id"
-                            :url="getGroupUrl(group)"
-                            :name="group.groupname"
-                            :isActive="selectedGroupId == group.id"
-                            @click="handleGroupClick(group.id)"
-                        />
-                    </div>
-                </div>
-
-                <!-- MAIN CONTENT -->
-                <div class="col mainContentCol">    
-                    <div class="taskList customScroll">
-                        <div v-if="loading" class="p-3 text-white">Loading tasks...</div>
-                        <div v-else-if="tasks.length === 0" class="p-3 text-white">No tasks found.</div>
-
-                        <list-task 
-                            v-else
-                            v-for="task in tasks"
-                            :key="task.id"
-                            :id="task.id"
-                            :url="getTaskUrl(task)"
-                            :title="task.title"
-                            :desc="task.description"
-                            @hover="onTaskHover"
-                            @leave="onTaskLeave"
-                        />
-                    </div>
-                </div>
-
-                <!-- RIGHT COLUMN (Calendar) -->
-                <!-- Added specific background class here to ensure full height color -->
-                <div class="col-sm-4 p-0 d-none d-md-block calendarCol">
-                    <TaskCalendar 
-                        :tasks="tasks"
-                        :hoveredTaskId="hoveredTaskId"
+    <div class="page-container">
+        <!-- CUSTOM GRID LAYOUT -->
+        <div class="layout-grid">
+            
+            <!-- COLUMN 1: SIDEBAR -->
+            <div class="sidebar-area">
+                <div class="sidebar-scroll">
+                    <list-group
+                        v-for="group in groups"
+                        :key="group.id"
+                        :url="getGroupUrl(group)"
+                        :name="group.groupname"
+                        :isActive="selectedGroupId == group.id"
+                        @click="handleGroupClick(group.id)"
                     />
                 </div>
+            </div>
+
+            <!-- COLUMN 2: TASKS -->
+            <div class="tasks-area">    
+                <div class="task-scroll custom-scroll">
+                    <div v-if="loading" style="padding: 20px; color:white;">Loading tasks...</div>
+                    <div v-else-if="tasks.length === 0" style="padding: 20px; color:white;">No tasks found.</div>
+
+                    <list-task 
+                        v-else
+                        v-for="task in tasks"
+                        :key="task.id"
+                        :id="task.id"
+                        :url="getTaskUrl(task)"
+                        :title="task.title"
+                        :desc="task.description"
+                        :isSelected="selectedTaskId === task.id"
+                        @hover="onTaskHover"
+                        @leave="onTaskLeave"
+                        @select="onTaskSelect"
+                        @click="goToDetails"
+                    />
+                </div>
+            </div>
+
+            <!-- COLUMN 3: CALENDAR (Desktop) -->
+            <div class="calendar-area">
+                <TaskCalendar 
+                    :tasks="tasks"
+                    :hoveredTaskId="hoveredTaskId"
+                />
+            </div>
+        </div>
+
+        <!-- FLOATING BUTTON -->
+        <button class="calendar-fab" @click="toggleCalendarModal">
+            #
+        </button>
+
+        <!-- MODAL OVERLAY -->
+        <div v-if="isCalendarModalOpen" class="modal-overlay" @click.self="isCalendarModalOpen = false">
+            <div class="modal-content">
+                <TaskCalendar 
+                    :tasks="tasks"
+                    :hoveredTaskId="selectedTaskId"
+                />
             </div>
         </div>
     </div>
 </template>
 
 <style scoped>
-/* FIX 2: Layout Structure */
+* { box-sizing: border-box; }
 
-/* 1. Define the viewport height minus navbar */
-.pageWrapper {
+.page-container {
     height: calc(100vh - 70px);
+    width: 100%;
     overflow: hidden;
-    padding: 0;
-    margin: 0;
     background-color: var(--c-bg);
+    position: relative;
 }
 
-/* 2. Force the Bootstrap row to take full height */
-.full-height-row {
+/* GRID LAYOUT */
+.layout-grid {
+    display: grid;
+    grid-template-columns: 80px 1fr 450px;
     height: 100%;
-    margin: 0; /* remove default negative margins */
+    width: 100%;
 }
 
-/* --- SIDEBAR --- */
-.sidebarCol {
-    width: 80px !important;
-    background-color: var(--c-surface); /* Background applied to column */
+/* SIDEBAR AREA */
+.sidebar-area {
+    background-color: var(--c-surface);
     border-right: 1px solid var(--border-color);
     padding: 10px 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    height: 100%; /* Fill the row */
     z-index: 100;
 }
 
-.sidebarScroll {
+.sidebar-scroll {
     width: 100%;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     align-items: center;
-    scrollbar-width: none; 
+    scrollbar-width: none;
 }
-.sidebarScroll::-webkit-scrollbar { display: none; }
+.sidebar-scroll::-webkit-scrollbar { display: none; }
 
-/* --- MAIN CONTENT --- */
-.mainContentCol {
-    background-color: var(--c-bg); /* Background applied to column */
+/* TASKS AREA */
+.tasks-area {
+    background-color: var(--c-bg);
     padding: 0 20px;
-    height: 100%; /* Fill the row */
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
-.taskList {
-    flex-grow: 1; /* Take available space */
+.task-scroll {
+    flex-grow: 1;
     overflow-y: auto;
     padding-bottom: 20px;
     padding-top: 20px;
-    height: 100%;
 }
 
-/* --- CALENDAR COLUMN --- */
-.calendarCol {
-    background-color: var(--c-surface); /* Background applied to column */
-    height: 100%; /* Fill the row */
+/* CALENDAR AREA (Right Column) */
+.calendar-area {
+    background-color: var(--c-surface);
     border-left: 1px solid var(--border-color);
-    overflow: hidden; /* Calendar component handles its own scrolling if needed */
+    display: block; 
 }
 
-/* Custom Scrollbar */
-.customScroll::-webkit-scrollbar { width: 8px; }
-.customScroll::-webkit-scrollbar-thumb { 
+/* SCROLLBAR */
+.custom-scroll::-webkit-scrollbar { width: 8px; }
+.custom-scroll::-webkit-scrollbar-thumb { 
     background: var(--c-surface-hover); 
     border-radius: 4px; 
 }
-.customScroll::-webkit-scrollbar-thumb:hover { 
+.custom-scroll::-webkit-scrollbar-thumb:hover { 
     background: var(--c-accent); 
 }
 
-/* --- RESPONSIVE --- */
-@media (max-width: 768px) {
-    .sidebarCol { width: 70px !important; }
-    .mainContentCol { padding: 0 10px; }
+/* FLOATING ACTION BUTTON */
+.calendar-fab {
+    position: fixed;
+    bottom: 30px;
+    right: 30px; 
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: var(--c-accent);
+    color: white;
+    font-size: 2rem;
+    font-weight: bold;
+    border: none;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    cursor: pointer;
+    z-index: 900;
+    display: none; 
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+}
+
+.calendar-fab:hover {
+    transform: scale(1.1);
+    background-color: var(--c-primary);
+}
+
+/* MODAL */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(5px);
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease;
+}
+
+.modal-content {
+    width: 90%;
+    max-width: 900px;
+    /* UPDATED: Height is auto so it shrinks to fit the calendar */
+    height: auto;
+    max-height: 90vh; /* Safety limit */
+    
+    background-color: var(--c-surface);
+    border-radius: 15px;
+    padding: 0; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* RESPONSIVE BREAKPOINTS */
+@media (max-width: 1300px) {
+    .layout-grid {
+        grid-template-columns: 80px 1fr;
+    }
+    .calendar-area { display: none; }
+    .calendar-fab { display: flex; }
+}
+
+@media (max-width: 530px) {
+    .layout-grid {
+        grid-template-columns: 70px 1fr;
+    }
+    .calendar-area { display: none; }
+    .tasks-area { padding: 0 10px; }
+    .calendar-fab { display: none; }
 }
 </style>

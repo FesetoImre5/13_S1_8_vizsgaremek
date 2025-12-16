@@ -111,78 +111,75 @@ const getDayStatus = (dateStr) => {
 </template>
 
 <style scoped>
+* {
+    box-sizing: border-box;
+}
+
 .calendarContainer {
     background-color: var(--c-surface);
     padding: 20px;
-    height: 100%;
-    /* Flex to allow centering the grid vertically if needed */
+    /* UPDATED: Fit content height instead of forcing 100% */
+    height: fit-content;
+    width: 100%;
     display: flex;
     flex-direction: column;
 }
 
+.calendarHeader {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+}
+
 .calendarHeader h3 {
     text-align: center;
-    margin-bottom: 20px;
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     color: var(--c-accent);
-    font-weight: bold;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: 1px;
 }
 
 /* 
-   GRID LAYOUT & BREAKPOINTS 
-   This grid uses 'repeat(7, 1fr)' but the boxes won't grow infinitely 
-   because we constrain the Width of the container in steps.
+   GRID LAYOUT 
 */
 .calendarGrid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 8px;
-    
-    /* Center the grid horizontally */
-    margin: 0 auto;
+    gap: 8px; 
     width: 100%;
-    
-    /* 1. Base Size (Mobile/Small Tablets) */
-    max-width: 300px; 
-}
-
-/* 2. Medium Screen Breakpoint */
-@media (min-width: 1200px) {
-    .calendarGrid {
-        max-width: 380px; 
-    }
-}
-
-/* 3. Large Screen Breakpoint */
-@media (min-width: 1600px) {
-    .calendarGrid {
-        max-width: 450px; 
-    }
+    max-width: 600px; 
+    margin: 0 auto;
 }
 
 .weekday {
     text-align: center;
-    font-size: 0.85rem;
+    font-size: 1rem;
     color: var(--c-text-secondary);
-    margin-bottom: 5px;
+    margin-bottom: 8px;
     text-transform: uppercase;
     font-weight: bold;
+    letter-spacing: 1px;
 }
 
 .daySquare {
     aspect-ratio: 1/1;
     background-color: #333; 
-    border-radius: 6px;
+    border-radius: 8px; 
+    
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 0.9rem;
+    
+    font-size: 1.2rem;
+    font-weight: 600;
+    
     position: relative;
     color: var(--c-text-primary);
-    
     border-bottom: 4px solid #222; 
+    
     transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
-    /* REMOVED: transform transition to stop expanding size */
+    user-select: none;
 }
 
 .daySquare.empty {
@@ -191,35 +188,24 @@ const getDayStatus = (dateStr) => {
     pointer-events: none;
 }
 
-/* --- STATE 1: TODAY (Standard) --- */
 .daySquare.isToday {
-    /* Thin white border */
     box-shadow: inset 0 0 0 2px white; 
-    font-weight: bold;
+    font-weight: 800;
     color: white;
 }
 
-/* --- STATE 2: TASK EXISTS (Not Hovered) --- */
 .daySquare.lineOrange {
     border-bottom-color: var(--c-accent);
 }
 
-/* --- STATE 3: HOVERED TASK --- */
 .daySquare.highlighted {
     background-color: var(--c-accent);      
     border-bottom-color: var(--c-primary); 
     color: white;
-    font-weight: bold;
-    /* REMOVED: transform: scale(1.1) */
+    font-weight: 800;
 }
 
-/* --- STATE 4: HOVERED TASK + IS TODAY (The specific request) --- */
-/* This specific combo needs to make the white border thicker */
 .daySquare.highlighted.isToday {
-    /* 
-       1. Highlighted background (Orange)
-       2. Thicker White Inset Border (4px)
-    */
     background-color: var(--c-accent);
     box-shadow: inset 0 0 0 4px white; 
 }

@@ -4,24 +4,30 @@
             id: { type: [Number, String], required: true },
             url: { type: String, default: "" },
             title: { type: String, default: "" },
-            desc: { type: String, default: "" }
+            desc: { type: String, default: "" },
+            // Prop to show visual selection state
+            isSelected: { type: Boolean, default: false }
         },
-        emits: ['click', 'hover', 'leave'] 
+        // Added 'select' emitter
+        emits: ['click', 'hover', 'leave', 'select'] 
     }
 </script>
 
 <template>
     <div 
         class="task"
+        :class="{ 'selected-task': isSelected }"
         @mouseenter="$emit('hover', id)"
         @mouseleave="$emit('leave')"
+        @click="$emit('select', id)"
     >
         <img :src="url" alt="" class="taskImage">
         
         <div class="taskText">
             <h2 class="taskTitle">{{title}}</h2>
             <p class="taskDesc">{{ desc }}</p>
-            <button class="detailsBtn" @click="$emit('click')">Details</button>
+            <!-- .stop prevents the selection click from firing when clicking Details -->
+            <button class="detailsBtn" @click.stop="$emit('click')">Details</button>
         </div>
     </div>
 </template>
@@ -31,14 +37,12 @@
     .task {
         display: flex;
         flex-direction: row;
-        
-        /* MODERN THEME */
         background-color: var(--c-surface);
         border: 1px solid var(--border-color);
         color: var(--c-text-primary);
         border-radius: var(--radius-md);
         
-        font-family: Arial, Helvetica, sans-serif; /* Can swap to 'Inter' if imported global */
+        font-family: Arial, Helvetica, sans-serif;
         width: 100%;
         margin: 10px 0;
         max-height: 145px;
@@ -46,9 +50,15 @@
         position: relative; 
         overflow: hidden; 
         transition: all 0.2s ease;
+        cursor: pointer; /* Clickable for selection */
     }
 
-    /* Hover: Use accent color for the inset shadow */
+    /* Selected State (Visual feedback) */
+    .selected-task {
+        border-color: var(--c-accent);
+        box-shadow: 0 0 0 1px var(--c-accent);
+    }
+
     .task:hover {
         transform: translateY(-2px);
         box-shadow: inset 0 0 0 2px var(--c-accent); 
@@ -64,7 +74,7 @@
         flex-shrink: 0;
         border-radius: 8px;
         align-self: center;
-        background-color: var(--c-bg); /* Darker placeholder bg */
+        background-color: var(--c-bg);
     }
 
     .taskText {
@@ -101,12 +111,9 @@
         padding: 0 20px;
         border: none;
         cursor: pointer;
-        
-        /* Modern Button Style */
         background-color: var(--c-surface-hover); 
         color: var(--c-text-primary);
         border-left: 1px solid var(--border-color);
-        
         white-space: nowrap;
         position: absolute;
         right: 0;      
@@ -122,7 +129,6 @@
     }
 
     /* --- MOBILE TILE LAYOUT (< 530px) --- */
-    /* Preserves layout but updates colors */
     @media (max-width: 530px) {
         .task {
             flex-direction: column;
@@ -133,20 +139,17 @@
             max-height: none; 
             width: 100%; 
             min-width: 0; 
-            
-            /* Update border to use variables */
             border: 1px solid var(--border-color);
             background-color: var(--c-surface); 
-            
             box-shadow: none !important;
             cursor: pointer; 
             transform: translateZ(0); 
         }
         
         .task:hover {
-             box-shadow: none !important;
-             z-index: auto;
-             transform: none;
+            box-shadow: none !important;
+            z-index: auto;
+            transform: none;
         }
 
         .taskImage {
@@ -166,11 +169,8 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            
-            /* Dark semi-transparent background */
             background-color: rgba(18, 18, 18, 0.85); 
             backdrop-filter: blur(4px); 
-            
             border-radius: 0; 
             display: block;
             text-align: center;
