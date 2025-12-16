@@ -88,11 +88,11 @@ const getDayStatus = (dateStr) => {
             <h3>{{ monthNames[currentMonth] }} {{ currentYear }}</h3>
         </div>
 
-        <div class="calendarGrid headers">
+        <div class="calendarGrid">
+            <!-- Headers -->
             <div v-for="day in daysOfWeek" :key="day" class="weekday">{{ day }}</div>
-        </div>
-
-        <div class="calendarGrid body">
+            
+            <!-- Days -->
             <div 
                 v-for="day in calendarDays" 
                 :key="day.id"
@@ -112,82 +112,115 @@ const getDayStatus = (dateStr) => {
 
 <style scoped>
 .calendarContainer {
-    background-color: #2a2a2a;
+    background-color: var(--c-surface);
     padding: 20px;
-    border-radius: 0 0 15px 15px;
-    color: white;
     height: 100%;
+    /* Flex to allow centering the grid vertically if needed */
+    display: flex;
+    flex-direction: column;
 }
 
 .calendarHeader h3 {
     text-align: center;
     margin-bottom: 20px;
     font-size: 1.5rem;
-    color: orangered;
+    color: var(--c-accent);
     font-weight: bold;
 }
 
+/* 
+   GRID LAYOUT & BREAKPOINTS 
+   This grid uses 'repeat(7, 1fr)' but the boxes won't grow infinitely 
+   because we constrain the Width of the container in steps.
+*/
 .calendarGrid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 8px;
+    
+    /* Center the grid horizontally */
+    margin: 0 auto;
+    width: 100%;
+    
+    /* 1. Base Size (Mobile/Small Tablets) */
+    max-width: 300px; 
+}
+
+/* 2. Medium Screen Breakpoint */
+@media (min-width: 1200px) {
+    .calendarGrid {
+        max-width: 380px; 
+    }
+}
+
+/* 3. Large Screen Breakpoint */
+@media (min-width: 1600px) {
+    .calendarGrid {
+        max-width: 450px; 
+    }
 }
 
 .weekday {
     text-align: center;
-    font-size: 0.8rem;
-    color: #888;
+    font-size: 0.85rem;
+    color: var(--c-text-secondary);
     margin-bottom: 5px;
     text-transform: uppercase;
+    font-weight: bold;
 }
 
 .daySquare {
     aspect-ratio: 1/1;
-    background-color: #444; 
+    background-color: #333; 
     border-radius: 6px;
     display: flex;
     justify-content: center;
     align-items: center;
     font-size: 0.9rem;
     position: relative;
+    color: var(--c-text-primary);
     
-    border-bottom: 4px solid #333; 
-    transition: all 0.2s ease;
+    border-bottom: 4px solid #222; 
+    transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+    /* REMOVED: transform transition to stop expanding size */
 }
 
 .daySquare.empty {
     background-color: transparent;
     border-bottom: none;
+    pointer-events: none;
 }
 
-/* 
-   TODAY STATE
-   Uses box-shadow instead of border so it doesn't conflict with the bottom orange line
-*/
+/* --- STATE 1: TODAY (Standard) --- */
 .daySquare.isToday {
-    box-shadow: inset 0 0 0 2px white; /* Inner white border */
+    /* Thin white border */
+    box-shadow: inset 0 0 0 2px white; 
     font-weight: bold;
     color: white;
 }
 
-/* Task exists, not hovering specific one */
+/* --- STATE 2: TASK EXISTS (Not Hovered) --- */
 .daySquare.lineOrange {
-    border-bottom-color: orange;
+    border-bottom-color: var(--c-accent);
 }
 
-/* Hovering specific task */
+/* --- STATE 3: HOVERED TASK --- */
 .daySquare.highlighted {
-    background-color: orange;      
-    border-bottom-color: orangered; 
+    background-color: var(--c-accent);      
+    border-bottom-color: var(--c-primary); 
     color: white;
     font-weight: bold;
-    transform: scale(1.1);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3); /* Outer shadow for depth */
-    z-index: 10;
+    /* REMOVED: transform: scale(1.1) */
 }
 
-/* If Today IS highlighted, combine shadows cleanly */
+/* --- STATE 4: HOVERED TASK + IS TODAY (The specific request) --- */
+/* This specific combo needs to make the white border thicker */
 .daySquare.highlighted.isToday {
-    box-shadow: inset 0 0 0 2px white, 0 4px 10px rgba(0,0,0,0.3);
+    /* 
+       1. Highlighted background (Orange)
+       2. Thicker White Inset Border (4px)
+    */
+    background-color: var(--c-accent);
+    box-shadow: inset 0 0 0 4px white; 
 }
 </style>
