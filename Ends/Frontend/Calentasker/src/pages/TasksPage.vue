@@ -72,7 +72,18 @@ const onTaskLeave = () => { hoveredTaskId.value = null; };
 
 const onTaskSelect = (id) => {
     const width = window.innerWidth;
+    
+    // Mobile (< 530px): Do nothing (calendar disabled)
+    if (width <= 530) return;
+
+    // Tablet (530px - 1300px): Open calendar modal
     if (width > 530 && width <= 1300) {
+        selectedTaskId.value = id;
+        isCalendarModalOpen.value = true;
+    }
+    
+    // Desktop (> 1300px): Just select (highlight logic handled by hover, but we keep state)
+    if (width > 1300) {
         if (selectedTaskId.value === id) {
             selectedTaskId.value = null;
         } else {
@@ -126,14 +137,23 @@ onMounted(() => {
 
             <!-- COLUMN 2: TASKS -->
             <div class="tasks-area">    
+                <div class="stickyHeader">
+                    <h2 style="margin:0; font-size:1.5rem; color:var(--c-text-primary);">Tasks</h2>
+                </div>
                 <div class="task-scroll custom-scroll">
-                    <div v-if="loading" style="padding: 20px; color:white;">Loading tasks...</div>
+                    <div v-if="loading" style="padding: 20px;">
+                        <div class="skeleton" style="height: 100px; width: 100%; margin-bottom: 15px;"></div>
+                        <div class="skeleton" style="height: 100px; width: 100%; margin-bottom: 15px;"></div>
+                        <div class="skeleton" style="height: 100px; width: 100%; margin-bottom: 15px;"></div>
+                    </div>
                     <div v-else-if="tasks.length === 0" style="padding: 20px; color:white;">No tasks found.</div>
 
                     <list-task 
                         v-else
-                        v-for="task in tasks"
+                        v-for="(task, index) in tasks"
                         :key="task.id"
+                        class="fade-in-item"
+                        :style="{ animationDelay: `${index * 50}ms` }"
                         :id="task.id"
                         :url="getTaskUrl(task)"
                         :title="task.title"
@@ -163,7 +183,7 @@ onMounted(() => {
 
         <!-- MODAL OVERLAY -->
         <div v-if="isCalendarModalOpen" class="modal-overlay" @click.self="isCalendarModalOpen = false">
-            <div class="modal-content">
+            <div class="modalContent">
                 <TaskCalendar 
                     :tasks="tasks"
                     :hoveredTaskId="selectedTaskId"
@@ -289,7 +309,7 @@ onMounted(() => {
     animation: fadeIn 0.2s ease;
 }
 
-.modal-content {
+.modalContent {
     width: 90%;
     max-width: 900px;
     /* UPDATED: Height is auto so it shrinks to fit the calendar */
@@ -302,6 +322,19 @@ onMounted(() => {
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     border: 1px solid var(--border-color);
     overflow: hidden;
+}
+
+.stickyHeader {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(18, 18, 18, 0.85); /* Semi-transparent */
+    backdrop-filter: blur(12px);        /* Blur effect */
+    border-bottom: 1px solid var(--border-color);
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 @keyframes fadeIn {
@@ -325,5 +358,39 @@ onMounted(() => {
     .calendar-area { display: none; }
     .tasks-area { padding: 0 10px; }
     .calendar-fab { display: none; }
+    
+    .modalContent {
+        width: 100%;
+        height: auto;
+        max-height: 85vh;
+        border-radius: 24px 24px 0 0; /* Round top only */
+        position: fixed;
+        bottom: 0;
+        top: auto;
+        border-bottom: none;
+        animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+/* FADE IN ANIMATION */
+.fade-in-item {
+    opacity: 0;
+    animation: fadeInTask 0.4s ease forwards;
+}
+
+@keyframes fadeInTask {
+    from { 
+        opacity: 0; 
+        transform: translateY(10px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
 }
 </style>

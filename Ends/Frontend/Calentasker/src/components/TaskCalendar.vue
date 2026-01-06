@@ -53,32 +53,15 @@ const calendarDays = computed(() => {
     return days;
 });
 
-const getDayStatus = (dateStr) => {
-    let dayHasTask = false;       
-    let dayIsHovered = false;     
-    const isHoveringAny = props.hoveredTaskId !== null;
-
-    for (const task of props.tasks) {
-        if (!task.created_at && !task.start_date) continue;
-
+const getDayTasks = (dateStr) => {
+    return props.tasks.filter(task => {
+        if (!task.created_at && !task.start_date) return false;
         const rawStart = task.start_date || task.created_at;
         const rawEnd = task.due_date || task.start_date || task.created_at;
-
         const start = rawStart.substring(0, 10);
         const end = rawEnd.substring(0, 10);
-
-        if (dateStr >= start && dateStr <= end) {
-            dayHasTask = true;
-            if (props.hoveredTaskId === task.id) {
-                dayIsHovered = true;
-            }
-        }
-    }
-
-    return {
-        isHighlighted: dayIsHovered, 
-        hasOrangeLine: dayHasTask && !isHoveringAny 
-    };
+        return dateStr >= start && dateStr <= end;
+    });
 };
 </script>
 
@@ -99,12 +82,18 @@ const getDayStatus = (dateStr) => {
                 class="daySquare"
                 :class="{ 
                     'empty': day.isEmpty,
-                    'isToday': day.isToday, 
-                    'lineOrange': !day.isEmpty && getDayStatus(day.dateStr).hasOrangeLine,
-                    'highlighted': !day.isEmpty && getDayStatus(day.dateStr).isHighlighted
+                    'isToday': day.isToday
                 }"
             >
                 <span v-if="!day.isEmpty">{{ day.dayNum }}</span>
+                <!-- Dots Heatmap -->
+                <div v-if="!day.isEmpty" class="dotContainer">
+                    <div 
+                        v-for="task in getDayTasks(day.dateStr).slice(0, 4)" 
+                        :key="task.id" 
+                        class="dot"
+                    ></div>
+                </div>
             </div>
         </div>
     </div>
@@ -170,13 +159,14 @@ const getDayStatus = (dateStr) => {
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-direction: column; /* Allow stacking number and dots */
     
     font-size: 1.2rem;
     font-weight: 600;
     
     position: relative;
     color: var(--c-text-primary);
-    border-bottom: 4px solid #222; 
+    border: 1px solid transparent;
     
     transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
     user-select: none;
@@ -184,7 +174,7 @@ const getDayStatus = (dateStr) => {
 
 .daySquare.empty {
     background-color: transparent;
-    border-bottom: none;
+    border: none;
     pointer-events: none;
 }
 
@@ -194,19 +184,19 @@ const getDayStatus = (dateStr) => {
     color: white;
 }
 
-.daySquare.lineOrange {
-    border-bottom-color: var(--c-accent);
+/* Heatmap Dots */
+.dotContainer {
+    position: absolute;
+    bottom: 6px;
+    display: flex;
+    gap: 3px;
 }
 
-.daySquare.highlighted {
-    background-color: var(--c-accent);      
-    border-bottom-color: var(--c-primary); 
-    color: white;
-    font-weight: 800;
-}
-
-.daySquare.highlighted.isToday {
+.dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
     background-color: var(--c-accent);
-    box-shadow: inset 0 0 0 4px white; 
+    opacity: 0.8;
 }
 </style>

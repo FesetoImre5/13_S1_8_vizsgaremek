@@ -29,7 +29,7 @@
             <div class="cardHeader">
                 <h3 class="cardTitle">{{ title }}</h3>
                 <!-- Mock Badge -->
-                <span class="badge priorityHigh">High Priority</span>
+                <span class="statusPill">High Priority</span>
             </div>
             
             <p class="cardDesc">{{ desc || "No description provided." }}</p>
@@ -83,9 +83,10 @@
 }
 
 .taskCard.isSelected {
-    border-color: var(--c-accent);
-    box-shadow: inset 0 0 0 1px var(--c-accent);
-    background-color: rgba(249, 115, 22, 0.05); 
+    /* No outline/color change for selected state as requested */
+    /* border-color: var(--c-accent); */
+    /* box-shadow: inset 0 0 0 1px var(--c-accent); */
+    /* background-color: rgba(249, 115, 22, 0.05); */
 }
 
 /* --- IMAGE --- */
@@ -126,18 +127,20 @@
     line-height: 1.2;
 }
 
-/* Badge Style */
-.badge {
-    font-size: 0.7rem;
-    font-weight: 800;
-    text-transform: uppercase;
+/* Status Pill */
+.statusPill {
+    display: inline-flex;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
     letter-spacing: 0.5px;
-    padding: 2px 8px;
-    border-radius: 6px;
-}
-.badge.priorityHigh {
-    background-color: rgba(220, 38, 38, 0.2); 
-    color: #ef4444;
+    text-transform: uppercase;
+    
+    /* Orange Style */
+    background: rgba(249, 115, 22, 0.15);
+    color: var(--c-accent);
+    border: 1px solid rgba(249, 115, 22, 0.3);
 }
 
 .cardDesc {
