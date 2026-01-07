@@ -159,6 +159,8 @@ onMounted(() => {
                         :title="task.title"
                         :desc="task.description"
                         :isSelected="selectedTaskId === task.id"
+                        :priority="task.priority"
+                        :dueDate="task.due_date"
                         @hover="onTaskHover"
                         @leave="onTaskLeave"
                         @select="onTaskSelect"
@@ -236,7 +238,7 @@ onMounted(() => {
 /* TASKS AREA */
 .tasks-area {
     background-color: var(--c-bg);
-    padding: 0 20px;
+    padding: 0; /* REMOVED padding: 0 20px to let scrollbar sit at edge/prevent clipping */
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -245,8 +247,7 @@ onMounted(() => {
 .task-scroll {
     flex-grow: 1;
     overflow-y: auto;
-    padding-bottom: 20px;
-    padding-top: 20px;
+    padding: 20px; /* Added full padding here (top/bottom/left/right) */
 }
 
 /* CALENDAR AREA (Right Column) */

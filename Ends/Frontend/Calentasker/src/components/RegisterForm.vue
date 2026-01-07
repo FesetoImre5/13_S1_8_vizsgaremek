@@ -175,87 +175,89 @@ export default {
     <div class="authCard">
         <h2 class="title">Register</h2>
 
-        <!-- First Name Input Group -->
-        <p v-if="firstNameError" class="errorMessage">{{ firstNameError }}</p>
-        <div class="inputGroup" :class="{ 'is-active': firstName || isFirstNameFocused }">
-            <input 
-                v-model="firstName" 
-                type="text" 
-                @input="firstNameError = ''" 
-                @focus="isFirstNameFocused = true" 
-                @blur="handleFirstNameBlur" 
-            />
-            <label>First Name</label>
-        </div>
+        <form @submit.prevent="register">
+            <!-- First Name Input Group -->
+            <p v-if="firstNameError" class="errorMessage">{{ firstNameError }}</p>
+            <div class="inputGroup" :class="{ 'is-active': firstName || isFirstNameFocused }">
+                <input 
+                    v-model="firstName" 
+                    type="text" 
+                    @input="firstNameError = ''" 
+                    @focus="isFirstNameFocused = true" 
+                    @blur="handleFirstNameBlur" 
+                />
+                <label>First Name</label>
+            </div>
 
-        <!-- Last Name Input Group -->
-        <p v-if="lastNameError" class="errorMessage">{{ lastNameError }}</p>
-        <div class="inputGroup" :class="{ 'is-active': lastName || isLastNameFocused }">
-            <input 
-                v-model="lastName" 
-                type="text" 
-                @input="lastNameError = ''" 
-                @focus="isLastNameFocused = true" 
-                @blur="handleLastNameBlur" 
-            />
-            <label>Last Name</label>
-        </div>
+            <!-- Last Name Input Group -->
+            <p v-if="lastNameError" class="errorMessage">{{ lastNameError }}</p>
+            <div class="inputGroup" :class="{ 'is-active': lastName || isLastNameFocused }">
+                <input 
+                    v-model="lastName" 
+                    type="text" 
+                    @input="lastNameError = ''" 
+                    @focus="isLastNameFocused = true" 
+                    @blur="handleLastNameBlur" 
+                />
+                <label>Last Name</label>
+            </div>
 
-        <!-- Email Input Group -->
-        <p v-if="emailError" class="errorMessage">{{ emailError }}</p>
-        <div class="inputGroup" :class="{ 'is-active': email || isEmailFocused }">
-            <input 
-                v-model="email" 
-                type="email" 
-                @input="emailError = ''" 
-                @focus="isEmailFocused = true" 
-                @blur="handleEmailBlur" 
-            />
-            <label>Email</label>
-        </div>
+            <!-- Email Input Group -->
+            <p v-if="emailError" class="errorMessage">{{ emailError }}</p>
+            <div class="inputGroup" :class="{ 'is-active': email || isEmailFocused }">
+                <input 
+                    v-model="email" 
+                    type="email" 
+                    @input="emailError = ''" 
+                    @focus="isEmailFocused = true" 
+                    @blur="handleEmailBlur" 
+                />
+                <label>Email</label>
+            </div>
 
-        <!-- Username Input Group -->
-        <p v-if="usernameError" class="errorMessage">{{ usernameError }}</p>
-        <div class="inputGroup" :class="{ 'is-active': username || isUsernameFocused }">
-            <input 
-                v-model="username" 
-                type="text" 
-                @input="usernameError = ''" 
-                @focus="isUsernameFocused = true" 
-                @blur="handleUsernameBlur" 
-            />
-            <label>Username</label>
-        </div>
+            <!-- Username Input Group -->
+            <p v-if="usernameError" class="errorMessage">{{ usernameError }}</p>
+            <div class="inputGroup" :class="{ 'is-active': username || isUsernameFocused }">
+                <input 
+                    v-model="username" 
+                    type="text" 
+                    @input="usernameError = ''" 
+                    @focus="isUsernameFocused = true" 
+                    @blur="handleUsernameBlur" 
+                />
+                <label>Username</label>
+            </div>
 
-        <!-- Password Input Group -->
+            <!-- Password Input Group -->
 
-        <!-- Note: This p tag must not have the 'inputError' class applied if the strengthMeter is present -->
-        <p v-if="passwordError" class="errorMessage" :class="{ 'inputError': !password }">{{ passwordError }}</p>
+            <!-- Note: This p tag must not have the 'inputError' class applied if the strengthMeter is present -->
+            <p v-if="passwordError" class="errorMessage" :class="{ 'inputError': !password }">{{ passwordError }}</p>
 
-        <div class="inputGroup passwordField" :class="{ 'is-active': password || isPasswordFocused }">
-            <input
-                :type="showPassword ? 'text' : 'password'"
-                v-model="password"
-                @keyup="checkCapsLock($event)"
-                @input="passwordError = ''"
-                @focus="isPasswordFocused = true"
-                @blur="handlePasswordBlur"
-            />
-            <label>Password</label>
-            <button type="button" class="toggle" @click="showPassword = !showPassword">
-                {{ showPassword ? 'Hide' : 'Show' }}
-            </button>
-        </div>
-        <p v-if="capsLockOn" class="capsWarning">Caps Lock is ON</p>
-        
+            <div class="inputGroup passwordField" :class="{ 'is-active': password || isPasswordFocused }">
+                <input
+                    :type="showPassword ? 'text' : 'password'"
+                    v-model="password"
+                    @keyup="checkCapsLock($event)"
+                    @input="passwordError = ''"
+                    @focus="isPasswordFocused = true"
+                    @blur="handlePasswordBlur"
+                />
+                <label>Password</label>
+                <button type="button" class="toggle" @click="showPassword = !showPassword">
+                    {{ showPassword ? 'Hide' : 'Show' }}
+                </button>
+            </div>
+            <p v-if="capsLockOn" class="capsWarning">Caps Lock is ON</p>
+            
 
-        <div class="strengthMeter" v-if="password">
-            <div class="strengthBar" :style="{ width: strength.width, background: strength.color }"></div>
-            <small :style="{ color: strength.color }">{{ strength.label }}</small>
-        </div>
+            <div class="strengthMeter" v-if="password">
+                <div class="strengthBar" :style="{ width: strength.width, background: strength.color }"></div>
+                <small :style="{ color: strength.color }">{{ strength.label }}</small>
+            </div>
 
-        <!-- Button disabled if computed form validity fails -->
-        <button class="primaryBtn" @click="register" :disabled="!isFormValid">Create Account</button>
+            <!-- Button disabled if computed form validity fails -->
+            <button type="submit" class="primaryBtn" :disabled="!isFormValid">Create Account</button>
+        </form>
 
         <!-- Only the word "Login" is clickable -->
         <p class="switchText">Already have an account? <span class="switch" @click="$emit('switchMode', 'login')">Login</span></p>

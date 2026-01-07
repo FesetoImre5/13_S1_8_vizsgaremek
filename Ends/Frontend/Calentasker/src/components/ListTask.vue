@@ -5,9 +5,51 @@
             url: { type: String, default: "" },
             title: { type: String, default: "" },
             desc: { type: String, default: "" },
-            isSelected: { type: Boolean, default: false }
+            isSelected: { type: Boolean, default: false },
+            priority: { type: String, default: "low" },
+            dueDate: { type: String, default: null } 
         },
-        emits: ['click', 'hover', 'leave', 'select']
+        emits: ['click', 'hover', 'leave', 'select'],
+        computed: {
+            formattedPriority() {
+                if (!this.priority) return "Priority: Low";
+                // Capitalize first letter
+                const p = this.priority.charAt(0).toUpperCase() + this.priority.slice(1);
+                return `Task Priority: ${p}`;
+            },
+            priorityColorClass() {
+                const p = this.priority ? this.priority.toLowerCase() : 'low';
+                return `priority-${p}`;
+            },
+            dueStatus() {
+                if (!this.dueDate) return { text: "No Due Date", colorClass: "due-gray" };
+
+                const now = new Date();
+                const due = new Date(this.dueDate);
+                
+                // Reset times to compare dates only
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+
+                const diffTime = dueDay - today; 
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                if (diffDays < 0) {
+                    return { text: "Overdue", colorClass: "due-red" };
+                } else if (diffDays === 0) {
+                    return { text: "Today", colorClass: "due-red" };
+                } else if (diffDays === 1) {
+                    return { text: "Tomorrow", colorClass: "due-orange" };
+                } else if (diffDays < 7) {
+                    return { text: `In ${diffDays} days`, colorClass: "due-yellow" };
+                } else if (diffDays < 28) {
+                    const weeks = Math.ceil(diffDays / 7);
+                    return { text: `In ${weeks} week${weeks > 1 ? 's' : ''}`, colorClass: "due-blue" };
+                } else {
+                    return { text: "More than a month", colorClass: "due-green" };
+                }
+            }
+        }
     }
 </script>
 
@@ -28,16 +70,24 @@
         <div class="cardContent">
             <div class="cardHeader">
                 <h3 class="cardTitle">{{ title }}</h3>
-                <!-- Mock Badge -->
-                <span class="statusPill">High Priority</span>
+                
+                <!-- Priority Badge -->
+                <span class="statusPill" :class="priorityColorClass">
+                    {{ formattedPriority }}
+                </span>
+
+                <!-- Due Date Badge -->
+                <span class="statusPill" :class="dueStatus.colorClass">
+                    {{ dueStatus.text }}
+                </span>
             </div>
             
             <p class="cardDesc">{{ desc || "No description provided." }}</p>
             
-            <!-- Optional: Date or Metadata -->
-            <div class="cardMeta">
+            <!-- Optional: Date or Metadata (Hidden if using badge, or keep as extra info) -->
+            <!-- <div class="cardMeta">
                 <span class="date">Dec 16</span>
-            </div>
+            </div> -->
         </div>
 
         <!-- Right: Action Area -->
@@ -84,9 +134,6 @@
 
 .taskCard.isSelected {
     /* No outline/color change for selected state as requested */
-    /* border-color: var(--c-accent); */
-    /* box-shadow: inset 0 0 0 1px var(--c-accent); */
-    /* background-color: rgba(249, 115, 22, 0.05); */
 }
 
 /* --- IMAGE --- */
@@ -127,7 +174,7 @@
     line-height: 1.2;
 }
 
-/* Status Pill */
+/* Status Pill Base */
 .statusPill {
     display: inline-flex;
     padding: 4px 10px;
@@ -136,11 +183,61 @@
     font-weight: 700;
     letter-spacing: 0.5px;
     text-transform: uppercase;
-    
-    /* Orange Style */
+    border: 1px solid transparent;
+}
+
+/* Priority Colors */
+.priority-urgent {
+    background: rgba(220, 38, 38, 0.15);
+    color: #ef4444; 
+    border-color: rgba(220, 38, 38, 0.3);
+}
+.priority-high {
     background: rgba(249, 115, 22, 0.15);
-    color: var(--c-accent);
-    border: 1px solid rgba(249, 115, 22, 0.3);
+    color: #f97316; 
+    border-color: rgba(249, 115, 22, 0.3);
+}
+.priority-medium {
+    background: rgba(234, 179, 8, 0.15);
+    color: #eab308; 
+    border-color: rgba(234, 179, 8, 0.3);
+}
+.priority-low {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+    border-color: rgba(34, 197, 94, 0.3);
+}
+
+/* Due Date Colors */
+.due-red {
+    background: rgba(220, 38, 38, 0.15);
+    color: #ef4444; 
+    border-color: rgba(220, 38, 38, 0.3);
+}
+.due-orange {
+    background: rgba(249, 115, 22, 0.15);
+    color: #f97316; 
+    border-color: rgba(249, 115, 22, 0.3);
+}
+.due-yellow {
+    background: rgba(234, 179, 8, 0.15);
+    color: #eab308; 
+    border-color: rgba(234, 179, 8, 0.3);
+}
+.due-blue {
+    background: rgba(59, 130, 246, 0.15);
+    color: #3b82f6; 
+    border-color: rgba(59, 130, 246, 0.3);
+}
+.due-green {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e; 
+    border-color: rgba(34, 197, 94, 0.3);
+}
+.due-gray {
+    background: rgba(113, 113, 122, 0.15);
+    color: #a1a1aa; 
+    border-color: rgba(113, 113, 122, 0.3);
 }
 
 .cardDesc {
@@ -217,7 +314,7 @@
     }
 
     .cardHeader {
-        justify-content: space-between;
+        justify-content: flex-start; /* flow normally on mobile, or keep space-between if desired */
     }
 
     .cardAction {

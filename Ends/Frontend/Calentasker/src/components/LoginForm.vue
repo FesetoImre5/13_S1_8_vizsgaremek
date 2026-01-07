@@ -98,22 +98,24 @@ export default {
     <div class="authCard">
         <h2 class="title">Login</h2>
 
-        <p v-if="identifierError" class="errorMessage">{{ identifierError }}</p>
-        <div class="inputGroup" :class="{ 'is-active': identifier || isIdentifierFocused }">
-            <input v-model="identifier" type="text" @input="identifierError = ''" @focus="isIdentifierFocused = true" @blur="handleIdentifierBlur"/>
-            <label>Email or Username</label>
-        </div>
-        
-        <p v-if="passwordError" class="errorMessage">{{ passwordError }}</p>
-        <div class="inputGroup passwordField" :class="{ 'is-active': password || isPasswordFocused }">
-            <input :type="showPassword ? 'text' : 'password'" v-model="password" @keyup="checkCapsLock($event)" @input="passwordError = ''" @focus="isPasswordFocused = true" @blur="handlePasswordBlur"/>
-            <label>Password</label>
-            <button type="button" class="toggle" @click="showPassword = !showPassword">{{ showPassword ? 'Hide' : 'Show' }}</button>
-        </div>
-        <p v-if="capsLockOn" class="capsWarning">Caps Lock is ON</p>
+        <form @submit.prevent="login">
+            <p v-if="identifierError" class="errorMessage">{{ identifierError }}</p>
+            <div class="inputGroup" :class="{ 'is-active': identifier || isIdentifierFocused }">
+                <input v-model="identifier" type="text" @input="identifierError = ''" @focus="isIdentifierFocused = true" @blur="handleIdentifierBlur"/>
+                <label>Email or Username</label>
+            </div>
+            
+            <p v-if="passwordError" class="errorMessage">{{ passwordError }}</p>
+            <div class="inputGroup passwordField" :class="{ 'is-active': password || isPasswordFocused }">
+                <input :type="showPassword ? 'text' : 'password'" v-model="password" @keyup="checkCapsLock($event)" @input="passwordError = ''" @focus="isPasswordFocused = true" @blur="handlePasswordBlur"/>
+                <label>Password</label>
+                <button type="button" class="toggle" @click="showPassword = !showPassword">{{ showPassword ? 'Hide' : 'Show' }}</button>
+            </div>
+            <p v-if="capsLockOn" class="capsWarning">Caps Lock is ON</p>
 
-        <!--div class="remember"><input type="checkbox" v-model="rememberMe" /> Remember me</div-->
-        <button class="primaryBtn" @click="login" :disabled="!isFormFilled">Login</button>
+            <!--div class="remember"><input type="checkbox" v-model="rememberMe" /> Remember me</div-->
+            <button type="submit" class="primaryBtn" :disabled="!isFormFilled">Login</button>
+        </form>
         <p class="switchText">No account? <span class="switch" @click="$emit('switchMode', 'register')">Register</span></p>
     </div>
 </template>
