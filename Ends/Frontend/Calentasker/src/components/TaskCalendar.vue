@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 const props = defineProps({
     tasks: {
@@ -9,8 +9,14 @@ const props = defineProps({
     hoveredTaskId: {
         type: [Number, String, null],
         default: null
+    },
+    selectedDate: {
+        type: String,
+        default: null
     }
 });
+
+const emit = defineEmits(['date-selected']);
 
 const currentDate = new Date();
 const currentYear = currentDate.getFullYear();
@@ -63,6 +69,11 @@ const getDayTasks = (dateStr) => {
         return dateStr >= start && dateStr <= end;
     });
 };
+
+const handleDayClick = (day) => {
+    if (day.isEmpty) return;
+    emit('date-selected', day.dateStr);
+};
 </script>
 
 <template>
@@ -82,17 +93,17 @@ const getDayTasks = (dateStr) => {
                 class="daySquare"
                 :class="{ 
                     'empty': day.isEmpty,
-                    'isToday': day.isToday
+                    'isToday': day.isToday,
+                    'hasTasks': !day.isEmpty && getDayTasks(day.dateStr).length > 0,
+                    'isSelected': day.dateStr === selectedDate
                 }"
+                @click="handleDayClick(day)"
             >
-                <span v-if="!day.isEmpty">{{ day.dayNum }}</span>
-                <!-- Dots Heatmap -->
-                <div v-if="!day.isEmpty" class="dotContainer">
-                    <div 
-                        v-for="task in getDayTasks(day.dateStr).slice(0, 4)" 
-                        :key="task.id" 
-                        class="dot"
-                    ></div>
+                <span v-if="!day.isEmpty" class="dayNum">{{ day.dayNum }}</span>
+                
+                <!-- Tooltip -->
+                <div v-if="!day.isEmpty && getDayTasks(day.dateStr).length > 0" class="taskTooltip">
+                    {{ getDayTasks(day.dateStr).length }} Tasks
                 </div>
             </div>
         </div>
@@ -107,7 +118,6 @@ const getDayTasks = (dateStr) => {
 .calendarContainer {
     background-color: var(--c-surface);
     padding: 20px;
-    /* UPDATED: Fit content height instead of forcing 100% */
     height: fit-content;
     width: 100%;
     display: flex;
@@ -129,9 +139,7 @@ const getDayTasks = (dateStr) => {
     letter-spacing: 1px;
 }
 
-/* 
-   GRID LAYOUT 
-*/
+/* GRID LAYOUT */
 .calendarGrid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -159,7 +167,7 @@ const getDayTasks = (dateStr) => {
     display: flex;
     justify-content: center;
     align-items: center;
-    flex-direction: column; /* Allow stacking number and dots */
+    flex-direction: column;
     
     font-size: 1.2rem;
     font-weight: 600;
@@ -168,14 +176,20 @@ const getDayTasks = (dateStr) => {
     color: var(--c-text-primary);
     border: 1px solid transparent;
     
-    transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+    transition: all 0.2s;
     user-select: none;
+    cursor: pointer;
 }
 
 .daySquare.empty {
     background-color: transparent;
     border: none;
     pointer-events: none;
+    cursor: default;
+}
+
+.daySquare:hover:not(.empty) {
+    background-color: var(--c-surface-hover);
 }
 
 .daySquare.isToday {
@@ -184,19 +198,51 @@ const getDayTasks = (dateStr) => {
     color: white;
 }
 
-/* Heatmap Dots */
-.dotContainer {
-    position: absolute;
-    bottom: 6px;
-    display: flex;
-    gap: 3px;
+.daySquare.isSelected {
+    background-color: rgba(249, 115, 22, 0.2);
+    border: 1px solid var(--c-accent);
 }
 
-.dot {
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    background-color: var(--c-accent);
-    opacity: 0.8;
+/* Orange Underline (Inset Shadow) for tasks */
+.daySquare.hasTasks {
+    box-shadow: inset 0 -4px 0 0 var(--c-accent);
+}
+.daySquare.hasTasks.isToday {
+    /* Combine both shadows if today has tasks */
+    box-shadow: inset 0 0 0 2px white, inset 0 -4px 0 0 var(--c-accent);
+}
+
+/* Tooltip */
+.taskTooltip {
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #000;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 10;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+.taskTooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #000 transparent transparent transparent;
+}
+
+.daySquare:hover .taskTooltip {
+    opacity: 1;
 }
 </style>

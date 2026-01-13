@@ -3,27 +3,34 @@ import TasksPage from "./pages/TasksPage.vue";
 import AuthPage from "./pages/AuthPage.vue";
 import ProfilePage from "./pages/ProfilePage.vue";
 // 1. Import the new page
+import GroupsPage from "./pages/GroupsPage.vue";
 import NotFoundPage from "./pages/NotFoundPage.vue";
 
 const routes = [
     {
         path: '/',
-        redirect: '/tasks' 
+        redirect: '/tasks'
     },
     {
-        path: '/tasks', 
+        path: '/tasks',
         name: 'Tasks',
         component: TasksPage,
         meta: { title: 'My Tasks' }
     },
     {
-        path: '/auth', 
+        path: '/groups',
+        name: 'Groups',
+        component: GroupsPage,
+        meta: { title: 'My Groups' }
+    },
+    {
+        path: '/auth',
         name: 'Auth',
         component: AuthPage,
         meta: { title: 'Login' }
     },
     {
-        path: '/profile', 
+        path: '/profile',
         name: 'Profile',
         component: ProfilePage,
         meta: { title: 'User Profile' }
@@ -58,13 +65,13 @@ router.beforeEach((to, from, next) => {
     // If you want 404 pages to be visible even if NOT logged in, add to.name !== 'NotFound' here.
     // Currently, if a user is NOT logged in and types a random URL, they will be redirected to Login.
     // If they ARE logged in and type a random URL, they will see the 404 page.
-    
+
     if (to.name !== 'Auth' && !isAuthenticated) {
         next({ name: 'Auth' });
-    } 
+    }
     else if (to.name === 'Auth' && isAuthenticated) {
         next({ name: 'Tasks' });
-    } 
+    }
     else {
         next();
     }

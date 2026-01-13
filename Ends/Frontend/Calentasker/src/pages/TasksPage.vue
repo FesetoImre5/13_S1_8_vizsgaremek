@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router'; 
 import ListTask from '../components/ListTask.vue';
@@ -18,6 +18,9 @@ const selectedGroupId = ref(null);
 const hoveredTaskId = ref(null);
 const selectedTaskId = ref(null);
 const isCalendarModalOpen = ref(false);
+
+// New State for Date Filtering
+const selectedDate = ref(null);
 
 // --- API ACTIONS ---
 const fetchGroups = async () => {
@@ -48,6 +51,24 @@ const fetchTasks = async (groupId = null) => {
         loading.value = false;
     }
 };
+
+// --- COMPUTED: Filtered Tasks ---
+const filteredTasks = computed(() => {
+    if (!selectedDate.value) return tasks.value;
+    
+    return tasks.value.filter(task => {
+        if (!task.created_at && !task.start_date) return false;
+        
+        const rawStart = task.start_date || task.created_at;
+        const rawEnd = task.due_date || task.start_date || task.created_at;
+        
+        const start = rawStart.substring(0, 10);
+        const end = rawEnd.substring(0, 10);
+        
+        // Check if selectedDate falls within the task's range
+        return selectedDate.value >= start && selectedDate.value <= end;
+    });
+});
 
 // --- INTERACTION ---
 const handleGroupClick = (groupId) => {
@@ -89,6 +110,14 @@ const onTaskSelect = (id) => {
         } else {
             selectedTaskId.value = id;
         }
+    }
+};
+
+const handleDateSelected = (dateStr) => {
+    if (selectedDate.value === dateStr) {
+        selectedDate.value = null; // Toggle off filter
+    } else {
+        selectedDate.value = dateStr;
     }
 };
 
@@ -138,7 +167,9 @@ onMounted(() => {
             <!-- COLUMN 2: TASKS -->
             <div class="tasks-area">    
                 <div class="stickyHeader">
-                    <h2 style="margin:0; font-size:1.5rem; color:var(--c-text-primary);">Tasks</h2>
+                    <h2 style="margin:0; font-size:1.5rem; color:var(--c-text-primary);">
+                        Tasks <span v-if="selectedDate" style="font-size: 0.9rem; opacity: 0.7;">({{ selectedDate }})</span>
+                    </h2>
                 </div>
                 <div class="task-scroll custom-scroll">
                     <div v-if="loading" style="padding: 20px;">
@@ -146,11 +177,14 @@ onMounted(() => {
                         <div class="skeleton" style="height: 100px; width: 100%; margin-bottom: 15px;"></div>
                         <div class="skeleton" style="height: 100px; width: 100%; margin-bottom: 15px;"></div>
                     </div>
-                    <div v-else-if="tasks.length === 0" style="padding: 20px; color:white;">No tasks found.</div>
+                    <div v-else-if="filteredTasks.length === 0" style="padding: 20px; color:white;">
+                        <span v-if="selectedDate">No tasks for this date.</span>
+                        <span v-else>No tasks found.</span>
+                    </div>
 
                     <list-task 
                         v-else
-                        v-for="(task, index) in tasks"
+                        v-for="(task, index) in filteredTasks"
                         :key="task.id"
                         class="fade-in-item"
                         :style="{ animationDelay: `${index * 50}ms` }"
@@ -174,14 +208,11 @@ onMounted(() => {
                 <TaskCalendar 
                     :tasks="tasks"
                     :hoveredTaskId="hoveredTaskId"
+                    :selectedDate="selectedDate"
+                    @date-selected="handleDateSelected"
                 />
             </div>
         </div>
-
-        <!-- FLOATING BUTTON -->
-        <button class="calendar-fab" @click="toggleCalendarModal">
-            #
-        </button>
 
         <!-- MODAL OVERLAY -->
         <div v-if="isCalendarModalOpen" class="modal-overlay" @click.self="isCalendarModalOpen = false">
@@ -189,6 +220,8 @@ onMounted(() => {
                 <TaskCalendar 
                     :tasks="tasks"
                     :hoveredTaskId="selectedTaskId"
+                    :selectedDate="selectedDate"
+                    @date-selected="handleDateSelected"
                 />
             </div>
         </div>
@@ -265,33 +298,6 @@ onMounted(() => {
 }
 .custom-scroll::-webkit-scrollbar-thumb:hover { 
     background: var(--c-accent); 
-}
-
-/* FLOATING ACTION BUTTON */
-.calendar-fab {
-    position: fixed;
-    bottom: 30px;
-    right: 30px; 
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background-color: var(--c-accent);
-    color: white;
-    font-size: 2rem;
-    font-weight: bold;
-    border: none;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-    cursor: pointer;
-    z-index: 900;
-    display: none; 
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.2s;
-}
-
-.calendar-fab:hover {
-    transform: scale(1.1);
-    background-color: var(--c-primary);
 }
 
 /* MODAL */
