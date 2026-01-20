@@ -103,65 +103,94 @@ watch(() => props.isOpen, (newVal) => {
 <template>
     <div v-if="isOpen" class="modal-overlay" @click.self="$emit('close')">
         <div class="modal-content">
-            <button class="close-btn" @click="$emit('close')">&times;</button>
+            <button class="close-btn" @click="$emit('close')">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
             
-            <div v-if="task" class="modal-body">
-                <!-- HEADER IMAGE -->
-                <div v-if="task.imageUrl" class="task-image">
-                    <img :src="task.imageUrl" alt="Task Cover">
-                </div>
+            <div v-if="task" class="modal-body-grid">
 
-                <div class="content-padding">
-                    <!-- TITLE & METADATA -->
-                    <div class="header-section">
-                        <div class="title-row">
-                            <h2>{{ task.title }}</h2>
-                            <span class="status-badge" :class="priorityClass">{{ task.priority }}</span>
+                <!-- LEFT COLUMN: DETAILS -->
+                <div class="details-column custom-scroll">
+                    
+                    <!-- TOP SECTION: IMAGE + TITLE/ASSIGNED -->
+                    <div class="top-section">
+                        <!-- Small Image Top Left -->
+                        <div v-if="task.imageUrl" class="small-task-image">
+                            <img :src="task.imageUrl" alt="Task Cover">
                         </div>
+                        <div v-else class="small-task-image placeholder-img">
+                            <span>No Img</span>
+                        </div>
+
+                        <!-- Right of Image: Title + Assigned -->
+                        <div class="header-info">
+                            <div class="title-row">
+                                <h2>{{ task.title }}</h2>
+                                <span class="status-badge" :class="priorityClass">{{ task.priority }}</span>
+                            </div>
+                            
+                            <!-- Assigned Users (Under Title) -->
+                            <div class="assigned-row">
+                                <span class="label-small">Assigned to:</span>
+                                <div class="user-chip">
+                                    <span class="avatar-small">{{ task.assigned_to?.username?.charAt(0).toUpperCase() || '?' }}</span>
+                                    <span>{{ task.assigned_to?.username || 'Unassigned' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DESCRIPTION (Under Image/Title) -->
+                    <div class="description-section">
+                        <label>Description</label>
                         <p class="description">{{ task.description || "No description provided." }}</p>
                     </div>
 
-                    <!-- INFO GRID -->
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <span class="label">Created By</span>
-                            <span class="value">{{ task.created_by?.username || 'Unknown' }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Assigned To</span>
-                            <span class="value">{{ task.assigned_to?.username || 'Unassigned' }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Start Date</span>
+                    <!-- TIMESPAN (Under Description) -->
+                    <div class="timespan-section">
+                        <div class="time-block">
+                            <span class="label-icon">📅 Start</span>
                             <span class="value">{{ formattedDate(task.start_date) }}</span>
                         </div>
-                        <div class="info-item">
-                            <span class="label">Due Date</span>
+                        <div class="arrow">→</div>
+                        <div class="time-block">
+                            <span class="label-icon">🏁 Due</span>
                             <span class="value">{{ formattedDate(task.due_date) }}</span>
                         </div>
                     </div>
 
-                    <!-- ACTIONS -->
-                    <div class="actions-bar">
-                        <button class="btn btn-primary" @click="markComplete">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>
-                            Mark Complete
-                        </button>
-                        <button v-if="isCreator" class="btn btn-secondary" @click="editTask">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                            </svg>
-                            Edit Task
-                        </button>
+                    <!-- META / ACTIONS (Bottom) -->
+                    <div class="meta-footer">
+                        <div class="meta-info">
+                            <span class="meta-text">Created by {{ task.created_by?.username }}</span>
+                        </div>
+                        <div class="actions-bar">
+                            <button class="btn btn-primary" @click="markComplete">Mark Complete</button>
+                            <button v-if="isCreator" class="btn btn-secondary" @click="editTask">Edit</button>
+                        </div>
                     </div>
-
-                    <!-- COMMENTS SECTION -->
+                </div>
+                
+                <!-- RIGHT COLUMN: COMMENTS -->
+                <div class="comments-column custom-scroll">
                     <div class="comments-section">
                         <h3>Comments</h3>
                         
+                        <!-- ADD COMMENT -->
+                        <div class="add-comment">
+                            <textarea 
+                                v-model="newComment" 
+                                placeholder="Write a comment..."
+                                rows="2"
+                            ></textarea>
+                            <button :disabled="isSubmitting" @click="submitComment">
+                                {{ isSubmitting ? '...' : 'Post' }}
+                            </button>
+                        </div>
+
                         <div class="comments-list">
                             <div v-if="isLoadingComments" class="loading-text">Loading comments...</div>
                             <div v-else-if="comments.length === 0" class="no-comments">No comments yet.</div>
@@ -179,20 +208,9 @@ watch(() => props.isOpen, (newVal) => {
                                 </div>
                             </div>
                         </div>
-
-                        <!-- ADD COMMENT -->
-                        <div class="add-comment">
-                            <textarea 
-                                v-model="newComment" 
-                                placeholder="Write a comment..."
-                                rows="2"
-                            ></textarea>
-                            <button :disabled="isSubmitting" @click="submitComment">
-                                {{ isSubmitting ? 'Posting...' : 'Post' }}
-                            </button>
-                        </div>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
@@ -203,8 +221,8 @@ watch(() => props.isOpen, (newVal) => {
     position: fixed;
     top: 0; left: 0;
     width: 100vw; height: 100vh;
-    background: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
     z-index: 2000;
     display: flex;
     justify-content: center;
@@ -215,8 +233,8 @@ watch(() => props.isOpen, (newVal) => {
 .modal-content {
     background: var(--c-surface);
     width: 90%;
-    max-width: 600px;
-    max-height: 90vh;
+    max-width: 1000px; /* Wider for 2 columns */
+    height: 80vh; /* Fixed height for scrollable areas */
     border-radius: 16px;
     border: 1px solid var(--border-color);
     box-shadow: 0 20px 50px rgba(0,0,0,0.5);
@@ -227,8 +245,11 @@ watch(() => props.isOpen, (newVal) => {
     animation: scaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.modal-body {
-    overflow-y: auto;
+.modal-body-grid {
+    display: grid;
+    grid-template-columns: 1fr 350px; /* Details first, Comments second (fixed width) */
+    height: 100%;
+    overflow: hidden;
 }
 
 .close-btn {
@@ -239,164 +260,49 @@ watch(() => props.isOpen, (newVal) => {
     border: none;
     width: 32px; height: 32px;
     border-radius: 50%;
-    font-size: 1.5rem;
-    line-height: 1;
-    cursor: pointer;
-    z-index: 10;
+    
+    /* Centering */
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.2s;
-}
-.close-btn:hover { background: rgba(0,0,0,0.8); }
-
-/* TASK IMAGE */
-.task-image {
-    width: 100%;
-    height: 200px;
-    overflow: hidden;
-}
-.task-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.content-padding {
-    padding: 24px;
-}
-
-/* HEADER */
-.header-section { margin-bottom: 24px; }
-
-.title-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 15px;
-    margin-bottom: 10px;
-}
-
-.title-row h2 {
-    margin: 0;
-    font-size: 1.5rem;
-    color: var(--c-text-primary);
-    line-height: 1.2;
-}
-
-.status-badge {
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    background: var(--c-surface-hover);
-    color: var(--c-text-secondary);
-}
-.priority-high { color: #f97316; background: rgba(249, 115, 22, 0.15); }
-.priority-urgent { color: #ef4444; background: rgba(220, 38, 38, 0.15); }
-.priority-medium { color: #eab308; background: rgba(234, 179, 8, 0.15); }
-.priority-low { color: #22c55e; background: rgba(34, 197, 94, 0.15); }
-
-.description {
-    color: var(--c-text-secondary);
-    line-height: 1.5;
-    margin: 0;
-}
-
-/* INFO GRID */
-.info-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 24px;
-    padding-bottom: 24px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.info-item { display: flex; flex-direction: column; gap: 4px; }
-.label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--c-text-secondary); opacity: 0.7; }
-.value { font-size: 0.95rem; color: var(--c-text-primary); font-weight: 500; }
-
-/* ACTIONS */
-.actions-bar {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 30px;
-}
-.btn {
-    flex: 1;
-    padding: 10px;
-    border-radius: 8px;
-    border: none;
-    font-weight: 600;
+    padding: 0;
+    
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: filter 0.2s;
+    z-index: 50;
+    transition: background 0.2s, transform 0.1s;
 }
-.btn:hover { filter: brightness(1.1); }
-.btn-primary { background: var(--c-accent); color: white; }
-.btn-secondary { background: var(--c-surface-hover); color: var(--c-text-primary); border: 1px solid var(--border-color); }
+.close-btn:hover { background: rgba(0,0,0,0.8); transform: scale(1.05); }
 
-/* COMMENTS */
-.comments-section h3 {
-    font-size: 1.1rem;
-    color: var(--c-text-primary);
-    margin-bottom: 15px;
-}
-
-.comments-list {
+/* --- LEFT COLUMN: DETAILS (Now Left) --- */
+.details-column {
+    padding: 30px;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    margin-bottom: 20px;
-    max-height: 300px;
+    gap: 24px;
+}
+
+/* --- RIGHT COLUMN: COMMENTS (Now Right) --- */
+.comments-column {
+    background: rgba(0,0,0,0.1); 
+    border-left: 1px solid var(--border-color); /* Changed from border-right */
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
     overflow-y: auto;
 }
 
-.comment-item {
-    display: flex;
-    gap: 12px;
-}
-
-.comment-avatar {
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    background: var(--c-surface-hover);
+.comments-section h3 {
+    font-size: 1.1rem;
     color: var(--c-text-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 0.9rem;
-    flex-shrink: 0;
+    margin-bottom: 20px;
+    margin-top: 0;
 }
-
-.comment-content {
-    flex: 1;
-    background: rgba(255,255,255,0.03);
-    padding: 10px 14px;
-    border-radius: 12px;
-}
-
-.comment-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 4px;
-    font-size: 0.85rem;
-}
-
-.username { font-weight: 600; color: var(--c-text-primary); }
-.timestamp { color: var(--c-text-secondary); font-size: 0.75rem; }
-.text { margin: 0; color: var(--c-text-secondary); font-size: 0.9rem; line-height: 1.4; word-break: break-word;}
 
 .add-comment {
     display: flex;
     gap: 10px;
-    align-items: flex-start;
+    margin-bottom: 20px;
 }
 .add-comment textarea {
     flex: 1;
@@ -407,20 +313,242 @@ watch(() => props.isOpen, (newVal) => {
     color: var(--c-text-primary);
     font-family: inherit;
     resize: none;
+    font-size: 0.9rem;
 }
-.add-comment textarea:focus { outline: none; border-color: var(--c-accent); }
 .add-comment button {
     background: var(--c-accent);
     color: white;
     border: none;
-    padding: 8px 16px;
+    padding: 0 16px;
     border-radius: 8px;
     font-weight: 600;
     cursor: pointer;
-    height: 42px;
+    font-size: 0.9rem;
 }
-.add-comment button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.comment-item {
+    display: flex;
+    gap: 12px;
+}
+.comment-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--c-surface-hover);
+    color: var(--c-text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+.comment-content {
+    flex: 1;
+    background: var(--c-bg);
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    font-size: 0.8rem;
+}
+.username { font-weight: 600; color: var(--c-text-primary); }
+.timestamp { color: var(--c-text-secondary); }
+.text { margin: 0; color: var(--c-text-secondary); font-size: 0.9rem; line-height: 1.4; word-break: break-word;}
+
+/* --- RIGHT COLUMN: DETAILS --- */
+.details-column {
+    padding: 30px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* TOP SCETION */
+.top-section {
+    display: flex;
+    gap: 20px;
+}
+
+.small-task-image {
+    width: 100px; 
+    height: 100px;
+    border-radius: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 1px solid var(--border-color);
+}
+.placeholder-img {
+    background: var(--c-surface-hover);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--c-text-secondary);
+    font-size: 0.8rem;
+}
+.small-task-image img {
+    width: 100%; height: 100%; object-fit: cover;
+}
+
+.header-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; 
+    gap: 10px;
+}
+
+.title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.title-row h2 {
+    margin: 0;
+    font-size: 1.6rem;
+    color: var(--c-text-primary);
+    line-height: 1.2;
+}
+
+.status-badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: var(--c-surface-hover);
+    color: var(--c-text-secondary);
+}
+.priority-high { color: #f97316; background: rgba(249, 115, 22, 0.15); }
+.priority-urgent { color: #ef4444; background: rgba(220, 38, 38, 0.15); }
+
+.assigned-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.label-small { color: var(--c-text-secondary); font-size: 0.9rem; }
+.user-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--c-surface-hover);
+    padding: 4px 10px 4px 4px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    color: var(--c-text-primary);
+}
+.avatar-small {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--c-accent);
+    color: white;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+/* DESCRIPTION */
+.description-section label {
+    display: block;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: var(--c-text-secondary);
+    margin-bottom: 8px;
+    opacity: 0.7;
+    letter-spacing: 0.5px;
+}
+.description {
+    margin: 0;
+    color: var(--c-text-primary);
+    line-height: 1.6;
+    font-size: 1rem;
+    background: rgba(255,255,255,0.02);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+/* TIMESPAN */
+.timespan-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: var(--c-surface-hover);
+    padding: 15px;
+    border-radius: 12px;
+    align-self: flex-start; /* Don't stretch full width */
+}
+.time-block { display: flex; flex-direction: column; gap: 4px; }
+.label-icon { font-size: 0.8rem; color: var(--c-text-secondary); }
+.value { font-weight: 600; color: var(--c-text-primary); }
+.arrow { color: var(--c-text-secondary); opacity: 0.5; }
+
+/* FOOTER / ACTIONS */
+.meta-footer {
+    margin-top: auto; /* Push to bottom */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+.meta-text { font-size: 0.85rem; color: var(--c-text-secondary); font-style: italic; }
+
+.actions-bar { display: flex; gap: 10px; }
+.btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: filter 0.2s;
+}
+.btn:hover { filter: brightness(1.1); }
+.btn-primary { background: var(--c-accent); color: white; }
+.btn-secondary { background: transparent; color: var(--c-text-primary); border: 1px solid var(--border-color); }
+
+/* SCROLLBAR CUSTOMIZATION */
+.custom-scroll::-webkit-scrollbar { width: 6px; }
+.custom-scroll::-webkit-scrollbar-track { background: transparent; }
+.custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+.custom-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* RESPONSIVE */
+@media (max-width: 800px) {
+    .modal-body-grid {
+        grid-template-columns: 1fr;
+        overflow-y: auto;
+    }
+    .comments-column {
+        order: 2; /* Move comments to bottom on mobile */
+        height: 300px; /* Fixed height for comments on mobile */
+        border-right: none;
+        border-top: 1px solid var(--border-color);
+    }
+    .details-column {
+        order: 1;
+        overflow: visible; /* Let it scroll with parent */
+    }
+    .modal-content {
+        height: 90vh; /* Taller on mobile */
+    }
+}
 </style>
