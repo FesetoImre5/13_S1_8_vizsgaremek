@@ -16,6 +16,8 @@ class GroupSerializer(serializers.ModelSerializer):
             'created_at', 
             'active',
             'imageUrl',
+            'image',
+            'parent_group',
         )
         read_only_fields = ('created_at', 'active',)
         extra_kwargs = {
