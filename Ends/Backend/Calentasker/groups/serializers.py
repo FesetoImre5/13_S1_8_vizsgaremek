@@ -33,12 +33,30 @@ class GroupMemberSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(
         queryset = User.objects.all(),
         write_only = True,
-        label = 'User'
+        label = 'User',
+        required = False,
     )
+    username = serializers.CharField(write_only=True, required=False)
     group_detail = GroupSerializer(source = 'group', read_only = True)
     user_detail = UserListSerializer(source = 'user', read_only = True)
 
     class Meta:
         model = GroupMember
-        fields = ('id', 'user_detail', 'group_detail', 'user', 'group', 'role', 'joined_at')
+        fields = ('id', 'user_detail', 'group_detail', 'user', 'group', 'username', 'role', 'joined_at')
         read_only_fields = ('joined_at', 'group_detail', 'user_detail',)
+    
+    def create(self, validated_data):
+        # If username is provided, look up the user
+        username = validated_data.pop('username', None)
+        if username:
+            try:
+                user = User.objects.get(username=username)
+                validated_data['user'] = user
+            except User.DoesNotExist:
+                raise serializers.ValidationError({'username': 'User with this username does not exist.'})
+        
+        # Check if user is already a member of this group
+        if GroupMember.objects.filter(group=validated_data['group'], user=validated_data['user']).exists():
+            raise serializers.ValidationError({'detail': 'User is already a member of this group.'})
+        
+        return super().create(validated_data)

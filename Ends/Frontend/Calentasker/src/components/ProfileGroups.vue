@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import ListGroup from './ListGroup.vue';
+import CreateGroupModal from './CreateGroupModal.vue';
 
 // --- STATE ---
 const groups = ref([]);
@@ -13,6 +14,8 @@ const memberLoading = ref(false);
 const newMemberUsername = ref('');
 const addMemberError = ref('');
 const addMemberSuccess = ref('');
+
+const showCreateModal = ref(false);
 
 // --- API ACTIONS ---
 const fetchMyGroups = async () => {
@@ -82,6 +85,18 @@ const getGroupUrl = (group) => {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(group.groupname)}&background=random&color=fff&size=128`;
 };
 
+const openCreateModal = () => {
+    showCreateModal.value = true;
+};
+
+const closeCreateModal = () => {
+    showCreateModal.value = false;
+};
+
+const handleGroupCreated = (newGroup) => {
+    fetchMyGroups();
+};
+
 onMounted(() => {
     fetchMyGroups();
 });
@@ -97,7 +112,6 @@ onMounted(() => {
                 <div v-if="loading" class="p-3 text-muted">Loading...</div>
                 
                 <div class="listContainer customScroll">
-                    <!-- Note: ListGroup component needs styling update too -->
                     <list-group
                         v-for="group in groups"
                         :key="group.id"
@@ -107,6 +121,15 @@ onMounted(() => {
                         @click="selectGroup(group)"
                     />
                 </div>
+                
+                <!-- Create New Group Button -->
+                <button class="createGroupBtn" @click="openCreateModal">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Create New Group
+                </button>
             </div>
 
             <!-- Inner Content: Group Details -->
@@ -150,6 +173,13 @@ onMounted(() => {
                 </div>
             </div>
         </div>
+        
+        <!-- Create Group Modal -->
+        <create-group-modal 
+            v-if="showCreateModal" 
+            @close="closeCreateModal"
+            @groupCreated="handleGroupCreated"
+        />
     </div>
 </template>
 
@@ -211,7 +241,7 @@ onMounted(() => {
     margin-bottom: 30px;
     border: 1px solid var(--border-color);
 }
-.actionBox label { display: block; color: var(--c-text-secondary); margin-bottom: 10px; font-size: 0.9rem; }
+.actionBox label { display: block; color: var(--c-text-primary); margin-bottom: 10px; font-size: 0.9rem; font-weight: 600; }
 .inputGroup { display: flex; gap: 10px; }
 .inputGroup input {
     flex: 1;
@@ -235,31 +265,68 @@ onMounted(() => {
 .inputGroup button:hover { opacity: 0.9; }
 
 /* Member List */
-.listHeader { color: var(--c-text-secondary); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 15px; }
+.listHeader { color: var(--c-accent); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1.5px; margin-bottom: 15px; font-weight: 700; }
 .memberList { list-style: none; padding: 0; }
 .memberItem {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px;
+    padding: 14px 16px;
     background: var(--c-surface);
     border: 1px solid var(--border-color);
     margin-bottom: 10px;
     border-radius: 10px;
-    transition: transform 0.1s;
+    transition: all 0.2s ease;
 }
-.memberItem:hover { transform: translateX(5px); border-color: var(--c-text-secondary); }
+.memberItem:hover { transform: translateX(5px); border-color: var(--c-accent); background: rgba(249, 115, 22, 0.05); }
 
 .memberInfo { display: flex; align-items: center; gap: 12px; }
-.avatar {
-    width: 32px; height: 32px; background: var(--c-primary); color: white;
-    border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem;
+.memberInfo span {
+    color: var(--c-text-primary);
+    font-size: 0.95rem;
 }
-.adminBadge { font-size: 0.7rem; background: var(--c-accent); color: black; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-weight: bold; }
-.removeBtn { background: transparent; color: var(--c-text-secondary); border: none; cursor: pointer; font-size: 0.9rem; }
-.removeBtn:hover { color: var(--c-primary); text-decoration: underline; }
+.memberInfo strong {
+    color: var(--c-text-primary);
+    font-weight: 600;
+}
+.avatar {
+    width: 36px; height: 36px; background: var(--c-accent); color: white;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 600;
+}
+.adminBadge { font-size: 0.7rem; background: var(--c-accent); color: white; padding: 3px 8px; border-radius: 4px; margin-left: 8px; font-weight: bold; }
+.removeBtn { background: transparent; color: var(--c-text-primary); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
+.removeBtn:hover { color: white; background: #ef4444; border-color: #ef4444; }
 
 /* Scrollbar fix for the list */
 .customScroll::-webkit-scrollbar { width: 5px; }
 .customScroll::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+
+/* Create Group Button */
+.createGroupBtn {
+    width: 100%;
+    padding: 12px 16px;
+    margin-top: 12px;
+    background: var(--c-accent);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.createGroupBtn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+}
+
+.createGroupBtn svg {
+    flex-shrink: 0;
+}
 </style>
