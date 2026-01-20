@@ -49,8 +49,14 @@ class AttachmentsViewSet(viewsets.ModelViewSet):
     serializer_class = AttachmentsSerializer
 
 class CommentViewSet(viewsets.ModelViewSet):
-    queryset = Comment.objects.filter(active=True).order_by('created_at')
     serializer_class = CommentSerializer
+
+    def get_queryset(self):
+        queryset = Comment.objects.filter(active=True).order_by('created_at')
+        task_id = self.request.query_params.get('task')
+        if task_id:
+            queryset = queryset.filter(task_id=task_id)
+        return queryset
 
 
 

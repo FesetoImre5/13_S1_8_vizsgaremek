@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router';
 import ListTask from '../components/ListTask.vue';
 import ListGroup from '../components/ListGroup.vue';
 import TaskCalendar from '../components/TaskCalendar.vue';
+import TaskDetailModal from '../components/TaskDetailModal.vue';
 
 // --- STATE ---
 const route = useRoute();
@@ -18,6 +19,10 @@ const selectedGroupId = ref(null);
 const hoveredTaskId = ref(null);
 const selectedTaskId = ref(null);
 const isCalendarModalOpen = ref(false);
+
+// Task Detail Modal State
+const isTaskDetailOpen = ref(false);
+const detailTask = ref(null);
 
 // New State for Date Filtering
 const selectedDate = ref(null);
@@ -125,7 +130,16 @@ const toggleCalendarModal = () => {
     isCalendarModalOpen.value = !isCalendarModalOpen.value;
 };
 
-const goToDetails = () => { console.log("Details clicked"); };
+const goToDetails = (task) => { 
+    console.log("Details clicked for task:", task); 
+    detailTask.value = task;
+    isTaskDetailOpen.value = true;
+};
+
+const closeTaskDetail = () => {
+    isTaskDetailOpen.value = false;
+    detailTask.value = null;
+};
 
 // --- HELPERS ---
 const getGroupUrl = (group) => {
@@ -198,7 +212,7 @@ onMounted(() => {
                         @hover="onTaskHover"
                         @leave="onTaskLeave"
                         @select="onTaskSelect"
-                        @click="goToDetails"
+                        @click="goToDetails(task)"
                     />
                 </div>
             </div>
@@ -214,17 +228,24 @@ onMounted(() => {
             </div>
         </div>
 
-        <!-- MODAL OVERLAY -->
-        <div v-if="isCalendarModalOpen" class="modal-overlay" @click.self="isCalendarModalOpen = false">
-            <div class="modalContent">
-                <TaskCalendar 
-                    :tasks="tasks"
-                    :hoveredTaskId="selectedTaskId"
-                    :selectedDate="selectedDate"
-                    @date-selected="handleDateSelected"
-                />
-            </div>
+    <TaskDetailModal 
+        :isOpen="isTaskDetailOpen"
+        :task="detailTask"
+        @close="closeTaskDetail"
+        @task-updated="fetchTasks"
+    />
+
+    <!-- MODAL OVERLAY (Calendar) -->
+    <div v-if="isCalendarModalOpen" class="modal-overlay" @click.self="isCalendarModalOpen = false">
+        <div class="modalContent">
+            <TaskCalendar 
+                :tasks="tasks"
+                :hoveredTaskId="selectedTaskId"
+                :selectedDate="selectedDate"
+                @date-selected="handleDateSelected"
+            />
         </div>
+    </div>
     </div>
 </template>
 
