@@ -10,18 +10,18 @@ class GroupMemberInline(admin.TabularInline):
 
 class CustomUserAdmin(UserAdmin):
     model = User
-    # Display display_name in the list view
-    list_display = UserAdmin.list_display + ('display_name',)
+    # Display fields in the list view
+    list_display = UserAdmin.list_display + ('profile_picture',)
     
     # Restoring standard fieldsets (which includes 'groups' and 'user_permissions')
     # and appending our custom field
     fieldsets = UserAdmin.fieldsets + (
-        ('Extra Info', {'fields': ('display_name',)}),
+        ('Extra Info', {'fields': ('profile_picture',)}),
     )
     
-    # Add display_name to the creation form
+    # Add custom fields to the creation form
     add_fieldsets = UserAdmin.add_fieldsets + (
-        (None, {'fields': ('display_name',)}),
+        (None, {'fields': ('profile_picture',)}),
     )
     
     # date_joined is auto_now_add=True in our model, so it's non-editable.
