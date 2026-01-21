@@ -37,24 +37,37 @@ class GroupMemberSerializer(serializers.ModelSerializer):
         required = False,
     )
     username = serializers.CharField(write_only=True, required=False)
+    email = serializers.EmailField(write_only=True, required=False)
     group_detail = GroupSerializer(source = 'group', read_only = True)
     user_detail = UserListSerializer(source = 'user', read_only = True)
 
     class Meta:
         model = GroupMember
-        fields = ('id', 'user_detail', 'group_detail', 'user', 'group', 'username', 'role', 'joined_at')
+        fields = ('id', 'user_detail', 'group_detail', 'user', 'group', 'username', 'email', 'role', 'joined_at')
         read_only_fields = ('joined_at', 'group_detail', 'user_detail',)
     
     def create(self, validated_data):
-        # If username is provided, look up the user
+        # Priority: user (already in validated_data if ID passed) > email > username
+        user = validated_data.get('user')
+        email = validated_data.pop('email', None)
         username = validated_data.pop('username', None)
-        if username:
-            try:
-                user = User.objects.get(username=username)
-                validated_data['user'] = user
-            except User.DoesNotExist:
-                raise serializers.ValidationError({'username': 'User with this username does not exist.'})
-        
+
+        if not user:
+            if email:
+                try:
+                    user = User.objects.get(email__iexact=email)
+                    validated_data['user'] = user
+                except User.DoesNotExist:
+                    raise serializers.ValidationError({'email': 'User with this email does not exist.'})
+            elif username:
+                try:
+                    user = User.objects.get(username__iexact=username)
+                    validated_data['user'] = user
+                except User.DoesNotExist:
+                    raise serializers.ValidationError({'username': 'User with this username does not exist.'})
+            else:
+                 raise serializers.ValidationError({'detail': 'Must provide user ID, email, or username.'})
+
         # Check if user is already a member of this group
         if GroupMember.objects.filter(group=validated_data['group'], user=validated_data['user']).exists():
             raise serializers.ValidationError({'detail': 'User is already a member of this group.'})
