@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import URLValidator
+from django.utils import timezone
 
 class Task(models.Model):
     PRIORITY_CHOICES = (
@@ -13,6 +14,7 @@ class Task(models.Model):
         ('todo', 'To Do'),
         ('in_progress', 'In Progress'),
         ('done', 'Done'),
+        ('missed', 'Missed'),
         ('archived', 'Archived'),
     )
 
@@ -54,10 +56,19 @@ class Task(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     imageUrl = models.TextField(validators=[URLValidator()], blank=True, null=True)
+    image = models.ImageField(upload_to='task_images/', blank=True, null=True)
     active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        if self.status == 'done' and not self.completed_at:
+            self.completed_at = timezone.now()
+        elif self.status != 'done' and self.completed_at:
+             # Optional: Clear completed_at if status changes back from done
+             self.completed_at = None
+        super().save(*args, **kwargs)
 
 class Assigned(models.Model):
     task = models.ForeignKey(

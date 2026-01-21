@@ -139,7 +139,7 @@ class TaskSerializer(serializers.ModelSerializer):
             'created_by_userid',
             'assigned_to_userid',
             'assignments', 'comments', 'attachments',
-            'imageUrl',
+            'imageUrl', 'image',
         )
         read_only_fields = ('group_detail', 'created_at', 'updated_at', 'completed_at', 'active',)
         extra_kwargs = {

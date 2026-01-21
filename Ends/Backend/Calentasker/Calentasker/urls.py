@@ -27,3 +27,9 @@ urlpatterns = [
     path('api/', include(api_router.urls)),
     path('api/login/', CustomAuthToken.as_view(), name='api_login'),
 ]
+
+from django.conf import settings
+from django.conf.urls.static import static
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

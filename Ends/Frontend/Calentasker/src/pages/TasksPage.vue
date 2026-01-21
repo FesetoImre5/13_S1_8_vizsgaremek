@@ -3,7 +3,7 @@ import { ref, onMounted, watch, computed } from 'vue';
 import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router'; 
 import ListTask from '../components/ListTask.vue';
-import ListGroup from '../components/ListGroup.vue';
+import ListGroupIcon from '../components/ListGroupIcon.vue';
 import TaskCalendar from '../components/TaskCalendar.vue';
 import TaskDetailModal from '../components/TaskDetailModal.vue';
 
@@ -167,7 +167,7 @@ onMounted(() => {
             <!-- COLUMN 1: SIDEBAR -->
             <div class="sidebar-area">
                 <div class="sidebar-scroll">
-                    <list-group
+                    <list-group-icon
                         v-for="group in groups"
                         :key="group.id"
                         :url="getGroupUrl(group)"
