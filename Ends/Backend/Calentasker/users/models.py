@@ -35,3 +35,6 @@ class User(AbstractUser):
             return self.username
         name = f"{self.first_name} {self.last_name}".strip()
         return name if name else self.email
+
+    def __str__(self):
+        return self.display_username

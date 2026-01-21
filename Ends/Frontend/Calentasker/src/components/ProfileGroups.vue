@@ -1,8 +1,9 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 import ListGroup from './ListGroup.vue';
 import CreateGroupModal from './CreateGroupModal.vue';
+import UserSearch from './UserSearch.vue';
 
 // --- STATE ---
 const groups = ref([]);
@@ -11,7 +12,7 @@ const groupMembers = ref([]);
 const loading = ref(false);
 const memberLoading = ref(false);
 
-const newMemberUsername = ref('');
+// const newMemberUsername = ref(''); // No longer needed
 const addMemberError = ref('');
 const addMemberSuccess = ref('');
 
@@ -35,7 +36,7 @@ const fetchMyGroups = async () => {
 const selectGroup = async (group) => {
     selectedGroup.value = group;
     groupMembers.value = [];
-    newMemberUsername.value = '';
+    // newMemberUsername.value = '';
     addMemberError.value = ''; 
     addMemberSuccess.value = '';
     
@@ -50,21 +51,33 @@ const selectGroup = async (group) => {
     }
 };
 
-const addMember = async () => {
-    if (!newMemberUsername.value.trim()) return;
+// Computed property to exclude users who are already members
+const excludedUserIds = computed(() => {
+    return groupMembers.value.map(m => m.user_detail.id);
+});
+
+const addMember = async (user) => {
+    if (!user || !user.id) return;
     addMemberError.value = '';
     addMemberSuccess.value = '';
 
     try {
-        const payload = { group: selectedGroup.value.id, username: newMemberUsername.value };
+        // Use user ID instead of username
+        const payload = { group: selectedGroup.value.id, user: user.id }; 
         const response = await axios.post('http://127.0.0.1:8000/api/group-members/', payload);
         groupMembers.value.push(response.data);
         addMemberSuccess.value = `User added!`;
-        newMemberUsername.value = '';
+        
+        // Hide success message after 3 seconds
+        setTimeout(() => {
+            addMemberSuccess.value = '';
+        }, 3000);
+        
     } catch (error) {
         if (error.response && error.response.data) {
              const data = error.response.data;
-             addMemberError.value = data.detail || (data.username ? data.username[0] : "Failed to add.");
+             // Handle generic or field-specific errors
+             addMemberError.value = data.detail || (data.user ? data.user[0] : "Failed to add.");
         } else {
             addMemberError.value = "Network error.";
         }
@@ -148,12 +161,16 @@ onMounted(() => {
                     <!-- Add Member -->
                     <div class="actionBox">
                         <label>Add New Member</label>
-                        <div class="inputGroup">
-                            <input v-model="newMemberUsername" type="text" placeholder="Enter username..." @keyup.enter="addMember">
-                            <button @click="addMember">Add</button>
+                        <!-- Replaced inputGroup with UserSearch -->
+                         <div class="searchWrapper">
+                            <UserSearch 
+                                placeholder="Search by email or name..." 
+                                :exclude="excludedUserIds" 
+                                @select="addMember" 
+                            />
                         </div>
-                        <small v-if="addMemberError" class="text-danger">{{ addMemberError }}</small>
-                        <small v-if="addMemberSuccess" class="text-success">{{ addMemberSuccess }}</small>
+                        <small v-if="addMemberError" class="text-danger mt-2 d-block">{{ addMemberError }}</small>
+                        <small v-if="addMemberSuccess" class="text-success mt-2 d-block">{{ addMemberSuccess }}</small>
                     </div>
 
                     <!-- Member List -->
@@ -161,9 +178,10 @@ onMounted(() => {
                     <ul class="memberList">
                         <li v-for="m in groupMembers" :key="m.id" class="memberItem">
                             <div class="memberInfo">
-                                <div class="avatar">{{ m.user_detail.username.charAt(0) }}</div>
+                                <div class="avatar">{{ m.user_detail.username ? m.user_detail.username.charAt(0).toUpperCase() : '?' }}</div>
                                 <span>
-                                    <strong>{{ m.user_detail.username }}</strong>
+                                    <!-- Use display_username from backend if available, or fallback -->
+                                    <strong>{{ m.user_detail.display_username || m.user_detail.username }}</strong>
                                     <span v-if="m.isAdmin" class="adminBadge">ADMIN</span>
                                 </span>
                             </div>
@@ -240,29 +258,17 @@ onMounted(() => {
     border-radius: var(--radius-md);
     margin-bottom: 30px;
     border: 1px solid var(--border-color);
+    overflow: visible; /* Ensure dropdown isn't clipped */
 }
 .actionBox label { display: block; color: var(--c-text-primary); margin-bottom: 10px; font-size: 0.9rem; font-weight: 600; }
-.inputGroup { display: flex; gap: 10px; }
-.inputGroup input {
-    flex: 1;
-    background: var(--c-bg);
-    border: 1px solid var(--border-color);
-    color: var(--c-text-primary);
-    padding: 10px 15px;
-    border-radius: 8px;
-    outline: none;
+
+/* Replaced .inputGroup with .searchWrapper since UserSearch handles conflicts */
+.searchWrapper {
+    width: 100%;
+    position: relative;
+    /* Optional: Add z-index if dropdown gets cut off, though UserSearch usually handles it */
+    z-index: 10;
 }
-.inputGroup input:focus { border-color: var(--c-accent); }
-.inputGroup button {
-    background: var(--c-accent);
-    color: white;
-    border: none;
-    padding: 0 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-}
-.inputGroup button:hover { opacity: 0.9; }
 
 /* Member List */
 .listHeader { color: var(--c-accent); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1.5px; margin-bottom: 15px; font-weight: 700; }

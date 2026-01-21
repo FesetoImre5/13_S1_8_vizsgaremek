@@ -41,7 +41,6 @@ export default {
         isFormValid() {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             return emailRegex.test(this.email) && 
-                this.username.length > 0 && 
                 this.password.length >= 6 &&
                 this.firstName.length > 0 &&
                 this.lastName.length > 0;
@@ -101,10 +100,7 @@ export default {
             return true;
         },
         validateUsername() {
-            if (this.username.trim() === '') {
-                this.usernameError = 'Username is required.';
-                return false;
-            }
+            // Username is now optional
             this.usernameError = '';
             return true;
         },
@@ -136,7 +132,7 @@ export default {
             try {
                 // 2. Prepare payload (Convert your camelCase vars to Django snake_case)
                 const payload = {
-                    username: this.username,
+                    username: this.username.trim() ? this.username : null,
                     email: this.email,
                     password: this.password,
                     first_name: this.firstName,
@@ -225,7 +221,7 @@ export default {
                     @focus="isUsernameFocused = true" 
                     @blur="handleUsernameBlur" 
                 />
-                <label>Username</label>
+                <label>Username (Optional)</label>
             </div>
 
             <!-- Password Input Group -->

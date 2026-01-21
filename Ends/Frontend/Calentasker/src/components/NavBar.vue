@@ -45,7 +45,7 @@ const handleLogout = () => {
             <!-- GROUP 2 (RIGHT): User Controls -->
             <div class="navRight" v-if="user">
                 <router-link to="/profile" class="usernameLink">
-                    {{ user.username }}
+                    {{ user.display_username || user.username }}
                 </router-link>
                 <button class="logoutBtn" @click="handleLogout">
                     Log Out
@@ -84,7 +84,7 @@ const handleLogout = () => {
                     <!-- Mobile User Controls -->
                      <li v-if="user" class="mobileUserControls">
                         <router-link to="/profile" class="mobileButton" @click="isMenuOpen = false">
-                            Profile ({{ user.username }})
+                            Profile ({{ user.display_username || user.username }})
                         </router-link>
                         <button class="mobileButton logout" @click="handleLogout; isMenuOpen = false">
                             Log Out

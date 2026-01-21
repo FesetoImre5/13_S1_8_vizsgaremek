@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import axios from 'axios';
+import UserSearch from './UserSearch.vue';
 
 const emit = defineEmits(['close', 'groupCreated']);
 
@@ -9,7 +10,8 @@ const groupTitle = ref('');
 const groupDescription = ref('');
 const coverImage = ref(null);
 const coverImagePreview = ref('');
-const memberUsernames = ref('');
+// Replaced memberUsernames with selectedMembers array
+const selectedMembers = ref([]); 
 const isSubmitting = ref(false);
 const error = ref('');
 const success = ref('');
@@ -31,6 +33,20 @@ const handleImageUpload = (event) => {
 const removeImage = () => {
     coverImage.value = null;
     coverImagePreview.value = '';
+};
+
+// Handle User Selection from UserSearch
+const handleUserSelect = (user) => {
+    // Check if already selected
+    if (selectedMembers.value.some(m => m.id === user.id)) {
+        return;
+    }
+    selectedMembers.value.push(user);
+};
+
+// Remove member from list
+const removeMember = (userId) => {
+    selectedMembers.value = selectedMembers.value.filter(m => m.id !== userId);
 };
 
 // Create group
@@ -66,16 +82,15 @@ const createGroup = async () => {
         const newGroup = response.data;
         
         // Add members if specified
-        if (memberUsernames.value.trim()) {
-            const usernames = memberUsernames.value.split(',').map(u => u.trim()).filter(u => u);
-            for (const username of usernames) {
+        if (selectedMembers.value.length > 0) {
+            for (const member of selectedMembers.value) {
                 try {
                     await axios.post('http://127.0.0.1:8000/api/group-members/', {
                         group: newGroup.id,
-                        username: username
+                        user: member.id  // sending user ID instead of username
                     });
                 } catch (err) {
-                    console.error(`Failed to add member ${username}:`, err);
+                    console.error(`Failed to add member ${member.display_username || member.username}:`, err);
                 }
             }
         }
@@ -167,14 +182,32 @@ const closeModal = () => {
                 
                 <!-- Add Members -->
                 <div class="formGroup">
-                    <label for="memberUsernames">Add Members (optional)</label>
-                    <input 
-                        id="memberUsernames"
-                        v-model="memberUsernames" 
-                        type="text" 
-                        placeholder="Enter usernames separated by commas..."
-                    >
-                    <small class="helpText">Example: user1, user2, user3</small>
+                    <label>Add Members (optional)</label>
+                    
+                    <!-- Selected Members Chips -->
+                    <div v-if="selectedMembers.length > 0" class="selected-members-container">
+                        <div v-for="member in selectedMembers" :key="member.id" class="member-chip">
+                            <img 
+                                v-if="member.profile_picture" 
+                                :src="member.profile_picture" 
+                                alt="avatar" 
+                                class="chip-avatar"
+                            >
+                             <div v-else class="chip-avatar-placeholder">
+                                {{ (member.first_name?.[0] || member.display_username?.[0] || member.email?.[0] || '?').toUpperCase() }}
+                             </div>
+                            
+                            <span class="chip-name">{{ member.display_username || member.email }}</span>
+                            <button class="chip-remove" @click="removeMember(member.id)">&times;</button>
+                        </div>
+                    </div>
+
+                    <!-- User Search Component -->
+                    <UserSearch 
+                        placeholder="Search by email or name to add members..." 
+                        :exclude="selectedMembers.map(m => m.id)"
+                        @select="handleUserSelect"
+                    />
                 </div>
                 
                 <!-- Error/Success Messages -->
@@ -457,5 +490,66 @@ const closeModal = () => {
 .modalBody::-webkit-scrollbar-thumb {
     background: var(--border-color);
     border-radius: 10px;
+}
+
+/* Selected Members Chips */
+.selected-members-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.member-chip {
+    display: flex;
+    align-items: center;
+    background: var(--c-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 4px 12px 4px 4px;
+    font-size: 0.9rem;
+}
+
+.chip-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    margin-right: 8px;
+    object-fit: cover;
+}
+
+.chip-avatar-placeholder {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    margin-right: 8px;
+    background: #ccc;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.chip-name {
+    margin-right: 8px;
+    color: var(--c-text-primary);
+}
+
+.chip-remove {
+    background: none;
+    border: none;
+    color: var(--c-text-secondary);
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    line-height: 1;
+}
+
+.chip-remove:hover {
+    color: #ef4444;
 }
 </style>

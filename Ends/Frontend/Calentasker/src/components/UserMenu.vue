@@ -80,7 +80,7 @@ const isAuthActive = (mode) => {
                 @click="toggleMenu"
                 :class="{ 'active': isOpen }"
             >
-                <span class="username">{{ user.username }}</span>
+                <span class="username">{{ user.display_username || user.username }}</span>
                 <span class="arrow" :class="{ 'flipped': isOpen }">▼</span>
             </button>
 
