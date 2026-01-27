@@ -31,9 +31,9 @@ const selectedDate = ref(null);
 const fetchGroups = async () => {
     try {
         const currentUserId = parseInt(localStorage.getItem('user_id'));
-        const response = await axios.get('http://127.0.0.1:8000/api/group-members/');
-        const myMemberships = response.data.filter(item => item.user_detail.id === currentUserId);
-        groups.value = myMemberships.map(item => item.group_detail);
+        // Updated to use server-side filtering
+        const response = await axios.get(`http://127.0.0.1:8000/api/group-members/?user=${currentUserId}`);
+        groups.value = response.data.map(item => item.group_detail);
 
         if (groups.value.length > 0 && !route.query.group) {
             handleGroupClick(groups.value[0].id);
@@ -144,6 +144,7 @@ const closeTaskDetail = () => {
 // --- HELPERS ---
 const getGroupUrl = (group) => {
     if (group.imageUrl) return group.imageUrl;
+    if (group.image) return group.image;
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(group.groupname)}&background=random&color=fff&size=128`;
 };
 
