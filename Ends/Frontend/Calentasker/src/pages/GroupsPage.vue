@@ -254,7 +254,7 @@ onMounted(() => {
 .detailsInner { padding: 30px; }
 
 .emptyState {
-    height: 100%;
+    height: calc(100% - 40px);
     display: flex;
     align-items: center;
     justify-content: center;

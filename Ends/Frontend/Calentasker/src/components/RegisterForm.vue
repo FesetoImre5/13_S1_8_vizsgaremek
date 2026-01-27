@@ -24,7 +24,15 @@ export default {
             isUsernameFocused: false,
             isPasswordFocused: false,
             isFirstNameFocused: false,
-            isLastNameFocused: false
+
+            isLastNameFocused: false,
+
+             // Image Upload State
+            imageMode: 'upload', // 'upload' or 'url'
+            profileImage: null,
+            profileImagePreview: '',
+            profileImageUrl: '',
+            isProfileImageUrlFocused: false
         };
     },
     computed: {
@@ -197,7 +205,7 @@ export default {
     <div class="authCard">
         <h2 class="title">Register</h2>
 
-        <h2 class="title">Register</h2>
+
 
         <form @submit.prevent="register">
             
@@ -513,10 +521,10 @@ export default {
 }
 .toggle-switch {
     display: flex;
-    background: #f3f4f6;
     border-radius: 6px;
     padding: 2px;
     border: 1px solid #e5e7eb;
+    gap: 5px;
 }
 .toggle-switch span {
     padding: 2px 8px;
