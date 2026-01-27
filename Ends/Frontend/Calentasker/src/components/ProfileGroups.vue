@@ -23,9 +23,9 @@ const fetchMyGroups = async () => {
     loading.value = true;
     try {
         const currentUserId = parseInt(localStorage.getItem('user_id'));
-        const response = await axios.get('http://127.0.0.1:8000/api/group-members/');
-        const myMemberships = response.data.filter(item => item.user_detail.id === currentUserId);
-        groups.value = myMemberships.map(item => item.group_detail);
+        // Updated to use server-side filtering
+        const response = await axios.get(`http://127.0.0.1:8000/api/group-members/?user=${currentUserId}`);
+        groups.value = response.data.map(item => item.group_detail);
     } catch (error) {
         console.error("Failed to load groups", error);
     } finally {
@@ -53,7 +53,12 @@ const selectGroup = async (group) => {
 
 // Computed property to exclude users who are already members
 const excludedUserIds = computed(() => {
-    return groupMembers.value.map(m => m.user_detail.id);
+    const ids = groupMembers.value.map(m => m.user_detail.id);
+    const currentUserId = Number(localStorage.getItem('user_id'));
+    if (currentUserId && !isNaN(currentUserId) && !ids.includes(currentUserId)) {
+        ids.push(currentUserId);
+    }
+    return ids;
 });
 
 const addMember = async (user) => {

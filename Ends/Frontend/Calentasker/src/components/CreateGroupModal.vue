@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import axios from 'axios';
 import UserSearch from './UserSearch.vue';
 
@@ -17,6 +17,15 @@ const selectedMembers = ref([]);
 const isSubmitting = ref(false);
 const error = ref('');
 const success = ref('');
+
+const excludedUsers = computed(() => {
+    const ids = selectedMembers.value.map(m => m.id);
+    const userId = Number(localStorage.getItem('user_id'));
+    if (userId && !isNaN(userId)) {
+        ids.push(userId);
+    }
+    return ids;
+});
 
 // Handle image upload
 const handleImageUpload = (event) => {
@@ -166,7 +175,12 @@ const closeModal = () => {
                         </div>
                         <div v-else class="imagePreview">
                             <img :src="coverImagePreview" alt="Cover preview">
-                            <button class="removeImageBtn" @click="removeImage">&times;</button>
+                            <button class="removeImageBtn" @click="removeImage">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
                         </div>
                     </div>
 
@@ -231,7 +245,7 @@ const closeModal = () => {
                     <!-- User Search Component -->
                     <UserSearch 
                         placeholder="Search by email or name to add members..." 
-                        :exclude="selectedMembers.map(m => m.id)"
+                        :exclude="excludedUsers"
                         @select="handleUserSelect"
                     />
                 </div>

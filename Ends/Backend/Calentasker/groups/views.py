@@ -49,6 +49,12 @@ class GroupMemberViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = self.queryset
         group_id = self.request.query_params.get('group')
+        user_id = self.request.query_params.get('user')
+        
         if group_id is not None:
             queryset = queryset.filter(group_id=group_id)
+            
+        if user_id is not None:
+            queryset = queryset.filter(user_id=user_id)
+            
         return queryset
