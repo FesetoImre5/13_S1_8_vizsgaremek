@@ -31,6 +31,17 @@ class GroupViewSet(viewsets.ModelViewSet):
             role='leader'
         )
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.created_by_userid != request.user:
+            from rest_framework.response import Response
+            from rest_framework import status
+            return Response(
+                {"detail": "Only the group creator can delete this group."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().destroy(request, *args, **kwargs)
+
 class GroupMemberViewSet(viewsets.ModelViewSet):
     queryset = GroupMember.objects.all()
     serializer_class = GroupMemberSerializer

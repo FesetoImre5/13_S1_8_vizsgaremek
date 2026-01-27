@@ -85,6 +85,7 @@ const removeMember = async (membershipId) => {
 
 const getGroupUrl = (group) => {
     if (group.imageUrl) return group.imageUrl;
+    if (group.image) return group.image;
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(group.groupname)}&background=random&color=fff&size=128`;
 };
 

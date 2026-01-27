@@ -51,6 +51,23 @@ export default {
             this.capsLockOn = e.getModifierState && e.getModifierState('CapsLock');
         },
         
+        handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                this.profileImage = file;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.profileImagePreview = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        },
+
+        removeImage() {
+            this.profileImage = null;
+            this.profileImagePreview = '';
+        },
+
         // --- Blur Handlers (Preserves your animation logic) ---
         handleFirstNameBlur() {
             this.validateFirstName();
@@ -131,17 +148,26 @@ export default {
 
             try {
                 // 2. Prepare payload (Convert your camelCase vars to Django snake_case)
-                const payload = {
-                    username: this.username.trim() ? this.username : null,
-                    email: this.email,
-                    password: this.password,
-                    first_name: this.firstName,
-                    last_name: this.lastName
-                };
+                // 2. Prepare Payload (FormData for file upload)
+                const formData = new FormData();
+                if (this.username.trim()) formData.append('username', this.username.trim());
+                formData.append('email', this.email);
+                formData.append('password', this.password);
+                formData.append('first_name', this.firstName);
+                formData.append('last_name', this.lastName);
+
+                // Image Logic
+                if (this.imageMode === 'upload' && this.profileImage) {
+                    formData.append('profile_picture', this.profileImage);
+                } else if (this.imageMode === 'url' && this.profileImageUrl.trim()) {
+                    formData.append('profile_picture_url', this.profileImageUrl.trim());
+                }
 
                 // 3. Send Request to your Django API
                 // Assuming your screenshot endpoint: /api/users/
-                await axios.post('http://127.0.0.1:8000/api/users/', payload);
+                await axios.post('http://127.0.0.1:8000/api/users/', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
 
                 // 4. On Success
                 alert("Account created successfully! Please log in.");
@@ -171,7 +197,50 @@ export default {
     <div class="authCard">
         <h2 class="title">Register</h2>
 
+        <h2 class="title">Register</h2>
+
         <form @submit.prevent="register">
+            
+            <!-- Profile Image Section -->
+            <div class="profile-image-section">
+                <div class="label-row">
+                    <label>Profile Picture</label>
+                    <div class="toggle-switch">
+                        <span :class="{ active: imageMode === 'upload' }" @click="imageMode = 'upload'">Upload</span>
+                        <span :class="{ active: imageMode === 'url' }" @click="imageMode = 'url'">URL</span>
+                    </div>
+                </div>
+
+                <!-- Upload Mode -->
+                <div v-if="imageMode === 'upload'" class="image-upload-box">
+                    <div v-if="!profileImagePreview" class="upload-placeholder">
+                        <input type="file" id="pfpInput" accept="image/*" @change="handleImageUpload" hidden>
+                        <label for="pfpInput" class="upload-label">
+                            <span class="plus-icon">+</span>
+                            <span>Upload</span>
+                        </label>
+                    </div>
+                    <div v-else class="image-preview">
+                        <img :src="profileImagePreview" alt="Preview">
+                        <button type="button" class="remove-btn" @click="removeImage">&times;</button>
+                    </div>
+                </div>
+
+                <!-- URL Mode -->
+                <div v-else class="inputGroup" :class="{ 'is-active': profileImageUrl || isProfileImageUrlFocused }">
+                    <input 
+                        v-model="profileImageUrl" 
+                        type="text" 
+                        @focus="isProfileImageUrlFocused = true" 
+                        @blur="isProfileImageUrlFocused = false" 
+                    />
+                    <label>Image URL</label>
+                </div>
+                 <div v-if="imageMode === 'url' && profileImageUrl" class="url-preview-small">
+                    <img :src="profileImageUrl" @error="$event.target.style.display='none'" onload="this.style.display='block'">
+                </div>
+            </div>
+
             <!-- First Name Input Group -->
             <p v-if="firstNameError" class="errorMessage">{{ firstNameError }}</p>
             <div class="inputGroup" :class="{ 'is-active': firstName || isFirstNameFocused }">
@@ -424,16 +493,122 @@ export default {
     cursor: pointer; 
     color: orangered; 
     font-weight: bold; /* Make the link stand out more */
+    opacity:1; 
 }
 
-@keyframes pop {
-    from {
-        transform: scale(0.9);
-        opacity:0; 
-    } 
-    to { 
-    transform: scale(1); 
-    opacity:1; 
-    } 
+/* Image Upload Styles */
+.profile-image-section {
+    margin-bottom: 20px;
 }
+.label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.label-row label {
+    font-size: 0.9rem;
+    color: #6b7280;
+    font-weight: 600;
+}
+.toggle-switch {
+    display: flex;
+    background: #f3f4f6;
+    border-radius: 6px;
+    padding: 2px;
+    border: 1px solid #e5e7eb;
+}
+.toggle-switch span {
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    border-radius: 4px;
+    color: #6b7280;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+.toggle-switch span.active {
+    background: white;
+    color: rgb(255, 68, 0);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.image-upload-box {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px dashed #d1d5db;
+    position: relative;
+    transition: all 0.2s;
+}
+.image-upload-box:hover {
+    border-color: rgb(255, 68, 0);
+    background: #fff7ed;
+}
+
+.upload-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    color: #9ca3af;
+    font-size: 0.8rem;
+}
+.plus-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+    margin-bottom: 2px;
+}
+
+.image-preview {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.remove-btn {
+    position: absolute;
+    top: 0; right: 0; bottom: 0; left: 0;
+    background: rgba(0,0,0,0.5);
+    color: white;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.image-preview:hover .remove-btn {
+    opacity: 1;
+}
+
+.url-preview-small {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 10px auto 0;
+    border: 1px solid #e5e7eb;
+}
+.url-preview-small img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
 </style>

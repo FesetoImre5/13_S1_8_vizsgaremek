@@ -10,6 +10,8 @@ const groupTitle = ref('');
 const groupDescription = ref('');
 const coverImage = ref(null);
 const coverImagePreview = ref('');
+const imageUrl = ref('');
+const imageMode = ref('upload'); // 'upload' or 'url'
 // Replaced memberUsernames with selectedMembers array
 const selectedMembers = ref([]); 
 const isSubmitting = ref(false);
@@ -68,8 +70,12 @@ const createGroup = async () => {
         if (groupDescription.value.trim()) {
             formData.append('description', groupDescription.value);
         }
-        if (coverImage.value) {
+        
+        // Handle Image Logic
+        if (imageMode.value === 'upload' && coverImage.value) {
             formData.append('image', coverImage.value);
+        } else if (imageMode.value === 'url' && imageUrl.value.trim()) {
+             formData.append('imageUrl', imageUrl.value.trim());
         }
         
         // Create the group
@@ -129,10 +135,18 @@ const closeModal = () => {
             </div>
             
             <div class="modalBody">
-                <!-- Cover Image Upload -->
+                <!-- Cover Image Section -->
                 <div class="formGroup">
-                    <label>Cover Image</label>
-                    <div class="imageUploadArea">
+                    <div class="label-row">
+                        <label>Cover Image</label>
+                        <div class="toggle-switch">
+                            <span :class="{ active: imageMode === 'upload' }" @click="imageMode = 'upload'">Upload</span>
+                            <span :class="{ active: imageMode === 'url' }" @click="imageMode = 'url'">URL</span>
+                        </div>
+                    </div>
+
+                    <!-- UPLOAD MODE -->
+                    <div v-if="imageMode === 'upload'" class="imageUploadArea">
                         <div v-if="!coverImagePreview" class="uploadPlaceholder">
                             <input 
                                 type="file" 
@@ -153,6 +167,18 @@ const closeModal = () => {
                         <div v-else class="imagePreview">
                             <img :src="coverImagePreview" alt="Cover preview">
                             <button class="removeImageBtn" @click="removeImage">&times;</button>
+                        </div>
+                    </div>
+
+                    <!-- URL MODE -->
+                    <div v-else class="urlInputArea">
+                         <input 
+                            v-model="imageUrl" 
+                            type="text" 
+                            placeholder="https://example.com/image.png"
+                        >
+                        <div v-if="imageUrl" class="urlPreview">
+                            <img :src="imageUrl" alt="Preview" @error="imageUrl = ''">
                         </div>
                     </div>
                 </div>
@@ -413,6 +439,58 @@ const closeModal = () => {
 .removeImageBtn:hover {
     background: rgba(255, 0, 0, 0.8);
     transform: scale(1.1);
+}
+
+/* URL Input Styles */
+.label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.toggle-switch {
+    display: flex;
+    background: var(--c-bg);
+    border-radius: 6px;
+    padding: 2px;
+    border: 1px solid var(--border-color);
+}
+
+.toggle-switch span {
+    padding: 4px 12px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    border-radius: 4px;
+    color: var(--c-text-secondary);
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.toggle-switch span.active {
+    background: var(--c-surface);
+    color: var(--c-accent);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.urlInputArea {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.urlPreview {
+    height: 150px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    background: black;
+}
+
+.urlPreview img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 /* Messages */
