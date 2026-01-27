@@ -20,6 +20,17 @@ class GroupViewSet(viewsets.ModelViewSet):
              
         return queryset
 
+    def perform_create(self, serializer):
+        # Save group with the creator
+        group = serializer.save(created_by_userid=self.request.user)
+        
+        # Add creator as a member (Leader)
+        GroupMember.objects.create(
+            group=group,
+            user=self.request.user,
+            role='leader'
+        )
+
 class GroupMemberViewSet(viewsets.ModelViewSet):
     queryset = GroupMember.objects.all()
     serializer_class = GroupMemberSerializer

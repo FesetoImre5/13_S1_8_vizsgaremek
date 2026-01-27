@@ -69,7 +69,7 @@ const createGroup = async () => {
             formData.append('description', groupDescription.value);
         }
         if (coverImage.value) {
-            formData.append('imageUrl', coverImage.value);
+            formData.append('image', coverImage.value);
         }
         
         // Create the group

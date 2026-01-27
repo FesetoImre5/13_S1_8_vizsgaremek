@@ -52,7 +52,7 @@ const handleLogout = () => {
                 </button>
             </div>
              <div class="navRight" v-else>
-                 <router-link to="/auth" class="navButton">Login</router-link>
+                 <router-link to="/auth" class="navButton">Login/Register</router-link>
             </div>
 
 
@@ -91,7 +91,7 @@ const handleLogout = () => {
                         </button>
                     </li>
                     <li v-else>
-                         <router-link to="/auth" class="mobileButton" @click="isMenuOpen=false">Login</router-link>
+                         <router-link to="/auth" class="mobileButton" @click="isMenuOpen=false">Login/Register</router-link>
                     </li>
                 </ul>
             </div>

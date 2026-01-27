@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 import ListGroup from '../components/ListGroup.vue';
 import CreateGroupModal from '../components/CreateGroupModal.vue';
@@ -10,6 +10,9 @@ const selectedGroup = ref(null);
 const groupMembers = ref([]);
 const loading = ref(false);
 const memberLoading = ref(false);
+
+const leaders = computed(() => groupMembers.value.filter(m => m.role === 'leader'));
+const regularMembers = computed(() => groupMembers.value.filter(m => m.role !== 'leader'));
 
 const newMemberUsername = ref('');
 const addMemberError = ref('');
@@ -93,8 +96,13 @@ const closeCreateModal = () => {
     showCreateModal.value = false;
 };
 
-const handleGroupCreated = (newGroup) => {
-    fetchMyGroups();
+const handleGroupCreated = async (newGroup) => {
+    await fetchMyGroups();
+    // Fallback: If the new group is not in the list (e.g. race condition/cache), add it manually
+    if (!groups.value.some(g => g.id === newGroup.id)) {
+        groups.value.push(newGroup);
+    }
+    selectGroup(newGroup);
 };
 
 onMounted(() => {
@@ -156,20 +164,40 @@ onMounted(() => {
                         <small v-if="addMemberSuccess" class="text-success">{{ addMemberSuccess }}</small>
                     </div>
 
+                    <!-- Leaders List -->
+                    <div v-if="leaders.length > 0" class="mb-4">
+                        <h6 class="listHeader">Leaders ({{ leaders.length }})</h6>
+                        <ul class="memberList">
+                            <li v-for="m in leaders" :key="m.id" class="memberItem">
+                                <div class="memberInfo">
+                                    <div class="avatar">{{ m.user_detail.username.charAt(0).toUpperCase() }}</div>
+                                    <span>
+                                        <strong>{{ m.user_detail.username }}</strong>
+                                        <span class="roleBadge leader">LEADER</span>
+                                    </span>
+                                </div>
+                                <button class="removeBtn" @click="removeMember(m.id)">Remove</button>
+                            </li>
+                        </ul>
+                    </div>
+
                     <!-- Member List -->
-                    <h6 class="listHeader">Members ({{ groupMembers.length }})</h6>
-                    <ul class="memberList">
-                        <li v-for="m in groupMembers" :key="m.id" class="memberItem">
-                            <div class="memberInfo">
-                                <div class="avatar">{{ m.user_detail.username.charAt(0) }}</div>
-                                <span>
-                                    <strong>{{ m.user_detail.username }}</strong>
-                                    <span v-if="m.isAdmin" class="adminBadge">ADMIN</span>
-                                </span>
-                            </div>
-                            <button class="removeBtn" @click="removeMember(m.id)">Remove</button>
-                        </li>
-                    </ul>
+                    <div v-if="regularMembers.length > 0">
+                        <h6 class="listHeader">Members ({{ regularMembers.length }})</h6>
+                        <ul class="memberList">
+                            <li v-for="m in regularMembers" :key="m.id" class="memberItem">
+                                <div class="memberInfo">
+                                    <div class="avatar">{{ m.user_detail.username.charAt(0).toUpperCase() }}</div>
+                                    <span>
+                                        <strong>{{ m.user_detail.username }}</strong>
+                                        <span v-if="m.role === 'moderator'" class="roleBadge moderator">MOD</span>
+                                        <span v-else-if="m.role === 'operator'" class="roleBadge operator">OP</span>
+                                    </span>
+                                </div>
+                                <button class="removeBtn" @click="removeMember(m.id)">Remove</button>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -293,7 +321,11 @@ onMounted(() => {
     width: 36px; height: 36px; background: var(--c-accent); color: white;
     border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 600;
 }
-.adminBadge { font-size: 0.7rem; background: var(--c-accent); color: white; padding: 3px 8px; border-radius: 4px; margin-left: 8px; font-weight: bold; }
+.roleBadge { font-size: 0.7rem; color: white; padding: 3px 8px; border-radius: 4px; margin-left: 8px; font-weight: bold; text-transform: uppercase; }
+.roleBadge.leader { background: #EAB308; } /* Yellow/Gold */
+.roleBadge.moderator { background: #3B82F6; } /* Blue */
+.roleBadge.operator { background: #10B981; } /* Green */
+
 .removeBtn { background: transparent; color: var(--c-text-primary); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
 .removeBtn:hover { color: white; background: #ef4444; border-color: #ef4444; }
 
