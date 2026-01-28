@@ -10,6 +10,24 @@ from users.serializers import UserListSerializer
 from groups.serializers import GroupSerializer
 from users.models import User
 
+
+class TaskSummarySerializer(serializers.ModelSerializer):
+    """
+    Lightweight serializer to avoid recursion in nested fields.
+    """
+    created_by = UserListSerializer(source='created_by_userid', read_only=True)
+    assigned_to = UserListSerializer(source='assigned_to_userid', read_only=True)
+    
+    class Meta:
+        model = Task
+        fields = (
+            'id', 'title', 'description', 'priority', 'status',
+            'start_date', 'due_date', 'completed_at',
+            'created_at', 'updated_at', 'active',
+            'group', 'created_by', 'assigned_to',
+            'imageUrl', 'image',
+        )
+
 class CommentSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(
         queryset = User.objects.all(),
@@ -31,9 +49,7 @@ class CommentSerializer(serializers.ModelSerializer):
     )
 
     def get_task_detail(self, obj):
-        from .serializers import TaskSerializer
-
-        return TaskSerializer(obj.task).data
+        return TaskSummarySerializer(obj.task).data
     
     user_detail = UserListSerializer(source = 'user', read_only = True)
     class Meta:
@@ -60,9 +76,7 @@ class AttachmentsSerializer(serializers.ModelSerializer):
     task_detail = serializers.SerializerMethodField()
 
     def get_task_detail(self, obj):
-        from .serializers import TaskSerializer
-
-        return TaskSerializer(obj.task).data
+        return TaskSummarySerializer(obj.task).data
 
     uploaded_by_userid = serializers.PrimaryKeyRelatedField(
         queryset = User.objects.all(),
@@ -98,9 +112,7 @@ class AssignedSerializer(serializers.ModelSerializer):
     task_detail = serializers.SerializerMethodField()
 
     def get_task_detail(self, obj):
-        from .serializers import TaskSerializer
-
-        return TaskSerializer(obj.task).data
+        return TaskSummarySerializer(obj.task).data
 
     user_detail = UserListSerializer(source = 'user', read_only = True)
     class Meta:
@@ -124,7 +136,13 @@ class TaskSerializer(serializers.ModelSerializer):
     group_detail = GroupSerializer(source = 'group', read_only = True)
     created_by = UserListSerializer(source = 'created_by_userid', read_only = True)
     assigned_to = UserListSerializer(source = 'assigned_to_userid', read_only = True)
-    assignments = serializers.PrimaryKeyRelatedField(many = True, read_only = True)
+    assignments = AssignedSerializer(many=True, read_only=True)
+    assignee_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        write_only=True,
+        required=False
+    )
+
     comments = serializers.PrimaryKeyRelatedField(many = True, read_only = True)
     attachments = serializers.PrimaryKeyRelatedField(many = True, read_only = True)
     class Meta:
@@ -138,6 +156,7 @@ class TaskSerializer(serializers.ModelSerializer):
             'assigned_to',
             'created_by_userid',
             'assigned_to_userid',
+            'assignee_ids',
             'assignments', 'comments', 'attachments',
             'imageUrl', 'image',
         )
@@ -146,3 +165,27 @@ class TaskSerializer(serializers.ModelSerializer):
             'created_by_userid': {'write_only': True},
             'assigned_to_userid': {'write_only': True},
         }
+
+    def create(self, validated_data):
+        assignee_ids = validated_data.pop('assignee_ids', [])
+        
+        # Determine primary assignee (first one) to maintain compatibility with single-field logic
+        if assignee_ids and 'assigned_to_userid' not in validated_data:
+            from users.models import User
+            try:
+                validated_data['assigned_to_userid'] = User.objects.get(pk=assignee_ids[0])
+            except User.DoesNotExist:
+                pass
+
+        task = Task.objects.create(**validated_data)
+
+        # Create Assigned objects
+        for uid in assignee_ids:
+            from users.models import User
+            try:
+                user_obj = User.objects.get(pk=uid)
+                Assigned.objects.create(task=task, user=user_obj)
+            except User.DoesNotExist:
+                pass
+                
+        return task

@@ -168,8 +168,12 @@ const handleImageError = (userId) => {
                     </div>
 
                     <!-- UPLOAD MODE -->
-                    <div v-if="imageMode === 'upload'" class="imageUploadArea">
-                        <div v-if="!coverImagePreview" class="uploadPlaceholder">
+                    <div v-if="imageMode === 'upload'">
+                         <div class="file-upload-wrapper">
+                            <label for="coverImageInput" class="uploadLabel">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                <span>{{ coverImage ? coverImage.name : 'Upload File' }}</span>
+                            </label>
                             <input 
                                 type="file" 
                                 id="coverImageInput" 
@@ -177,36 +181,16 @@ const handleImageError = (userId) => {
                                 @change="handleImageUpload"
                                 style="display: none;"
                             >
-                            <label for="coverImageInput" class="uploadLabel">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                                    <polyline points="21 15 16 10 5 21"></polyline>
-                                </svg>
-                                <span>Click to upload cover image</span>
-                            </label>
-                        </div>
-                        <div v-else class="imagePreview">
-                            <img :src="coverImagePreview" alt="Cover preview">
-                            <button class="removeImageBtn" @click="removeImage">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                                </svg>
-                            </button>
                         </div>
                     </div>
 
                     <!-- URL MODE -->
-                    <div v-else class="urlInputArea">
+                    <div v-else>
                          <input 
                             v-model="imageUrl" 
                             type="text" 
                             placeholder="https://example.com/image.png"
                         >
-                        <div v-if="imageUrl" class="urlPreview">
-                            <img :src="imageUrl" alt="Preview" @error="imageUrl = ''">
-                        </div>
                     </div>
                 </div>
                 
@@ -391,92 +375,40 @@ const handleImageError = (userId) => {
     font-size: 0.85rem;
 }
 
-/* Image Upload */
-.imageUploadArea {
-    width: 100%;
-    height: 200px;
-    border-radius: 12px;
-    overflow: hidden;
-}
-
-.uploadPlaceholder {
-    width: 100%;
-    height: 100%;
-    background: var(--c-bg);
-    border: 2px dashed var(--border-color);
-    border-radius: 12px;
+.file-upload-wrapper {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
 }
-
-.uploadPlaceholder:hover {
-    border-color: var(--c-accent);
-    background: var(--c-surface);
-}
-
-.uploadLabel {
+label.uploadLabel {
     display: flex;
-    flex-direction: column;
+    flex-direction: row; /* Explicitly set row to avoid any inheritance issues */
     align-items: center;
+    justify-content: flex-start; /* Left align */
     gap: 12px;
+    background: #0d0d0d; /* Dark background to match image */
+    border: 1px dashed #333; /* Darker border */
+    padding: 14px 16px; /* Increased padding */
+    border-radius: 8px;
     cursor: pointer;
+    width: 100%;
     color: var(--c-text-secondary);
-    padding: 20px;
-}
-
-.uploadLabel svg {
-    opacity: 0.5;
-}
-
-.uploadLabel span {
-    font-size: 0.9rem;
-}
-
-.imagePreview {
-    width: 100%;
-    height: 100%;
-    position: relative;
-}
-
-.imagePreview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.removeImageBtn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    border: none;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    font-size: 1.5rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     transition: all 0.2s;
 }
-
-.removeImageBtn:hover {
-    background: rgba(255, 0, 0, 0.8);
-    transform: scale(1.1);
+label.uploadLabel:hover {
+    border-color: var(--c-accent);
+    color: var(--c-accent);
+    background: rgba(255, 255, 255, 0.05);
+}
+label.uploadLabel svg {
+    display: block;
+    opacity: 0.8;
+}
+label.uploadLabel span {
+    font-size: 0.9rem;
+    line-height: 1;
+    padding-top: 2px;
 }
 
-/* URL Input Styles */
-.label-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-}
-
+/* Toggle Switch - Consolidated */
 .toggle-switch {
     display: flex;
     background: var(--c-bg);
@@ -484,7 +416,6 @@ const handleImageError = (userId) => {
     padding: 2px;
     border: 1px solid var(--border-color);
 }
-
 .toggle-switch span {
     padding: 4px 12px;
     font-size: 0.8rem;
@@ -494,11 +425,18 @@ const handleImageError = (userId) => {
     font-weight: 600;
     transition: all 0.2s;
 }
-
 .toggle-switch span.active {
-    background: var(--c-surface);
-    color: var(--c-accent);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    background: var(--c-accent);
+    color: white;
+    box-shadow: none;
+}
+
+/* URL Input Styles */
+.label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
 }
 
 .urlInputArea {

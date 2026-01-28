@@ -78,16 +78,4 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--c-surface-hover); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--c-accent); }
 
-/* Skeleton Loader */
-.skeleton {
-    background: linear-gradient(90deg, var(--c-surface) 25%, #2a2a2a 50%, var(--c-surface) 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-    border-radius: 6px;
-}
-
-@keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-}
 </style>

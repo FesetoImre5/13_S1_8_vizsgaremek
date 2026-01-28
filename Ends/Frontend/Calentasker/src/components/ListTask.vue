@@ -7,7 +7,8 @@
             desc: { type: String, default: "" },
             isSelected: { type: Boolean, default: false },
             priority: { type: String, default: "low" },
-            dueDate: { type: String, default: null } 
+            dueDate: { type: String, default: null },
+            status: { type: String, default: "todo" }
         },
         emits: ['click', 'hover', 'leave', 'select'],
         computed: {
@@ -22,6 +23,11 @@
                 return `priority-${p}`;
             },
             dueStatus() {
+                // If task is done, show Completed regardless of date
+                if (this.status === 'done') {
+                    return { text: "Completed", colorClass: "due-green" };
+                }
+
                 if (!this.dueDate) return { text: "No Due Date", colorClass: "due-gray" };
 
                 const now = new Date();
@@ -250,6 +256,7 @@
     
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
     line-height: 1.4;
@@ -326,6 +333,7 @@
     
     .cardDesc {
         -webkit-line-clamp: 3;
+        line-clamp: 3;
     }
 }
 </style>

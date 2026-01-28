@@ -212,13 +212,14 @@ onMounted(() => {
                         <ul class="memberList">
                             <li v-for="m in groupMembers" :key="m.id" class="memberItem">
                                 <div class="memberInfo">
-                                    <div class="avatar">{{ m.user_detail.username ? m.user_detail.username.charAt(0).toUpperCase() : '?' }}</div>
+                                    <img v-if="m.user_detail.profile_picture" :src="m.user_detail.profile_picture" class="avatarImg">
+                                    <div v-else class="avatar">{{ m.user_detail.username ? m.user_detail.username.charAt(0).toUpperCase() : '?' }}</div>
                                     <strong>{{ m.user_detail.username }}</strong>
                                     
                                     <!-- Role Display / Edit -->
                                     <div v-if="isCurrentUserLeader && m.user_detail.id !== currentUserId" class="roleEditor">
                                         <select 
-                                            class="roleSelect"
+                                            :class="['roleSelect', m.role]"
                                             :value="m.role" 
                                             @change="updateMemberRole(m, $event.target.value)"
                                         >
@@ -260,14 +261,35 @@ onMounted(() => {
     background: var(--c-bg);
     color: var(--c-text-primary);
     border: 1px solid var(--border-color);
-    border-radius: 4px;
-    padding: 2px 6px;
-    font-size: 0.8rem;
+    border-radius: 6px;
+    height: 26px;
+    padding: 0 8px; /* Horizontal padding only */
+    font-size: 0.8rem; /* Slightly smaller to fit nicely in 26px */
     outline: none;
     cursor: pointer;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: all 0.2s;
 }
 .roleSelect:hover {
-    border-color: var(--c-accent);
+    filter: brightness(1.1);
+}
+
+/* Dynamic Role Colors */
+.roleSelect.reader {
+    background: #6B7280; /* Gray */
+    color: white;
+    border-color: #6B7280;
+}
+.roleSelect.operator {
+    background: #10B981; /* Green */
+    color: white;
+    border-color: #10B981;
+}
+.roleSelect.moderator {
+    background: #3B82F6; /* Blue */
+    color: white;
+    border-color: #3B82F6;
 }
 
 .groupsWrapper {
@@ -397,6 +419,9 @@ onMounted(() => {
 .avatar {
     width: 36px; height: 36px; background: var(--c-accent); color: white;
     border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 600;
+}
+.avatarImg {
+    width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
 }
 .roleBadge { font-size: 0.7rem; color: white; padding: 3px 8px; border-radius: 4px; margin-left: 8px; font-weight: bold; text-transform: uppercase; }
 .roleBadge.leader { background: #EAB308; } /* Yellow/Gold */

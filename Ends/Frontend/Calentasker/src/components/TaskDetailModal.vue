@@ -36,6 +36,17 @@ const priorityClass = computed(() => {
     return `priority-${props.task.priority || 'low'}`;
 });
 
+const formatStatus = (status) => {
+    const map = {
+        'todo': 'To Do',
+        'in_progress': 'In Progress',
+        'done': 'Done',
+        'missed': 'Missed',
+        'archived': 'Archived'
+    };
+    return map[status] || status;
+};
+
 // --- ACTIONS ---
 const fetchComments = async () => {
     if (!props.task) return;
@@ -118,11 +129,11 @@ watch(() => props.isOpen, (newVal) => {
                     <!-- TOP SECTION: IMAGE + TITLE/ASSIGNED -->
                     <div class="top-section">
                         <!-- Small Image Top Left -->
-                        <div v-if="task.imageUrl" class="small-task-image">
-                            <img :src="task.imageUrl" alt="Task Cover">
+                        <div v-if="task.imageUrl || task.image" class="small-task-image">
+                            <img :src="task.imageUrl || task.image" alt="Task Cover">
                         </div>
                         <div v-else class="small-task-image placeholder-img">
-                            <span>No Img</span>
+                            <span>No Image</span>
                         </div>
 
                         <!-- Right of Image: Title + Assigned -->
@@ -136,7 +147,8 @@ watch(() => props.isOpen, (newVal) => {
                             <div class="assigned-row">
                                 <span class="label-small">Assigned to:</span>
                                 <div class="user-chip">
-                                    <span class="avatar-small">{{ task.assigned_to?.username?.charAt(0).toUpperCase() || '?' }}</span>
+                                    <img v-if="task.assigned_to?.profile_picture" :src="task.assigned_to.profile_picture" class="avatar-small img-fit">
+                                    <span v-else class="avatar-small">{{ task.assigned_to?.username?.charAt(0).toUpperCase() || '?' }}</span>
                                     <span>{{ task.assigned_to?.username || 'Unassigned' }}</span>
                                 </div>
                             </div>
@@ -149,16 +161,28 @@ watch(() => props.isOpen, (newVal) => {
                         <p class="description">{{ task.description || "No description provided." }}</p>
                     </div>
 
-                    <!-- TIMESPAN (Under Description) -->
-                    <div class="timespan-section">
-                        <div class="time-block">
-                            <span class="label-icon">📅 Start</span>
-                            <span class="value">{{ formattedDate(task.start_date) }}</span>
+                    <!-- META ROW: TIMESPAN + STATUS -->
+                    <div class="meta-row">
+                        <!-- TIMESPAN (Usage already existing styles, now inside row) -->
+                        <div class="timespan-section">
+                            <div class="time-block">
+                                <span class="label-icon">📅 Start</span>
+                                <span class="value">{{ formattedDate(task.start_date || new Date()) }}</span>
+                            </div>
+                            <div class="arrow">→</div>
+                            <div class="time-block">
+                                <span class="label-icon">🏁 Due</span>
+                                <span class="value">{{ formattedDate(task.due_date) }}</span>
+                            </div>
                         </div>
-                        <div class="arrow">→</div>
-                        <div class="time-block">
-                            <span class="label-icon">🏁 Due</span>
-                            <span class="value">{{ formattedDate(task.due_date) }}</span>
+
+                        <!-- NEW: STATUS INDICATOR -->
+                        <div class="status-indicator">
+                            <span class="label-icon">Current Status</span>
+                            <div class="status-value" :class="`status-${task.status}`">
+                                <span class="status-dot"></span>
+                                {{ formatStatus(task.status) }}
+                            </div>
                         </div>
                     </div>
 
@@ -196,7 +220,8 @@ watch(() => props.isOpen, (newVal) => {
                             <div v-else-if="comments.length === 0" class="no-comments">No comments yet.</div>
                             
                             <div v-for="comment in comments" :key="comment.id" class="comment-item">
-                                <div class="comment-avatar">
+                                <img v-if="comment.user_detail?.profile_picture" :src="comment.user_detail.profile_picture" class="comment-avatar img-fit">
+                                <div v-else class="comment-avatar">
                                     {{ comment.user_detail?.username?.charAt(0).toUpperCase() || '?' }}
                                 </div>
                                 <div class="comment-content">
@@ -460,6 +485,11 @@ watch(() => props.isOpen, (newVal) => {
     font-size: 0.7rem;
     font-weight: bold;
 }
+/* Helper for images reusing avatar classes */
+.img-fit {
+    object-fit: cover;
+    background: transparent;
+}
 
 /* DESCRIPTION */
 .description-section label {
@@ -482,6 +512,14 @@ watch(() => props.isOpen, (newVal) => {
     border: 1px solid rgba(255,255,255,0.05);
 }
 
+/* META ROW */
+.meta-row {
+    display: flex;
+    gap: 20px;
+    align-items: stretch; /* Ensure same height */
+    flex-wrap: wrap; /* responsive wrap */
+}
+
 /* TIMESPAN */
 .timespan-section {
     display: flex;
@@ -490,12 +528,46 @@ watch(() => props.isOpen, (newVal) => {
     background: var(--c-surface-hover);
     padding: 15px;
     border-radius: 12px;
-    align-self: flex-start; /* Don't stretch full width */
+    /* align-self removed to fit flex stretch */
 }
 .time-block { display: flex; flex-direction: column; gap: 4px; }
-.label-icon { font-size: 0.8rem; color: var(--c-text-secondary); }
+.label-icon { font-size: 0.8rem; color: var(--c-text-secondary); text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.8; }
 .value { font-weight: 600; color: var(--c-text-primary); }
 .arrow { color: var(--c-text-secondary); opacity: 0.5; }
+
+/* STATUS INDICATOR */
+.status-indicator {
+    background: var(--c-surface-hover);
+    padding: 15px 20px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    min-width: 140px;
+}
+.status-value {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--c-text-primary);
+    text-transform: capitalize;
+}
+.status-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: gray;
+    box-shadow: 0 0 5px rgba(255,255,255,0.2);
+}
+
+/* Status Colors */
+.status-todo .status-dot { background: #3b82f6; box-shadow: 0 0 8px rgba(59, 130, 246, 0.4); }
+.status-in_progress .status-dot { background: #f59e0b; box-shadow: 0 0 8px rgba(245, 158, 11, 0.4); }
+.status-done .status-dot { background: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.4); }
+.status-missed .status-dot { background: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
+.status-archived .status-dot { background: #6b7280; }
 
 /* FOOTER / ACTIONS */
 .meta-footer {

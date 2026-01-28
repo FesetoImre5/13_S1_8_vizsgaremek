@@ -39,6 +39,17 @@ const selectedGroup = computed(() => {
     return groups.value.find(g => g.id == selectedGroupId.value);
 });
 
+// Check if user is Leader or Operator in the selected group
+const canCreateTask = computed(() => {
+    if (!selectedGroupId.value) return false;
+    if (selectedGroupId.value === 'own') return true; // Always allow own tasks
+
+    const group = groups.value.find(g => g.id == selectedGroupId.value);
+    // groups.value now stores the group_detail, but we need the membership role.
+    // Wait, fetchGroups maps to group_detail. We need to preserve the role.
+    return group && (group.myRole === 'leader' || group.myRole === 'operator');
+});
+
 // Filtered Tasks
 const filteredTasks = computed(() => {
     if (!selectedDate.value) return tasks.value;
@@ -61,7 +72,11 @@ const fetchGroups = async () => {
     try {
         const currentUserId = parseInt(localStorage.getItem('user_id'));
         const response = await axios.get(`http://127.0.0.1:8000/api/group-members/?user=${currentUserId}`);
-        groups.value = response.data.map(item => item.group_detail);
+        // Store group details AND the role from the membership object
+        groups.value = response.data.map(item => ({
+            ...item.group_detail,
+            myRole: item.role // Add the role to the group object
+        }));
 
         // Logic to default to something if needed, but 'own' might be default if route says so
         if (!route.query.group && groups.value.length > 0) {
@@ -195,9 +210,10 @@ const getGroupUrl = (group) => {
 
 const getTaskUrl = (task) => {
     if (task.imageUrl) return task.imageUrl;
+    if (task.image) return task.image;
     const p = task.priority ? task.priority.toLowerCase() : 'low';
-    if (p === 'urgent') return 'https://placehold.co/150/dc2626/white?text=Urgent';
-    return 'https://placehold.co/150/gray/white?text=Task';
+    if (p === 'urgent') return 'https://placehold.co/150/26272D/9CA3AF?text=No%20Image';
+    return 'https://placehold.co/150/26272D/9CA3AF?text=No%20Image';
 };
 
 onMounted(() => {
@@ -246,19 +262,18 @@ onMounted(() => {
                     </div>
 
                     <div class="headerRight">
-                         <button class="btnNewTask" @click="openCreateTask">
+                         <button 
+                            v-if="canCreateTask" 
+                            class="btnNewTask" 
+                            @click="openCreateTask"
+                         >
                             <span class="plusIcon">+</span> New Task
                          </button>
                     </div>
                 </div>
 
                 <div class="taskScroll customScroll">
-                    <div v-if="loading" style="padding: 20px;">
-                        <div class="skeleton" style="height: 100px; width: 100%; margin-bottom: 15px;"></div>
-                        <div class="skeleton" style="height: 100px; width: 100%; margin-bottom: 15px;"></div>
-                        <div class="skeleton" style="height: 100px; width: 100%; margin-bottom: 15px;"></div>
-                    </div>
-                    <div v-else-if="filteredTasks.length === 0" style="padding: 20px; color:white;">
+                    <div v-if="!loading && filteredTasks.length === 0" style="padding: 20px; color:white;">
                         <span v-if="selectedDate">No tasks for this date.</span>
                         <span v-else>No tasks found.</span>
                     </div>
@@ -276,6 +291,7 @@ onMounted(() => {
                         :isSelected="selectedTaskId === task.id"
                         :priority="task.priority"
                         :dueDate="task.due_date"
+                        :status="task.status"
                         @hover="onTaskHover"
                         @leave="onTaskLeave"
                         @select="onTaskSelect"
@@ -437,6 +453,7 @@ onMounted(() => {
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 4px 20px rgba(0,0,0,0.2); /* Added shadow for better separation */
+    min-height: 84px; /* Slight increase to perfectly match button height + padding */
 }
 
 /* Combined Left Section */
@@ -500,9 +517,11 @@ onMounted(() => {
 }
 
 .plusIcon {
-    font-size: 1.2rem;
-    line-height: 1;
-    font-weight: bold;
+    font-size: 1.4rem; /* Slightly larger */
+    line-height: 0; /* Remove line-height influence */
+    font-weight: 700; /* Bold as requested */
+    transform: translateY(-1px); /* Visual correction */
+    margin-top: -2px; /* Fine-tune centering */
 }
 
 @keyframes fadeIn {
