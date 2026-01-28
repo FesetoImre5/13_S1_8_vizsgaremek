@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted } from 'vue';
 import NavBar from './components/NavBar.vue';
+import ToastContainer from './components/ToastContainer.vue';
 import { useAuth } from './composables/UseAuth';
 
 // Initialize Authentication Check
@@ -13,6 +14,7 @@ onMounted(() => {
 
 <template>
   <NavBar />
+  <ToastContainer />
   <main>
     <!-- 
       We use the v-slot API to expose the current route component 
@@ -36,8 +38,8 @@ onMounted(() => {
     --c-text-primary: #E5E7EB; /* The Light Gray */
     --c-text-secondary: #9CA3AF;
     
-    --c-primary: #DC2626;      /* The Red-Orange */
-    --c-primary-hover: #B91C1C;
+    --c-primary: #F97316;      /* Orange */
+    --c-primary-hover: #EA580C;
     
     --c-accent: #F97316;       /* The Bright Orange */
     

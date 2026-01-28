@@ -1,5 +1,6 @@
 <script>
 import axios from 'axios';
+import { useToast } from '../composables/useToast';
 
 export default {
     data() {
@@ -53,6 +54,10 @@ export default {
                 this.firstName.length > 0 &&
                 this.lastName.length > 0;
         }
+    },
+    setup() {
+        const { addToast } = useToast();
+        return { addToast };
     },
     methods: {
         checkCapsLock(e) {
@@ -151,11 +156,11 @@ export default {
             // 1. Run local validation
             if (!this.validateForm()) {
                 console.log('Validation failed locally.');
+                this.addToast('Please fix the errors in the form.', 'warning');
                 return;
             }
 
             try {
-                // 2. Prepare payload (Convert your camelCase vars to Django snake_case)
                 // 2. Prepare Payload (FormData for file upload)
                 const formData = new FormData();
                 if (this.username.trim()) formData.append('username', this.username.trim());
@@ -178,22 +183,29 @@ export default {
                 });
 
                 // 4. On Success
-                alert("Account created successfully! Please log in.");
+                this.addToast('Account created successfully! Please log in.', 'success');
                 this.$emit('switchMode', 'login');
 
             } catch (error) {
                 // 5. Handle Django Backend Errors
                 if (error.response && error.response.data) {
                     const data = error.response.data;
+                    let hasError = false;
 
                     // Django returns errors as arrays, e.g. { username: ["User exists"] }
-                    if (data.username) this.usernameError = data.username[0];
-                    if (data.email) this.emailError = data.email[0];
-                    if (data.password) this.passwordError = data.password[0];
-                    if (data.first_name) this.firstNameError = data.first_name[0];
-                    if (data.last_name) this.lastNameError = data.last_name[0];
+                    if (data.username) { this.usernameError = data.username[0]; hasError = true; }
+                    if (data.email) { this.emailError = data.email[0]; hasError = true; }
+                    if (data.password) { this.passwordError = data.password[0]; hasError = true; }
+                    if (data.first_name) { this.firstNameError = data.first_name[0]; hasError = true; }
+                    if (data.last_name) { this.lastNameError = data.last_name[0]; hasError = true; }
+
+                    if (hasError) {
+                         this.addToast('Please check the form for errors.', 'error');
+                    } else {
+                         this.addToast('An unknown error occurred.', 'error');
+                    }
                 } else {
-                    alert("Network error or server is down.");
+                    this.addToast('Network error or server is down.', 'error');
                 }
             }
         }
@@ -339,14 +351,16 @@ export default {
 
 <style scoped>
 .title{
-    margin-bottom: 13px;
+    margin-bottom: 20px;
+    color: var(--c-text-primary, #E5E7EB);
+    text-align: center;
 }
 
 /* New styles for floating label effect */
 .inputGroup {
     position: relative;
     /* Use standard margin-bottom and adjust error margin instead of relying on negative margin */
-    margin-bottom: 10px; 
+    margin-bottom: 12px; 
 }
 
 /* Base input styling (overrides previous implicit styles) */
@@ -354,12 +368,14 @@ export default {
     width: 100%;
     /* Adjusted padding for vertical alignment: 15px top, 9px bottom */
     padding: 15px 12px 9px 12px;
-    border: 1px solid #d1d5db; /* gray-300 */
+    border: 1px solid var(--border-color, #333333);
     border-radius: 8px;
-    background: #f9fafb; /* gray-50 */
+    background: var(--c-bg, #121212); /* Dark background for inputs */
+    color: var(--c-text-primary, #E5E7EB);
     font-size: 1rem;
     outline: none;
     transition: all 0.2s ease;
+    appearance: none;
     -webkit-appearance: none;
     line-height: 1.5; /* Ensures consistent height */
 }
@@ -369,7 +385,7 @@ export default {
     position: absolute;
     top: 50%; /* Center vertically when acting as placeholder */
     left: 12px;
-    color: #6b7280; /* gray-500 */
+    color: var(--c-text-secondary, #9CA3AF); /* gray-500 */
     font-size: 1rem;
     pointer-events: none; /* Allows clicks to pass through to the input */
     transform: translateY(-50%);
@@ -381,17 +397,18 @@ export default {
 .inputGroup.is-active label {
     top: 0px; /* Moves to the top */
     font-size: 0.75rem; /* Shrinks */
-    color: rgb(255, 68, 0); /* Used primary color for focused label */
+    color: var(--c-primary, rgb(255, 68, 0)); /* Used primary color for focused label */
     transform: translateY(-50%);
     padding: 0 5px;
-    background: white; /* Provides the "cut-out" background for the label */
+    background: var(--c-surface, #1E1E1E); /* Matches the card background */
     left: 8px; 
+    border-radius: 4px;
 }
 
 /* Input Focus Border and Shadow */
 .inputGroup input:focus {
-    border-color: rgb(255, 68, 0); /* Used primary color for focused border */
-    box-shadow: 0 0 0 1px rgb(255, 68, 0);
+    border-color: var(--c-primary, rgb(255, 68, 0)); /* Used primary color for focused border */
+    box-shadow: 0 0 0 1px var(--c-primary, rgb(255, 68, 0));
 }
 
 /* Specific adjustments for password input/toggle combination */
@@ -411,21 +428,24 @@ export default {
     transform: translateY(-50%);
     padding: 5px;
     z-index: 10; /* Ensure button is above the input */
-    color: #6b7280;
+    color: var(--c-text-secondary, #6b7280);
     cursor: pointer;
     background: transparent;
     border: none;
     font-size: 0.85rem;
 }
+.passwordField .toggle:hover {
+    color: var(--c-text-primary, #E5E7EB);
+}
 
 /* --- Error Styles (New spacing logic) --- */
 
 .errorMessage {
-    color: #dc2626; /* red-600 for visibility */
+    color: var(--c-primary, #dc2626); /* red-600 for visibility */
     font-size: 0.8rem;
     /* Reset margins for generic error message */
     text-align: right; 
-    margin-bottom: -2px;
+    margin-bottom: 2px;
 }
 
 /* New class to pull the error message closer to the input when it appears directly after an inputGroup */
@@ -435,53 +455,56 @@ export default {
 }
 
 .primaryBtn:disabled {
-    background: rgb(255, 169, 137); /* Lighter color when disabled */
+    background: #5a2e24; /* Lighter color when disabled */
+    color: #9CA3AF;
     cursor: not-allowed;
 }
 .primaryBtn:disabled:hover {
-    background: rgb(255, 126, 79); /* Lighter color when disabled */
+    background: #5a2e24; /* Lighter color when disabled */
     cursor: not-allowed;
 }
 
 .authCard {
-    background: white;
+    background: var(--c-surface, #1E1E1E); /* Dark card background */
     padding: 30px;
     width: 350px;
     border-radius: 20px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     animation: pop 0.4s ease;
+    border: 1px solid #4B5563; /* Lighter border for visibility */
 }
 .capsWarning { 
-    color: red; 
+    color: var(--c-primary, red); 
     font-size:0.85rem; 
     margin-top:0; 
     margin-bottom: 5px; 
 }
 
 .strengthMeter { 
-    margin-bottom: 10px; 
+    margin-bottom: 15px; 
 }
 
 .strengthBar { 
     height: 8px; 
     border-radius: 10px; 
-    background: #e5e7eb; 
+    background: #374151; /* Darker gray for empty part */
 }
 
 .primaryBtn { 
     width: 100%; 
-    padding: 10px; 
+    padding: 12px; 
     border: none; 
     border-radius: 10px; 
-    background: rgb(255, 68, 0); 
+    background: var(--c-primary, rgb(255, 68, 0)); 
     color: white; 
     cursor: pointer; 
     font-weight: bold; 
     transition: 0.2s; 
+    font-size: 1rem;
 }
 
 .primaryBtn:hover { 
-    background:rgb(177, 47, 0); 
+    background: var(--c-primary-hover, rgb(177, 47, 0)); 
 }
 
 .primaryBtn:active { 
@@ -492,16 +515,20 @@ export default {
 /* NEW CLASS: switchText centers the whole line */
 .switchText { 
     text-align: center; 
-    margin-top: 15px; 
-    font-size: 1rem; /* Adjust font size to match surrounding text */
+    margin-top: 20px; 
+    color: var(--c-text-secondary, #9CA3AF);
+    font-size: 0.95rem; /* Adjust font size to match surrounding text */
 }
 
 /* EXISTING CLASS: switch applies click styling only to the span */
 .switch { 
     cursor: pointer; 
-    color: orangered; 
+    color: var(--c-accent, orangered); 
     font-weight: bold; /* Make the link stand out more */
     opacity:1; 
+}
+.switch:hover {
+    text-decoration: underline;
 }
 
 /* Image Upload Styles */
@@ -516,29 +543,30 @@ export default {
 }
 .label-row label {
     font-size: 0.9rem;
-    color: #6b7280;
+    color: var(--c-text-secondary, #6b7280);
     font-weight: 600;
 }
 .toggle-switch {
     display: flex;
     border-radius: 6px;
     padding: 2px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border-color, #333333);
     gap: 5px;
+    background: var(--c-bg, #121212);
 }
 .toggle-switch span {
     padding: 2px 8px;
     font-size: 0.75rem;
     cursor: pointer;
     border-radius: 4px;
-    color: #6b7280;
+    color: var(--c-text-secondary, #6b7280);
     font-weight: 600;
     transition: all 0.2s;
 }
 .toggle-switch span.active {
-    background: white;
-    color: rgb(255, 68, 0);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    background: var(--c-surface, #1E1E1E);
+    color: var(--c-primary, rgb(255, 68, 0));
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
 .image-upload-box {
@@ -547,13 +575,14 @@ export default {
     margin: 0 auto;
     border-radius: 50%;
     overflow: hidden;
-    border: 2px dashed #d1d5db;
+    border: 2px dashed var(--border-color, #d1d5db);
     position: relative;
     transition: all 0.2s;
+    background: var(--c-bg, #121212);
 }
 .image-upload-box:hover {
-    border-color: rgb(255, 68, 0);
-    background: #fff7ed;
+    border-color: var(--c-primary, rgb(255, 68, 0));
+    background: #2a1c1c;
 }
 
 .upload-placeholder {
@@ -568,7 +597,7 @@ export default {
     flex-direction: column;
     align-items: center;
     cursor: pointer;
-    color: #9ca3af;
+    color: var(--c-text-secondary, #9ca3af);
     font-size: 0.8rem;
 }
 .plus-icon {
@@ -611,12 +640,10 @@ export default {
     border-radius: 50%;
     overflow: hidden;
     margin: 10px auto 0;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border-color, #e5e7eb);
 }
 .url-preview-small img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
 }
-
 </style>
