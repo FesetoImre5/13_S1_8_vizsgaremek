@@ -33,6 +33,9 @@ const selectedDate = ref(null);
 
 // --- COMPUTED ---
 const selectedGroup = computed(() => {
+    if (selectedGroupId.value === 'own') {
+        return { groupname: 'Own Tasks', id: 'own' };
+    }
     return groups.value.find(g => g.id == selectedGroupId.value);
 });
 
@@ -49,7 +52,6 @@ const filteredTasks = computed(() => {
         const start = rawStart.substring(0, 10);
         const end = rawEnd.substring(0, 10);
         
-        // Check if selectedDate falls within the task's range
         return selectedDate.value >= start && selectedDate.value <= end;
     });
 });
@@ -58,12 +60,13 @@ const filteredTasks = computed(() => {
 const fetchGroups = async () => {
     try {
         const currentUserId = parseInt(localStorage.getItem('user_id'));
-        // Updated to use server-side filtering
         const response = await axios.get(`http://127.0.0.1:8000/api/group-members/?user=${currentUserId}`);
         groups.value = response.data.map(item => item.group_detail);
 
-        if (groups.value.length > 0 && !route.query.group) {
-            handleGroupClick(groups.value[0].id);
+        // Logic to default to something if needed, but 'own' might be default if route says so
+        if (!route.query.group && groups.value.length > 0) {
+             // Maybe default to Own tasks? Or first group. Keeping first group for now.
+             handleGroupClick(groups.value[0].id);
         }
     } catch (error) {
         console.error("Failed to load groups", error);
@@ -72,11 +75,44 @@ const fetchGroups = async () => {
 
 const fetchTasks = async (groupId = null) => {
     loading.value = true;
+    tasks.value = []; // Clear current tasks to avoid confusion
+
     try {
         let url = 'http://127.0.0.1:8000/api/tasks/';
-        if (groupId) url += `?group=${groupId}`; 
+        const currentUserId = parseInt(localStorage.getItem('user_id'));
+
+        if (groupId === 'own') {
+             // Fetch tasks created by user with NO group (Personal Tasks)
+             // Assuming backend supports simple filtering. 
+             // If backend is standard DRF: ?created_by_userid=<id>&group__isnull=true
+             // We'll try a custom filter approach or assume 'assigned_to'.
+             // User request: "Own Tasks is a place where the user can create tasks for themselves."
+             // This strongly implies personal tasks.
+             
+             // Strategy: Get all tasks and filter client side if backend is limited, 
+             // BUT ideally backend filter. Let's try to pass a query.
+             // Since I can't easily change backend right now without checking views, 
+             // I will try to fetch specific user tasks.
+             // Note: The previous code just fetched /tasks/?group=ID.
+             
+             // OPTION 1: Filter by creator and no group.
+             url += `?created_by_userid=${currentUserId}`; 
+             // We might need to handle the "no group" part in client if backend ignores it.
+        } else if (groupId) {
+            url += `?group=${groupId}`; 
+        }
+
         const response = await axios.get(url);
-        tasks.value = response.data;
+        
+        if (groupId === 'own') {
+            // Client-side filter to ensure we show only personal tasks (no group)
+            // or we could show ALL tasks assigned to user?
+            // "Own Tasks is a place where the user can create tasks for themselves" -> Personal Tasks.
+            tasks.value = response.data.filter(t => t.created_by_userid === currentUserId && !t.group);
+        } else {
+            tasks.value = response.data;
+        }
+
     } catch (error) {
         console.error("Failed to load tasks", error);
     } finally {
@@ -86,6 +122,8 @@ const fetchTasks = async (groupId = null) => {
 
 // --- INTERACTION ---
 const handleGroupClick = (groupId) => {
+    // If clicking the same group/own, do nothing? Or refresh? 
+    // Always push handling to watch
     router.push({ query: { ...route.query, group: groupId } });
 };
 
@@ -107,32 +145,18 @@ const onTaskLeave = () => { hoveredTaskId.value = null; };
 
 const onTaskSelect = (id) => {
     const width = window.innerWidth;
-    
-    // Mobile (< 530px): Do nothing (calendar disabled)
     if (width <= 530) return;
-
-    // Tablet (530px - 1300px): Open calendar modal
     if (width > 530 && width <= 1300) {
         selectedTaskId.value = id;
         isCalendarModalOpen.value = true;
     }
-    
-    // Desktop (> 1300px): Just select (highlight logic handled by hover, but we keep state)
     if (width > 1300) {
-        if (selectedTaskId.value === id) {
-            selectedTaskId.value = null;
-        } else {
-            selectedTaskId.value = id;
-        }
+        selectedTaskId.value = (selectedTaskId.value === id) ? null : id;
     }
 };
 
 const handleDateSelected = (dateStr) => {
-    if (selectedDate.value === dateStr) {
-        selectedDate.value = null; // Toggle off filter
-    } else {
-        selectedDate.value = dateStr;
-    }
+    selectedDate.value = (selectedDate.value === dateStr) ? null : dateStr;
 };
 
 const toggleCalendarModal = () => {
@@ -152,14 +176,13 @@ const closeTaskDetail = () => {
 
 const openCreateTask = () => {
     if (!selectedGroupId.value) {
-        alert("Please select a group first.");
+        alert("Please select a group or 'Own Tasks' first.");
         return;
     }
     isCreateTaskOpen.value = true;
 };
 
 const onTaskCreated = (newTask) => {
-    // Refresh tasks efficiently or invoke fetch
     fetchTasks(selectedGroupId.value);
 };
 
@@ -190,6 +213,16 @@ onMounted(() => {
             <!-- COLUMN 1: SIDEBAR -->
             <div class="sidebar-area">
                 <div class="sidebar-scroll">
+                    <!-- Own Tasks Item -->
+                    <list-group-icon
+                        url="/src/assets/view-list.svg"
+                        name="Own Tasks"
+                        :isActive="selectedGroupId === 'own'"
+                        :isSystemIcon="true"
+                        @click="handleGroupClick('own')"
+                        style="margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;"
+                    />
+
                     <list-group-icon
                         v-for="group in groups"
                         :key="group.id"
@@ -271,7 +304,7 @@ onMounted(() => {
 
     <CreateTaskModal 
         :isOpen="isCreateTaskOpen"
-        :groupId="selectedGroupId ? parseInt(selectedGroupId) : null"
+        :groupId="selectedGroupId === 'own' ? null : (selectedGroupId ? parseInt(selectedGroupId) : null)"
         @close="isCreateTaskOpen = false"
         @task-created="onTaskCreated"
     />

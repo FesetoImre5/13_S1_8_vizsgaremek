@@ -4,8 +4,9 @@ import axios from 'axios';
 
 const props = defineProps({
     groupId: {
-        type: Number,
-        required: true
+        type: [Number, String], // Allow null or special value if needed, though strictly we pass null or ID
+        required: false,
+        default: null
     },
     isOpen: {
         type: Boolean,
