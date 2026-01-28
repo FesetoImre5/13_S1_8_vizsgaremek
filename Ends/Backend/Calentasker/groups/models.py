@@ -12,14 +12,18 @@ class Group(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     imageUrl = models.TextField(validators=[URLValidator()], blank=True, null=True)
+    image = models.ImageField(upload_to='group_images/', blank=True, null=True)
     active = models.BooleanField(default=True)
+    parent_group = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='subgroups')
 
     def __str__(self):
         return self.groupname
 
 class GroupMember(models.Model):
     ROLE_CHOICES = (
-        ('member', 'Member'),
+        ('reader', 'Reader'),
+        ('operator', 'Operator'),
+        ('moderator', 'Moderator'),
         ('leader', 'Leader'),
     )
 
@@ -36,6 +40,6 @@ class GroupMember(models.Model):
     role = models.CharField(
         max_length=10,
         choices=ROLE_CHOICES,
-        default='member',
+        default='reader',
     )
     joined_at = models.DateTimeField(auto_now_add=True)

@@ -16,6 +16,8 @@ class GroupSerializer(serializers.ModelSerializer):
             'created_at', 
             'active',
             'imageUrl',
+            'image',
+            'parent_group',
         )
         read_only_fields = ('created_at', 'active',)
         extra_kwargs = {
@@ -31,12 +33,43 @@ class GroupMemberSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(
         queryset = User.objects.all(),
         write_only = True,
-        label = 'User'
+        label = 'User',
+        required = False,
     )
+    username = serializers.CharField(write_only=True, required=False)
+    email = serializers.EmailField(write_only=True, required=False)
     group_detail = GroupSerializer(source = 'group', read_only = True)
     user_detail = UserListSerializer(source = 'user', read_only = True)
 
     class Meta:
         model = GroupMember
-        fields = ('id', 'user_detail', 'group_detail', 'user', 'group', 'role', 'joined_at')
+        fields = ('id', 'user_detail', 'group_detail', 'user', 'group', 'username', 'email', 'role', 'joined_at')
         read_only_fields = ('joined_at', 'group_detail', 'user_detail',)
+    
+    def create(self, validated_data):
+        # Priority: user (already in validated_data if ID passed) > email > username
+        user = validated_data.get('user')
+        email = validated_data.pop('email', None)
+        username = validated_data.pop('username', None)
+
+        if not user:
+            if email:
+                try:
+                    user = User.objects.get(email__iexact=email)
+                    validated_data['user'] = user
+                except User.DoesNotExist:
+                    raise serializers.ValidationError({'email': 'User with this email does not exist.'})
+            elif username:
+                try:
+                    user = User.objects.get(username__iexact=username)
+                    validated_data['user'] = user
+                except User.DoesNotExist:
+                    raise serializers.ValidationError({'username': 'User with this username does not exist.'})
+            else:
+                 raise serializers.ValidationError({'detail': 'Must provide user ID, email, or username.'})
+
+        # Check if user is already a member of this group
+        if GroupMember.objects.filter(group=validated_data['group'], user=validated_data['user']).exists():
+            raise serializers.ValidationError({'detail': 'User is already a member of this group.'})
+        
+        return super().create(validated_data)

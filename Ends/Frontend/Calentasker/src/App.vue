@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted } from 'vue';
 import NavBar from './components/NavBar.vue';
+import ToastContainer from './components/ToastContainer.vue';
 import { useAuth } from './composables/UseAuth';
 
 // Initialize Authentication Check
@@ -13,6 +14,7 @@ onMounted(() => {
 
 <template>
   <NavBar />
+  <ToastContainer />
   <main>
     <!-- 
       We use the v-slot API to expose the current route component 
@@ -28,25 +30,34 @@ onMounted(() => {
 
 <style>
 :root {
-    /* --- COLOR PALETTE FROM IMAGE --- */
-    --c-bg: #121212;          /* The Almost Black */
-    --c-surface: #1E1E1E;     /* The Dark Gray */
-    --c-surface-hover: #2D2D2D;
+    /* --- COLOR PALETTE (Enhanced Contrast) --- */
+    --c-bg: #101113;          /* Much darker background for depth */
+    --c-surface: #26272D;     /* Slightly lighter surface to pop against bg */
+    --c-surface-hover: #32333A;
     
-    --c-text-primary: #E5E7EB; /* The Light Gray */
+    --c-text-primary: #EDECEC; /* Brighter text */
     --c-text-secondary: #9CA3AF;
     
-    --c-primary: #DC2626;      /* The Red-Orange */
-    --c-primary-hover: #B91C1C;
+    --c-primary: #F97316;      
+    --c-primary-hover: #EA580C;
     
-    --c-accent: #F97316;       /* The Bright Orange */
+    --c-accent: #F97316;       
     
     /* --- BORDERS & SPACING --- */
-    --border-color: #333333;
+    --border-color: #2F3036;   /* Subtle border */
     --radius-md: 12px;
     --radius-lg: 16px;
     --nav-height: 70px;
+
+    /* --- SHADOWS --- */
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.4);
+    --shadow-lg: 0 10px 15px rgba(0,0,0,0.5);
+    --shadow-glow: 0 0 15px rgba(249, 115, 22, 0.15); /* Orange glow */
 }
+main {
+    background-color: var(--c-bg);
+} 
 
 body {
     margin: 0; 
@@ -66,4 +77,5 @@ body {
 ::-webkit-scrollbar-track { background: var(--c-bg); }
 ::-webkit-scrollbar-thumb { background: var(--c-surface-hover); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--c-accent); }
+
 </style>

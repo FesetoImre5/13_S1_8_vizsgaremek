@@ -14,5 +14,28 @@ class User(AbstractUser):
         blank=True,
         verbose_name=('user permissions'),
     )
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+        blank=True,
+        null=True,
+        help_text=('Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.'),
+        validators=[AbstractUser.username_validator],
+        error_messages={
+            'unique': ("A user with that username already exists."),
+        },
+    )
+    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
+    profile_picture_url = models.TextField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def display_username(self):
+        if self.username:
+            return self.username
+        name = f"{self.first_name} {self.last_name}".strip()
+        return name if name else self.email
+
+    def __str__(self):
+        return self.display_username

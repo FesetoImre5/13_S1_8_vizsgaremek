@@ -1,7 +1,9 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 import ListGroup from './ListGroup.vue';
+import CreateGroupModal from './CreateGroupModal.vue';
+import UserSearch from './UserSearch.vue';
 
 // --- STATE ---
 const groups = ref([]);
@@ -10,18 +12,31 @@ const groupMembers = ref([]);
 const loading = ref(false);
 const memberLoading = ref(false);
 
-const newMemberUsername = ref('');
+// const newMemberUsername = ref(''); // No longer needed
 const addMemberError = ref('');
 const addMemberSuccess = ref('');
+
+const showCreateModal = ref(false);
+const showEditModal = ref(false);
+
+const canEditGroup = computed(() => {
+    if (!selectedGroup.value) return false;
+    // Check if I am leader using the role we stored in the group object
+    return selectedGroup.value.myRole === 'leader';
+});
 
 // --- API ACTIONS ---
 const fetchMyGroups = async () => {
     loading.value = true;
     try {
         const currentUserId = parseInt(localStorage.getItem('user_id'));
-        const response = await axios.get('http://127.0.0.1:8000/api/group-members/');
-        const myMemberships = response.data.filter(item => item.user_detail.id === currentUserId);
-        groups.value = myMemberships.map(item => item.group_detail);
+        // Updated to use server-side filtering
+        const response = await axios.get(`http://127.0.0.1:8000/api/group-members/?user=${currentUserId}`);
+        // Store group details AND the role
+        groups.value = response.data.map(item => ({
+            ...item.group_detail,
+            myRole: item.role
+        }));
     } catch (error) {
         console.error("Failed to load groups", error);
     } finally {
@@ -32,7 +47,7 @@ const fetchMyGroups = async () => {
 const selectGroup = async (group) => {
     selectedGroup.value = group;
     groupMembers.value = [];
-    newMemberUsername.value = '';
+    // newMemberUsername.value = '';
     addMemberError.value = ''; 
     addMemberSuccess.value = '';
     
@@ -47,21 +62,38 @@ const selectGroup = async (group) => {
     }
 };
 
-const addMember = async () => {
-    if (!newMemberUsername.value.trim()) return;
+// Computed property to exclude users who are already members
+const excludedUserIds = computed(() => {
+    const ids = groupMembers.value.map(m => m.user_detail.id);
+    const currentUserId = Number(localStorage.getItem('user_id'));
+    if (currentUserId && !isNaN(currentUserId) && !ids.includes(currentUserId)) {
+        ids.push(currentUserId);
+    }
+    return ids;
+});
+
+const addMember = async (user) => {
+    if (!user || !user.id) return;
     addMemberError.value = '';
     addMemberSuccess.value = '';
 
     try {
-        const payload = { group: selectedGroup.value.id, username: newMemberUsername.value };
+        // Use user ID instead of username
+        const payload = { group: selectedGroup.value.id, user: user.id }; 
         const response = await axios.post('http://127.0.0.1:8000/api/group-members/', payload);
         groupMembers.value.push(response.data);
         addMemberSuccess.value = `User added!`;
-        newMemberUsername.value = '';
+        
+        // Hide success message after 3 seconds
+        setTimeout(() => {
+            addMemberSuccess.value = '';
+        }, 3000);
+        
     } catch (error) {
         if (error.response && error.response.data) {
              const data = error.response.data;
-             addMemberError.value = data.detail || (data.username ? data.username[0] : "Failed to add.");
+             // Handle generic or field-specific errors
+             addMemberError.value = data.detail || (data.user ? data.user[0] : "Failed to add.");
         } else {
             addMemberError.value = "Network error.";
         }
@@ -82,6 +114,52 @@ const getGroupUrl = (group) => {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(group.groupname)}&background=random&color=fff&size=128`;
 };
 
+const openCreateModal = () => {
+    showCreateModal.value = true;
+};
+
+const closeCreateModal = () => {
+    showCreateModal.value = false;
+};
+
+const handleGroupCreated = (newGroup) => {
+    fetchMyGroups();
+};
+
+const handleGroupUpdated = (updatedGroup) => {
+    // Update local list
+    const index = groups.value.findIndex(g => g.id === updatedGroup.id);
+    if (index !== -1) {
+        // Preserve role!
+        groups.value[index] = { ...updatedGroup, myRole: groups.value[index].myRole };
+    }
+    // Update selected group details if match
+    if (selectedGroup.value && selectedGroup.value.id === updatedGroup.id) {
+        selectedGroup.value = { ...updatedGroup, myRole: selectedGroup.value.myRole };
+    }
+    fetchMyGroups(); // Refresh to be safe
+};
+
+const openEditModal = () => {
+    showEditModal.value = true;
+};
+
+const deleteGroup = async () => {
+    if (!selectedGroup.value) return;
+    if (!confirm(`Are you sure you want to delete "${selectedGroup.value.groupname}"?`)) return;
+
+    try {
+        await axios.delete(`http://127.0.0.1:8000/api/groups/${selectedGroup.value.id}/`);
+        // Refresh and clear selection
+        await fetchMyGroups();
+        selectedGroup.value = null;
+        groupMembers.value = [];
+    } catch (error) {
+         console.error("Failed to delete group", error);
+         alert("Failed to delete group.");
+    }
+};
+
 onMounted(() => {
     fetchMyGroups();
 });
@@ -97,7 +175,6 @@ onMounted(() => {
                 <div v-if="loading" class="p-3 text-muted">Loading...</div>
                 
                 <div class="listContainer customScroll">
-                    <!-- Note: ListGroup component needs styling update too -->
                     <list-group
                         v-for="group in groups"
                         :key="group.id"
@@ -107,6 +184,15 @@ onMounted(() => {
                         @click="selectGroup(group)"
                     />
                 </div>
+                
+                <!-- Create New Group Button -->
+                <button class="createGroupBtn" @click="openCreateModal">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Create New Group
+                </button>
             </div>
 
             <!-- Inner Content: Group Details -->
@@ -116,8 +202,19 @@ onMounted(() => {
                 </div>
                 <div v-else class="detailsInner">
                     <div class="header">
-                        <img :src="getGroupUrl(selectedGroup)" class="gImg">
-                        <h3>{{ selectedGroup.groupname }}</h3>
+                        <div class="headerLeft">
+                            <img :src="getGroupUrl(selectedGroup)" class="gImg">
+                            <h3>{{ selectedGroup.groupname }}</h3>
+                        </div>
+                        <div v-if="canEditGroup" class="headerRight">
+                             <button class="editBtn" @click="openEditModal">Edit</button>
+                             <button class="deleteBtn" @click="deleteGroup">Delete</button>
+                        </div>
+                    </div>
+
+                    <!-- Description Box -->
+                    <div v-if="selectedGroup.description" class="descriptionBox">
+                        <p>{{ selectedGroup.description }}</p>
                     </div>
                     
                     <div class="divider"></div>
@@ -125,12 +222,16 @@ onMounted(() => {
                     <!-- Add Member -->
                     <div class="actionBox">
                         <label>Add New Member</label>
-                        <div class="inputGroup">
-                            <input v-model="newMemberUsername" type="text" placeholder="Enter username..." @keyup.enter="addMember">
-                            <button @click="addMember">Add</button>
+                        <!-- Replaced inputGroup with UserSearch -->
+                         <div class="searchWrapper">
+                            <UserSearch 
+                                placeholder="Search by email or name..." 
+                                :exclude="excludedUserIds" 
+                                @select="addMember" 
+                            />
                         </div>
-                        <small v-if="addMemberError" class="text-danger">{{ addMemberError }}</small>
-                        <small v-if="addMemberSuccess" class="text-success">{{ addMemberSuccess }}</small>
+                        <small v-if="addMemberError" class="text-danger mt-2 d-block">{{ addMemberError }}</small>
+                        <small v-if="addMemberSuccess" class="text-success mt-2 d-block">{{ addMemberSuccess }}</small>
                     </div>
 
                     <!-- Member List -->
@@ -138,9 +239,10 @@ onMounted(() => {
                     <ul class="memberList">
                         <li v-for="m in groupMembers" :key="m.id" class="memberItem">
                             <div class="memberInfo">
-                                <div class="avatar">{{ m.user_detail.username.charAt(0) }}</div>
+                                <div class="avatar">{{ m.user_detail.username ? m.user_detail.username.charAt(0).toUpperCase() : '?' }}</div>
                                 <span>
-                                    <strong>{{ m.user_detail.username }}</strong>
+                                    <!-- Use display_username from backend if available, or fallback -->
+                                    <strong>{{ m.user_detail.display_username || m.user_detail.username }}</strong>
                                     <span v-if="m.isAdmin" class="adminBadge">ADMIN</span>
                                 </span>
                             </div>
@@ -150,6 +252,21 @@ onMounted(() => {
                 </div>
             </div>
         </div>
+        
+        <!-- Create Group Modal -->
+        <create-group-modal 
+            v-if="showCreateModal" 
+            @close="closeCreateModal"
+            @groupCreated="handleGroupCreated"
+        />
+
+        <!-- Edit Group Modal (Reusing existing component) -->
+        <create-group-modal 
+            v-if="showEditModal" 
+            :group="selectedGroup"
+            @close="showEditModal = false"
+            @groupUpdated="handleGroupUpdated"
+        />
     </div>
 </template>
 
@@ -198,10 +315,35 @@ onMounted(() => {
 }
 
 /* Header & Images */
-.header { display: flex; align-items: center; margin-bottom: 20px; }
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.headerLeft { display: flex; align-items: center; }
+.headerRight { display: flex; gap: 10px; }
+
 .gImg { width: 64px; height: 64px; border-radius: var(--radius-md); margin-right: 20px; object-fit: cover; }
 .header h3 { color: var(--c-text-primary); margin: 0; }
 .divider { height: 1px; background: var(--border-color); margin: 20px 0; }
+
+.descriptionBox {
+    background: var(--c-surface-hover);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+}
+.descriptionBox p { margin: 0; color: var(--c-text-secondary); font-size: 0.95rem; line-height: 1.5; }
+
+/* Buttons */
+.editBtn { 
+    background: var(--c-surface); color: var(--c-text-primary); border: 1px solid var(--border-color); 
+    padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s;
+}
+.editBtn:hover { background: var(--c-bg); }
+
+.deleteBtn { 
+    background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);
+    padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s;
+}
+.deleteBtn:hover { background: rgba(239, 68, 68, 0.2); }
 
 /* Inputs & Actions */
 .actionBox {
@@ -210,56 +352,81 @@ onMounted(() => {
     border-radius: var(--radius-md);
     margin-bottom: 30px;
     border: 1px solid var(--border-color);
+    overflow: visible; /* Ensure dropdown isn't clipped */
 }
-.actionBox label { display: block; color: var(--c-text-secondary); margin-bottom: 10px; font-size: 0.9rem; }
-.inputGroup { display: flex; gap: 10px; }
-.inputGroup input {
-    flex: 1;
-    background: var(--c-bg);
-    border: 1px solid var(--border-color);
-    color: var(--c-text-primary);
-    padding: 10px 15px;
-    border-radius: 8px;
-    outline: none;
+.actionBox label { display: block; color: var(--c-text-primary); margin-bottom: 10px; font-size: 0.9rem; font-weight: 600; }
+
+/* Replaced .inputGroup with .searchWrapper since UserSearch handles conflicts */
+.searchWrapper {
+    width: 100%;
+    position: relative;
+    /* Optional: Add z-index if dropdown gets cut off, though UserSearch usually handles it */
+    z-index: 10;
 }
-.inputGroup input:focus { border-color: var(--c-accent); }
-.inputGroup button {
-    background: var(--c-accent);
-    color: white;
-    border: none;
-    padding: 0 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-}
-.inputGroup button:hover { opacity: 0.9; }
 
 /* Member List */
-.listHeader { color: var(--c-text-secondary); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 15px; }
+.listHeader { color: var(--c-accent); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1.5px; margin-bottom: 15px; font-weight: 700; }
 .memberList { list-style: none; padding: 0; }
 .memberItem {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px;
+    padding: 14px 16px;
     background: var(--c-surface);
     border: 1px solid var(--border-color);
     margin-bottom: 10px;
     border-radius: 10px;
-    transition: transform 0.1s;
+    transition: all 0.2s ease;
 }
-.memberItem:hover { transform: translateX(5px); border-color: var(--c-text-secondary); }
+.memberItem:hover { transform: translateX(5px); border-color: var(--c-accent); background: rgba(249, 115, 22, 0.05); }
 
 .memberInfo { display: flex; align-items: center; gap: 12px; }
-.avatar {
-    width: 32px; height: 32px; background: var(--c-primary); color: white;
-    border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem;
+.memberInfo span {
+    color: var(--c-text-primary);
+    font-size: 0.95rem;
 }
-.adminBadge { font-size: 0.7rem; background: var(--c-accent); color: black; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-weight: bold; }
-.removeBtn { background: transparent; color: var(--c-text-secondary); border: none; cursor: pointer; font-size: 0.9rem; }
-.removeBtn:hover { color: var(--c-primary); text-decoration: underline; }
+.memberInfo strong {
+    color: var(--c-text-primary);
+    font-weight: 600;
+}
+.avatar {
+    width: 36px; height: 36px; background: var(--c-accent); color: white;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 600;
+}
+.adminBadge { font-size: 0.7rem; background: var(--c-accent); color: white; padding: 3px 8px; border-radius: 4px; margin-left: 8px; font-weight: bold; }
+.removeBtn { background: transparent; color: var(--c-text-primary); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
+.removeBtn:hover { color: white; background: #ef4444; border-color: #ef4444; }
 
 /* Scrollbar fix for the list */
 .customScroll::-webkit-scrollbar { width: 5px; }
 .customScroll::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+
+/* Create Group Button */
+.createGroupBtn {
+    width: 100%;
+    padding: 12px 16px;
+    margin-top: 12px;
+    background: var(--c-accent);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.createGroupBtn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+}
+
+.createGroupBtn svg {
+    flex-shrink: 0;
+}
 </style>

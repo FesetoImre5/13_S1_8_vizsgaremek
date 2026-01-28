@@ -1,19 +1,26 @@
 <script setup>
 import { ref, computed } from 'vue';
-import UserMenu from './UserMenu.vue';
+import { useRouter } from 'vue-router'; // Import useRouter
 import { useAuth } from '../composables/UseAuth'; 
 
-const { user } = useAuth();
+const { user, logout } = useAuth(); // Destructure logout
+const router = useRouter(); // Use router
 const isMenuOpen = ref(false);
 
 const navLinks = computed(() => {
     if (user.value) {
         return [
-            { name: 'Tasks', path: '/tasks' }
+            { name: 'Tasks', path: '/tasks' },
+            { name: 'Groups', path: '/groups' } // Add Groups link
         ];
     }
     return []; 
 });
+
+const handleLogout = () => {
+    logout();
+    router.push('/auth');
+};
 </script>
 
 <template>
@@ -35,10 +42,19 @@ const navLinks = computed(() => {
                 </ul>
             </div>
 
-            <!-- GROUP 2 (RIGHT): User Menu -->
-            <div class="navRight">
-                <UserMenu />
+            <!-- GROUP 2 (RIGHT): User Controls -->
+            <div class="navRight" v-if="user">
+                <router-link to="/profile" class="usernameLink">
+                    {{ user.display_username || user.username }}
+                </router-link>
+                <button class="logoutBtn" @click="handleLogout">
+                    Log Out
+                </button>
             </div>
+             <div class="navRight" v-else>
+                 <router-link to="/auth" class="navButton">Login/Register</router-link>
+            </div>
+
 
             <!-- HAMBURGER -->
             <div class="hamburgerMenu">
@@ -65,8 +81,17 @@ const navLinks = computed(() => {
                             {{ link.name }}
                         </router-link>
                     </li>
-                    <li class="mobileUserMenuWrapper">
-                        <UserMenu />
+                    <!-- Mobile User Controls -->
+                     <li v-if="user" class="mobileUserControls">
+                        <router-link to="/profile" class="mobileButton" @click="isMenuOpen = false">
+                            Profile ({{ user.display_username || user.username }})
+                        </router-link>
+                        <button class="mobileButton logout" @click="handleLogout; isMenuOpen = false">
+                            Log Out
+                        </button>
+                    </li>
+                    <li v-else>
+                         <router-link to="/auth" class="mobileButton" @click="isMenuOpen=false">Login/Register</router-link>
                     </li>
                 </ul>
             </div>
@@ -128,7 +153,37 @@ const navLinks = computed(() => {
 
 /* --- GROUP 2 (RIGHT) --- */
 .navRight {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.usernameLink {
+    text-decoration: none;
+    color: var(--nav-text);
+    font-weight: 500;
+    font-size: 1rem;
+    transition: color 0.2s;
+}
+
+.usernameLink:hover {
+    color: var(--accent);
+}
+
+.logoutBtn {
+    background-color: transparent;
+    border: 1px solid var(--c-primary); /* Red/Orange border */
+    color: var(--c-primary);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.logoutBtn:hover {
+    background-color: var(--c-primary);
+    color: white;
 }
 
 /* --- BUTTON STYLES --- */
@@ -172,7 +227,12 @@ const navLinks = computed(() => {
     text-align: center;
     border-bottom: 1px solid var(--border-color);
     background-color: transparent;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    width: 100%;
     transition: background-color 0.2s ease;
+    cursor: pointer;
 }
 
 .mobileButton:hover {
@@ -186,10 +246,13 @@ const navLinks = computed(() => {
     border-bottom: 1px solid var(--accent);
 }
 
-.mobileUserMenuWrapper {
+.mobileButton.logout {
+    color: var(--c-primary);
+}
+
+.mobileUserControls {
     display: flex;
-    justify-content: center;
-    border-bottom: 1px solid var(--border-color);
+    flex-direction: column;
 }
 
 /* =========================================

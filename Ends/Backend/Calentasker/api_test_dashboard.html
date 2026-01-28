@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calentasker API Test Dashboard</title>
+    <style>
+        :root {
+            --c-bg: #121212;
+            --c-surface: #1E1E1E;
+            --c-surface-hover: #2D2D2D;
+            --c-text-primary: #E5E7EB;
+            --c-text-secondary: #9CA3AF;
+            --c-primary: #DC2626;
+            --c-primary-hover: #B91C1C;
+            --c-accent: #F97316;
+            --border-color: #333333;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+        }
+
+        body {
+            background-color: var(--c-bg);
+            color: var(--c-text-primary);
+            font-family: 'Inter', Arial, sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            overflow-x: hidden;
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: var(--c-text-primary);
+            margin-top: 0;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--c-accent);
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        /* Layout */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        /* Cards */
+        .section {
+            background-color: var(--c-surface);
+            border-radius: var(--radius-md);
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease;
+        }
+
+        .section:hover {
+            border-color: var(--c-surface-hover);
+        }
+
+        .row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--c-text-secondary);
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        /* Inputs */
+        input,
+        select,
+        textarea {
+            background-color: var(--c-bg);
+            border: 1px solid var(--border-color);
+            color: var(--c-text-primary);
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 0.95em;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--c-accent);
+        }
+
+        /* Buttons */
+        button {
+            background-color: var(--c-primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: var(--c-primary-hover);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* Response Box */
+        .response {
+            background-color: var(--c-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85em;
+            color: var(--c-text-secondary);
+            max-height: 250px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .status-ok {
+            border-color: #22c55e;
+            color: #22c55e;
+        }
+
+        .status-error {
+            border-color: var(--c-primary);
+            color: var(--c-primary);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .full-width {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Specifics */
+        #auth-token {
+            color: var(--c-accent);
+            font-weight: bold;
+            background: transparent;
+            border: none;
+            padding: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Calentasker <span style="color:var(--c-text-primary); font-weight:normal; font-size: 0.6em;">Backstage
+                API</span></h1>
+
+        <!-- AUTH SECTION -->
+        <div class="section" id="auth-section">
+            <h2>🔐 Authentication</h2>
+            <div class="row">
+                <input type="text" id="auth-username" placeholder="Username" value="admin">
+                <input type="password" id="auth-password" placeholder="Password" value="">
+                <button onclick="login()">Login</button>
+                <button onclick="register()"
+                    style="background-color: transparent; border: 1px solid var(--c-primary);">Register</button>
+            </div>
+            <div class="form-group"
+                style="margin-top:20px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+                <label>Active Token:</label>
+                <input type="text" id="auth-token" class="full-width" readonly placeholder="Waiting for login..."
+                    style="font-family: monospace;">
+            </div>
+            <div id="auth-response" class="response hidden"></div>
+        </div>
+
+        <div id="main-interface" class="hidden container" style="margin:0; padding:0; width:100%; max-width:none;">
+
+            <!-- USERS SECTION -->
+            <div class="section">
+                <h2>👥 Users</h2>
+                <div class="row">
+                    <button onclick="listUsers()">Refresh User List</button>
+                    <div style="flex-grow:1; text-align:right;">
+                        <input type="text" readonly value="Selected for Actions:"
+                            style="border:none; background:transparent; text-align:right;">
+                        <select id="user-select-list" style="min-width: 200px;"></select>
+                    </div>
+                </div>
+                <div class="users-controls"
+                    style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border-color);">
+                    <label style="font-size:0.9em; color:var(--c-text-secondary);">Update Profile Picture (Selected
+                        User):</label>
+                    <div class="row">
+                        <input type="file" id="user-pfp-input">
+                        <button onclick="uploadPfp()">Upload PFP</button>
+                    </div>
+                </div>
+                <div id="users-response" class="response hidden"></div>
+            </div>
+
+            <!-- GROUPS SECTION -->
+            <div class="section">
+                <h2>🏢 Groups & Teams</h2>
+                <div class="row">
+                    <input type="text" id="group-name" placeholder="Group Name">
+                    <input type="text" id="group-desc" placeholder="Description" style="flex-grow:1;">
+                    <button onclick="createGroup()">Create</button>
+                    <button onclick="listGroups()" style="background-color: var(--c-surface-hover);">List All</button>
+                </div>
+                <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0;">
+                <div class="row">
+                    <select id="group-list-select" style="flex-grow:1;"></select>
+                    <span style="color:var(--c-text-secondary);">+</span>
+                    <select id="member-role-select">
+                        <option value="member">Member</option>
+                        <option value="reader">Reader</option>
+                        <option value="operator">Operator</option>
+                        <option value="moderator">Moderator</option>
+                        <option value="leader">Leader</option>
+                    </select>
+                    <button onclick="addMember()">Add User to Group</button>
+                </div>
+                <div id="groups-response" class="response hidden"></div>
+            </div>
+
+            <!-- TASKS SECTION -->
+            <div class="section">
+                <h2>⚡ Tasks</h2>
+                <div class="form-group">
+                    <label>New Task Details</label>
+                    <div class="row">
+                        <input type="text" id="task-title" placeholder="What needs doing?" class="full-width"
+                            style="font-size: 1.1em; font-weight:bold;">
+                    </div>
+                    <div class="row">
+                        <select id="task-priority">
+                            <option value="low">Low Priority</option>
+                            <option value="medium">Medium Priority</option>
+                            <option value="high">High Priority</option>
+                            <option value="urgent" style="color:red;">Urgent</option>
+                        </select>
+                        <select id="task-group-select" style="flex-grow:1;">
+                            <option value="">-- Personal Task --</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div>
+                            <label>Start Date</label>
+                            <input type="date" id="task-start">
+                        </div>
+                        <div>
+                            <label>Due Date</label>
+                            <input type="date" id="task-due">
+                        </div>
+                        <button onclick="createTask()" style="margin-left:auto;">Create Task</button>
+                    </div>
+                </div>
+                <div class="row">
+                    <button onclick="listTasks()" style="background-color: var(--c-surface-hover); width:100%;">Refresh
+                        My Tasks</button>
+                </div>
+                <div id="tasks-response" class="response hidden"></div>
+            </div>
+
+            <!-- OPERATIONS & AUTOMATION -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <div class="section">
+                    <h2>🔧 Operations</h2>
+                    <div class="form-group">
+                        <label>Target Task:</label>
+                        <select id="active-task-select" class="full-width">
+                            <option>Load Tasks First...</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <button onclick="assignTask()" class="full-width">Assign User</button>
+                        <button onclick="markDone()" class="full-width" style="background-color: #22c55e;">Mark
+                            DONE</button>
+                    </div>
+                    <div id="ops-response" class="response hidden"></div>
+                </div>
+
+                <div class="section" style="border-color: var(--c-accent);">
+                    <h2 style="color:var(--c-accent);">🤖 Automation Test</h2>
+                    <p style="color: var(--c-text-secondary); font-size: 0.9em; line-height: 1.6;">
+                        To verify email logic, run this in your terminal:
+                    </p>
+                    <div
+                        style="background:black; padding:10px; border-radius:6px; font-family:monospace; margin: 10px 0; border: 1px solid #333;">
+                        python manage.py check_deadlines
+                    </div>
+                </div>
+
+                <!-- UPLOAD SECTION -->
+                <div class="section" style="grid-column: span 2;">
+                    <h2>📂 File Uploads</h2>
+                    <div class="form-group">
+                        <label>Select Task to Attach File:</label>
+                        <select id="upload-task-select" class="full-width">
+                            <option>Load Tasks First...</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <input type="file" id="file-input">
+                        <button onclick="uploadFile()">Upload File</button>
+                    </div>
+                    <div id="upload-response" class="response hidden"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:8000/api';
+        let authToken = '';
+        let currentUserId = null;
+
+        // --- AUTH ---
+        async function login() {
+            const username = document.getElementById('auth-username').value;
+            const password = document.getElementById('auth-password').value;
+
+            try {
+                const res = await fetch(`${API_URL}/login/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+
+                if (data.token) {
+                    authToken = data.token;
+                    currentUserId = data.user_id;
+                    document.getElementById('auth-token').value = authToken;
+                    document.getElementById('main-interface').classList.remove('hidden');
+                    log('auth-response', 'Login Successful!', true);
+
+                    // Init lists
+                    listUsers();
+                    listGroups();
+                    listTasks();
+                } else {
+                    log('auth-response', JSON.stringify(data), false);
+                }
+            } catch (e) {
+                log('auth-response', 'Error: ' + e, false);
+            }
+        }
+
+        async function register() {
+            const username = document.getElementById('auth-username').value;
+            const password = document.getElementById('auth-password').value;
+            // Simplified registration generic
+            try {
+                const res = await fetch(`${API_URL}/users/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username,
+                        password,
+                        email: `${username}@example.com`
+                    })
+                });
+                const data = await res.json();
+                log('auth-response', 'Registration Result: ' + JSON.stringify(data));
+            } catch (e) { log('auth-response', e); }
+        }
+
+        // --- USERS ---
+        async function listUsers() {
+            const data = await authenticatedFetch('/users/');
+
+            // Render Cards
+            const container = document.getElementById('users-response');
+            container.innerHTML = ''; // Clear previous
+            container.classList.add('show');
+            container.style.display = 'grid';
+            container.style.gridTemplateColumns = 'repeat(auto-fill, minmax(200px, 1fr))';
+            container.style.gap = '10px';
+            container.style.background = 'transparent';
+            container.style.border = 'none';
+
+            const select = document.getElementById('user-select-list');
+            select.innerHTML = '';
+
+            data.forEach(u => {
+                // Populate Select
+                const opt = document.createElement('option');
+                opt.value = u.id;
+                opt.text = `${u.username}`;
+                select.appendChild(opt);
+
+                // Create Card
+                const card = document.createElement('div');
+                card.style.background = 'var(--c-surface-hover)';
+                card.style.padding = '10px';
+                card.style.borderRadius = 'var(--radius-sm)';
+                card.style.border = '1px solid var(--border-color)';
+                card.style.display = 'flex';
+                card.style.alignItems = 'center';
+                card.style.gap = '10px';
+
+                let pfpHtml = `<div style="width:40px; height:40px; background:#333; border-radius:50%;"></div>`;
+                if (u.profile_picture) {
+                    pfpHtml = `<img src="${u.profile_picture}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">`;
+                }
+
+                card.innerHTML = `
+                    ${pfpHtml}
+                    <div>
+                        <strong style="color:var(--c-text-primary)">${u.username}</strong>
+                        <div style="font-size:0.8em; color:var(--c-text-secondary);">ID: ${u.id} | ${u.email}</div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        async function uploadPfp() {
+            const userId = document.getElementById('user-select-list').value;
+            const fileInput = document.getElementById('user-pfp-input');
+            if (fileInput.files.length === 0) { alert('Select file!'); return; }
+
+            const formData = new FormData();
+            formData.append('profile_picture', fileInput.files[0]);
+
+            try {
+                const res = await fetch(`${API_URL}/users/${userId}/`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': 'Token ' + authToken },
+                    body: formData
+                });
+                const data = await res.json();
+                log('users-response', 'PFP Updated: ' + JSON.stringify(data, null, 2));
+                listUsers();
+            } catch (e) { log('users-response', 'Error: ' + e); }
+        }
+
+        // --- GROUPS ---
+        async function createGroup() {
+            const name = document.getElementById('group-name').value;
+            const desc = document.getElementById('group-desc').value;
+            const data = await authenticatedFetch('/groups/', 'POST', {
+                groupname: name,
+                description: desc,
+                created_by_userid: currentUserId
+            });
+            alert('Group Created!');
+            listGroups();
+        }
+
+        async function listGroups() {
+            const data = await authenticatedFetch('/groups/');
+
+            // Render Cards
+            const container = document.getElementById('groups-response');
+            container.innerHTML = '';
+            container.classList.add('show');
+            container.style.display = 'grid';
+            container.style.gridTemplateColumns = 'repeat(auto-fill, minmax(250px, 1fr))';
+            container.style.gap = '10px';
+            container.style.background = 'transparent';
+            container.style.border = 'none';
+            container.style.maxHeight = 'none';
+
+            const listSelect = document.getElementById('group-list-select');
+            const taskGroupSelect = document.getElementById('task-group-select');
+
+            listSelect.innerHTML = '';
+            taskGroupSelect.innerHTML = '<option value="">-- No Group --</option>';
+
+            data.forEach(g => {
+                // Populate Selects
+                const opt1 = document.createElement('option');
+                opt1.value = g.id;
+                opt1.text = g.groupname;
+                listSelect.appendChild(opt1);
+
+                const opt2 = document.createElement('option');
+                opt2.value = g.id;
+                opt2.text = g.groupname;
+                taskGroupSelect.appendChild(opt2);
+
+                // Create Card
+                const card = document.createElement('div');
+                card.style.background = 'var(--c-surface-hover)';
+                card.style.padding = '15px';
+                card.style.borderRadius = 'var(--radius-sm)';
+                card.style.border = '1px solid var(--border-color)';
+                card.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <strong style="color:var(--c-accent); font-size:1.1em;">${g.groupname}</strong>
+                        <span style="font-size:0.75em; background:var(--c-bg); padding:2px 6px; borderRadius:4px;">ID: ${g.id}</span>
+                    </div>
+                    <div style="font-size:0.9em; color:var(--c-text-secondary); margin:5px 0;">${g.description || 'No description'}</div>
+                    <div style="font-size:0.8em; border-top:1px solid var(--border-color); padding-top:5px; margin-top:5px;">
+                        Members: ${g.members ? g.members.length : 0}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        async function addMember() {
+            const userId = document.getElementById('user-select-list').value;
+            const groupId = document.getElementById('group-list-select').value;
+            const role = document.getElementById('member-role-select').value;
+
+            const data = await authenticatedFetch('/group-members/', 'POST', {
+                user: userId,
+                group: groupId,
+                role: role
+            });
+            listGroups(); // Refresh to show member count if applicable
+            alert('Member added successfully.');
+        }
+
+        // --- TASKS ---
+        async function createTask() {
+            const title = document.getElementById('task-title').value;
+            const priority = document.getElementById('task-priority').value;
+            const groupId = document.getElementById('task-group-select').value;
+            const start = document.getElementById('task-start').value;
+            const due = document.getElementById('task-due').value;
+
+            const payload = {
+                title: title,
+                priority: priority,
+                status: 'todo',
+                created_by_userid: currentUserId,
+            };
+            if (groupId) payload.group = groupId;
+            if (start) payload.start_date = start;
+            if (due) payload.due_date = due;
+
+            const data = await authenticatedFetch('/tasks/', 'POST', payload);
+            alert('Task Created!');
+            listTasks();
+        }
+
+        async function listTasks() {
+            const data = await authenticatedFetch('/tasks/');
+
+            // Render Cards
+            const container = document.getElementById('tasks-response');
+            container.innerHTML = '';
+            container.classList.add('show');
+            container.style.display = 'flex';
+            container.style.flexDirection = 'column';
+            container.style.gap = '10px';
+            container.style.background = 'transparent';
+            container.style.border = 'none';
+            container.style.maxHeight = 'none';
+
+            const select = document.getElementById('active-task-select');
+            select.innerHTML = '';
+
+            const uploadSelect = document.getElementById('upload-task-select');
+            if (uploadSelect) uploadSelect.innerHTML = '<option value="">Select Task...</option>';
+
+            data.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.id;
+                opt.text = `${t.title}`;
+                select.appendChild(opt);
+
+                // Determine Border Color based on Priority
+                let borderColor = 'var(--border-color)';
+                if (t.priority === 'urgent') borderColor = '#ef4444';
+                if (t.priority === 'high') borderColor = '#f97316';
+                if (t.priority === 'medium') borderColor = '#eab308';
+
+                // Status Badge
+                let statusColor = '#9CA3AF';
+                if (t.status === 'done') statusColor = '#22c55e';
+                if (t.status === 'in_progress') statusColor = '#3b82f6';
+                if (t.status === 'missed') statusColor = '#ef4444';
+
+                // Create Card
+                const card = document.createElement('div');
+                card.style.background = 'var(--c-surface-hover)';
+                card.style.padding = '15px';
+                card.style.borderRadius = 'var(--radius-sm)';
+                card.style.borderLeft = `4px solid ${borderColor}`; // Left border for priority
+                card.style.display = 'flex';
+                card.style.justifyContent = 'space-between';
+                card.style.alignItems = 'center';
+
+                card.innerHTML = `
+                    <div>
+                        <div style="font-weight:bold; font-size:1.1em; color:var(--c-text-primary);">${t.title}</div>
+                        <div style="font-size:0.85em; color:var(--c-text-secondary); margin-top:4px;">
+                             Due: ${t.due_date || 'No Date'} | Priority: <span style="text-transform:capitalize">${t.priority}</span>
+                        </div>
+                    </div>
+                    <div style="text-align:right;">
+                        <span style="background:${statusColor}20; color:${statusColor}; padding:4px 8px; border-radius:12px; font-size:0.8em; font-weight:600; text-transform:uppercase;">
+                            ${t.status.replace('_', ' ')}
+                        </span>
+                        ${t.completed_at ? `<div style="font-size:0.7em; margin-top:5px; color:#22c55e;">Done: ${t.completed_at.slice(0, 10)}</div>` : ''}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        async function assignTask() {
+            const taskId = document.getElementById('active-task-select').value;
+            const userId = document.getElementById('user-select-list').value;
+
+            // Note: Your model has 'assigned_to_userid' on Task directly OR 'Assigned' model for many users.
+            // Requirement says "Assign tasks to people".
+            // Implementation Plan used 'Assigned' model. But Task model has 'assigned_to_userid' too.
+            // Let's use the 'assigned_to_userid' field for simple single assignment first.
+            const data = await authenticatedFetch(`/tasks/${taskId}/`, 'PATCH', {
+                assigned_to_userid: userId
+            });
+            log('ops-response', 'Assigned User (Direct): ' + JSON.stringify(data));
+        }
+
+        async function markDone() {
+            const taskId = document.getElementById('active-task-select').value;
+            const data = await authenticatedFetch(`/tasks/${taskId}/`, 'PATCH', {
+                status: 'done'
+            });
+            log('ops-response', 'Marked Done. Check completed_at in response:\n' + JSON.stringify(data, null, 2));
+            listTasks();
+        }
+
+        // --- HELPERS ---
+        async function authenticatedFetch(endpoint, method = 'GET', body = null) {
+            const headers = {
+                'Authorization': 'Token ' + authToken,
+                'Content-Type': 'application/json'
+            };
+            const options = { method, headers };
+            if (body) options.body = JSON.stringify(body);
+
+            try {
+                const res = await fetch(API_URL + endpoint, options);
+                return await res.json();
+            } catch (e) {
+                return { error: e.toString() };
+            }
+        }
+
+        function log(elementId, text, success) {
+            const el = document.getElementById(elementId);
+            el.classList.add('show');
+            el.innerText = text;
+            if (success === true) el.style.borderColor = '#22c55e';
+            if (success === false) el.style.borderColor = '#dc2626';
+        }
+    </script>
+</body>
+
+</html>
