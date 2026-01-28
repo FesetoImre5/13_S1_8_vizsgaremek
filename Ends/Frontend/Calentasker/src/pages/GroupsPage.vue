@@ -11,9 +11,16 @@ const selectedGroup = ref(null);
 const groupMembers = ref([]);
 const loading = ref(false);
 const memberLoading = ref(false);
+const currentUserId = ref(Number(localStorage.getItem('user_id')));
 
 const leaders = computed(() => groupMembers.value.filter(m => m.role === 'leader'));
 const regularMembers = computed(() => groupMembers.value.filter(m => m.role !== 'leader'));
+
+const isCurrentUserLeader = computed(() => {
+    const myMembership = groupMembers.value.find(m => m.user_detail.id === currentUserId.value);
+    return myMembership?.role === 'leader';
+});
+
 
 
 
@@ -88,6 +95,16 @@ const addMember = async (user) => {
         } else {
             addMemberError.value = "Network error.";
         }
+    }
+};
+
+const updateMemberRole = async (member, newRole) => {
+    try {
+        await axios.patch(`http://127.0.0.1:8000/api/group-members/${member.id}/`, { role: newRole });
+        member.role = newRole; // Optimistic update
+    } catch (error) {
+        console.error("Failed to update role", error);
+        alert("Failed to update role.");
     }
 };
 
@@ -196,14 +213,29 @@ onMounted(() => {
                             <li v-for="m in groupMembers" :key="m.id" class="memberItem">
                                 <div class="memberInfo">
                                     <div class="avatar">{{ m.user_detail.username ? m.user_detail.username.charAt(0).toUpperCase() : '?' }}</div>
-                                    <span>
-                                        <strong>{{ m.user_detail.username }}</strong>
+                                    <strong>{{ m.user_detail.username }}</strong>
+                                    
+                                    <!-- Role Display / Edit -->
+                                    <div v-if="isCurrentUserLeader && m.user_detail.id !== currentUserId" class="roleEditor">
+                                        <select 
+                                            class="roleSelect"
+                                            :value="m.role" 
+                                            @change="updateMemberRole(m, $event.target.value)"
+                                        >
+                                            <option value="reader">Reader</option>
+                                            <option value="operator">Operator</option>
+                                            <option value="moderator">Moderator</option>
+                                            <option value="leader">Leader</option>
+                                        </select>
+                                    </div>
+                                    <div v-else class="roleDisplay">
                                         <span v-if="m.role === 'leader'" class="roleBadge leader">LEADER</span>
                                         <span v-else-if="m.role === 'moderator'" class="roleBadge moderator">MOD</span>
                                         <span v-else-if="m.role === 'operator'" class="roleBadge operator">OP</span>
-                                    </span>
+                                        <!-- Reader Role Badge Omitted -->
+                                    </div>
                                 </div>
-                                <button v-if="m.role !== 'leader'" class="removeBtn" @click="removeMember(m.id)">Remove</button>
+                                <button v-if="isCurrentUserLeader && m.user_detail.id !== currentUserId" class="removeBtn" @click="removeMember(m.id)">Remove</button>
                             </li>
                         </ul>
                     </div>
@@ -221,6 +253,24 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* Role Editor */
+.roleEditor {
+    margin-left: 8px;
+}
+.roleSelect {
+    background: var(--c-bg);
+    color: var(--c-text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 0.8rem;
+    outline: none;
+    cursor: pointer;
+}
+.roleSelect:hover {
+    border-color: var(--c-accent);
+}
+
 .groupsWrapper {
     height: calc(100vh - 70px); /* Adjust for navbar height */
     /* No background here, letting it blend or using surface */
