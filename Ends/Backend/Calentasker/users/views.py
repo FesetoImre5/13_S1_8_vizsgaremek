@@ -6,7 +6,8 @@ from .models import User
 from .serializers import UserSerializer, UserListSerializer, UserSearchSerializer
 
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all().order_by('id')
+    # Only list active users
+    queryset = User.objects.filter(is_active=True).order_by('id')
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -31,7 +32,8 @@ class UserViewSet(viewsets.ModelViewSet):
             Q(email__icontains=query) |
             Q(username__icontains=query) |
             Q(first_name__icontains=query) |
-            Q(last_name__icontains=query)
+            Q(last_name__icontains=query),
+            is_active=True # Ensure search only returns active users
         ).annotate(
             relevance=Case(
                 When(email__iexact=query, then=Value(3)),

@@ -17,22 +17,37 @@ class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
 
     def get_queryset(self):
-        # CHANGE: Removed .filter(active=True)
-        # Now it fetches ALL tasks, even the "soft deleted" ones.
+        # CHANGE: Restored active=True to filter out soft-deleted tasks
         queryset = Task.objects.select_related(
             'group', 
             'created_by_userid', 
             'assigned_to_userid'
-        ).order_by('id')
+        ).filter(active=True).order_by('id')
 
         # Filters
         group_id = self.request.query_params.get('group')
         status = self.request.query_params.get('status')
+        created_by_userid = self.request.query_params.get('created_by_userid')
+        group_isnull = self.request.query_params.get('group__isnull')
         
         if group_id:
             queryset = queryset.filter(group_id=group_id)
         if status:
             queryset = queryset.filter(status=status)
+        if created_by_userid:
+            queryset = queryset.filter(created_by_userid=created_by_userid)
+        if group_isnull:
+            # If 'true' or 'True', filter for null group
+            if group_isnull.lower() == 'true':
+                queryset = queryset.filter(group__isnull=True)
+        
+        # Ensure we don't show tasks from deleted groups
+        # We perform this check for tasks that HAVE a group.
+        # Since we use select_related('group'), we can filter generally on group__active.
+        # Tasks with group=None (Own Tasks) have group__active as Null/None, so we need Q objects.
+        
+        from django.db.models import Q
+        queryset = queryset.filter(Q(group__isnull=True) | Q(group__active=True))
             
         return queryset
 
@@ -56,6 +71,24 @@ class TaskViewSet(viewsets.ModelViewSet):
         serializer.save()
 
     def perform_destroy(self, instance):
+        from groups.models import GroupMember
+        from rest_framework.exceptions import PermissionDenied
+
+        user = self.request.user
+        
+        if instance.group:
+            # Group Task: Only Leader or Operator
+            try:
+                member = GroupMember.objects.get(group=instance.group, user=user)
+                if member.role not in ['leader', 'operator']:
+                     raise PermissionDenied("Only Leaders and Operators can delete tasks in this group.")
+            except GroupMember.DoesNotExist:
+                raise PermissionDenied("You are not a member of this group.")
+        else:
+            # Own Task: Only Creator
+            if instance.created_by_userid != user:
+                raise PermissionDenied("You can only delete your own personal tasks.")
+
         instance.active = False
         instance.save()
 
@@ -71,11 +104,25 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
 
     def get_queryset(self):
-        queryset = Comment.objects.filter(active=True).order_by('created_at')
+        queryset = Comment.objects.filter(active=True).order_by('-created_at')
         task_id = self.request.query_params.get('task')
         if task_id:
             queryset = queryset.filter(task_id=task_id)
         return queryset
+
+    def perform_update(self, serializer):
+        from rest_framework.exceptions import PermissionDenied
+        if self.request.user != serializer.instance.user:
+             raise PermissionDenied("You can only edit your own comments.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        from rest_framework.exceptions import PermissionDenied
+        if self.request.user != instance.user:
+             raise PermissionDenied("You can only delete your own comments.")
+        
+        instance.active = False
+        instance.save()
 
 
 

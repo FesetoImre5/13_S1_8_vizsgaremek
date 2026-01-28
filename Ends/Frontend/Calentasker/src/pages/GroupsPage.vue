@@ -17,8 +17,15 @@ const leaders = computed(() => groupMembers.value.filter(m => m.role === 'leader
 const regularMembers = computed(() => groupMembers.value.filter(m => m.role !== 'leader'));
 
 const isCurrentUserLeader = computed(() => {
+    // Only used for member management permissions inside the list
     const myMembership = groupMembers.value.find(m => m.user_detail.id === currentUserId.value);
     return myMembership?.role === 'leader';
+});
+
+const canEditGroup = computed(() => {
+    if (!selectedGroup.value) return false;
+    // Check if I am leader using the role we stored in the group object
+    return selectedGroup.value.myRole === 'leader';
 });
 
 
@@ -49,7 +56,11 @@ const fetchMyGroups = async () => {
         const currentUserId = parseInt(localStorage.getItem('user_id'));
         // Updated to use server-side filtering
         const response = await axios.get(`http://127.0.0.1:8000/api/group-members/?user=${currentUserId}`);
-        groups.value = response.data.map(item => item.group_detail);
+        // Store group details AND the role
+        groups.value = response.data.map(item => ({
+            ...item.group_detail,
+            myRole: item.role
+        }));
     } catch (error) {
         console.error("Failed to load groups", error);
     } finally {
@@ -71,6 +82,22 @@ const selectGroup = async (group) => {
         console.error("Failed to load members", error);
     } finally {
         memberLoading.value = false;
+    }
+};
+
+const deleteGroup = async () => {
+    if (!selectedGroup.value) return;
+    if (!confirm(`Are you sure you want to delete "${selectedGroup.value.groupname}"?`)) return;
+
+    try {
+        await axios.delete(`http://127.0.0.1:8000/api/groups/${selectedGroup.value.id}/`);
+        // Refresh and clear selection
+        await fetchMyGroups();
+        selectedGroup.value = null;
+        groupMembers.value = [];
+    } catch (error) {
+         console.error("Failed to delete group", error);
+         alert("Failed to delete group.");
     }
 };
 
@@ -108,6 +135,23 @@ const updateMemberRole = async (member, newRole) => {
     }
 };
 
+const transferLeadership = async (member) => {
+    if (!member || !member.user_detail) return;
+    const confirmMsg = `Are you sure you want to TRANSFER LEADERSHIP to ${member.user_detail.username}?\n\nYou will lose your Leader privileges and become a Reader.`;
+    if (!confirm(confirmMsg)) return;
+
+    try {
+        await axios.post(`http://127.0.0.1:8000/api/groups/${selectedGroup.value.id}/transfer_leadership/`, {
+            new_leader_id: member.user_detail.id
+        });
+        alert(`Leadership transferred to ${member.user_detail.username}.`);
+        fetchMyGroups(); // Refresh everything as my permissions changed
+    } catch (error) {
+        console.error("Failed to transfer leadership", error);
+        alert(error.response?.data?.detail || "Failed to transfer leadership.");
+    }
+};
+
 const removeMember = async (membershipId) => {
     if(!confirm("Remove this member?")) return;
     try {
@@ -127,17 +171,54 @@ const openCreateModal = () => {
     showCreateModal.value = true;
 };
 
-const closeCreateModal = () => {
-    showCreateModal.value = false;
+
+
+const openEditModal = () => {
+    // We reuse the create modal but pass the group to edit
+    // Note: CreateGroupModal needs to accept a prop, but here we can just set a state if the modal supports it
+    // Wait, the CreateGroupModal logic likely needs to be passed via props or v-if re-mount.
+    // For simplicity, let's assume we update the logic to open it in "edit mode"
+    // Since we don't have a ref to the component easily without defining it or using a store,
+    // let's pass a prop "groupToEdit" to CreateGroupModal in template.
+    groupToEdit.value = selectedGroup.value;
+    showCreateModal.value = true;
 };
 
 const handleGroupCreated = async (newGroup) => {
     await fetchMyGroups();
     // Fallback: If the new group is not in the list (e.g. race condition/cache), add it manually
     if (!groups.value.some(g => g.id === newGroup.id)) {
-        groups.value.push(newGroup);
+        // Correctly map the role for the new group (creator is leader)
+        const groupWithRole = { ...newGroup, myRole: 'leader' };
+        groups.value.push(groupWithRole);
+        selectGroup(groupWithRole);
+    } else {
+        // If it exists, find it and select it
+        const existing = groups.value.find(g => g.id === newGroup.id);
+        selectGroup(existing);
     }
-    selectGroup(newGroup);
+};
+
+const handleGroupUpdated = (updatedGroup) => {
+    // Update local list
+    const index = groups.value.findIndex(g => g.id === updatedGroup.id);
+    if (index !== -1) {
+         // Preserve role!
+        groups.value[index] = { ...updatedGroup, myRole: groups.value[index].myRole };
+    }
+    // Update selected group details
+    if (selectedGroup.value && selectedGroup.value.id === updatedGroup.id) {
+         selectedGroup.value = { ...updatedGroup, myRole: selectedGroup.value.myRole };
+    }
+    fetchMyGroups(); // Refresh to be safe
+};
+
+// Add state for editing
+const groupToEdit = ref(null);
+
+const closeCreateModal = () => {
+    showCreateModal.value = false;
+    groupToEdit.value = null; // Reset
 };
 
 onMounted(() => {
@@ -182,8 +263,19 @@ onMounted(() => {
                 </div>
                 <div v-else class="detailsInner">
                     <div class="header">
-                        <img :src="getGroupUrl(selectedGroup)" class="gImg">
-                        <h3>{{ selectedGroup.groupname }}</h3>
+                        <div class="headerLeft">
+                            <img :src="getGroupUrl(selectedGroup)" class="gImg">
+                            <h3>{{ selectedGroup.groupname }}</h3>
+                        </div>
+                        <div v-if="canEditGroup" class="headerRight">
+                             <button class="editBtn" @click="openEditModal">Edit</button>
+                             <button class="deleteBtn" @click="deleteGroup">Delete</button>
+                        </div>
+                    </div>
+
+                    <!-- Description Box -->
+                    <div v-if="selectedGroup.description" class="descriptionBox">
+                        <p>{{ selectedGroup.description }}</p>
                     </div>
                     
                     <div class="divider"></div>
@@ -235,7 +327,23 @@ onMounted(() => {
                                         <!-- Reader Role Badge Omitted -->
                                     </div>
                                 </div>
-                                <button v-if="isCurrentUserLeader && m.user_detail.id !== currentUserId" class="removeBtn" @click="removeMember(m.id)">Remove</button>
+                                <div class="memberActions">
+                                    <button 
+                                        v-if="isCurrentUserLeader && m.user_detail.id !== currentUserId" 
+                                        class="transferBtn" 
+                                        title="Transfer Leadership"
+                                        @click="transferLeadership(m)"
+                                    >
+                                        Transfer Leadership
+                                    </button>
+                                    <button 
+                                        v-if="isCurrentUserLeader && m.user_detail.id !== currentUserId" 
+                                        class="removeBtn" 
+                                        @click="removeMember(m.id)"
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
                             </li>
                         </ul>
                     </div>
@@ -246,8 +354,10 @@ onMounted(() => {
         <!-- Create Group Modal -->
         <create-group-modal 
             v-if="showCreateModal" 
+            :group="groupToEdit"
             @close="closeCreateModal"
             @groupCreated="handleGroupCreated"
+            @groupUpdated="handleGroupUpdated"
         />
     </div>
 </template>
@@ -296,6 +406,51 @@ onMounted(() => {
     height: calc(100vh - 70px); /* Adjust for navbar height */
     /* No background here, letting it blend or using surface */
     background: var(--c-bg);
+    /* No background here, letting it blend or using surface */
+    background: var(--c-bg);
+}
+
+.header { 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; /* Push right buttons */
+    margin-bottom: 20px; 
+}
+
+.headerLeft { display: flex; align-items: center; }
+.headerRight { display: flex; gap: 10px; }
+
+.editBtn, .deleteBtn {
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: filter 0.2s;
+}
+
+.editBtn {
+    background: var(--c-accent); /* Match Create Group button */
+    color: white;
+}
+.editBtn:hover { filter: brightness(1.1); }
+
+.deleteBtn {
+    background: #B91C1C; /* Darker Red */
+    color: white;
+}
+.deleteBtn:hover { filter: brightness(1.1); }
+
+
+.descriptionBox {
+    background: var(--c-surface); /* Consistent with actionBox */
+    padding: 15px;
+    border-radius: 8px;
+    color: var(--c-text-secondary);
+    font-size: 0.95rem;
+    border-left: 4px solid var(--c-accent);
+    margin-bottom: 20px;
 }
 
 .groupListCol {
@@ -336,7 +491,8 @@ onMounted(() => {
 }
 
 /* Header & Images */
-.header { display: flex; align-items: center; margin-bottom: 20px; }
+/* .header is now defined above to support flex-between */
+.gImg { width: 64px; height: 64px; border-radius: var(--radius-md); margin-right: 20px; object-fit: cover; }
 .gImg { width: 64px; height: 64px; border-radius: var(--radius-md); margin-right: 20px; object-fit: cover; }
 .header h3 { color: var(--c-text-primary); margin: 0; }
 .divider { height: 1px; background: var(--border-color); margin: 20px 0; }
@@ -429,7 +585,7 @@ onMounted(() => {
 .roleBadge.operator { background: #10B981; } /* Green */
 
 .removeBtn { background: transparent; color: var(--c-text-primary); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
-.removeBtn:hover { color: white; background: #ef4444; border-color: #ef4444; }
+.removeBtn:hover { color: white; background: #B91C1C; border-color: #B91C1C; }
 
 /* Scrollbar fix for the list */
 .customScroll::-webkit-scrollbar { width: 5px; }
@@ -458,6 +614,29 @@ onMounted(() => {
     opacity: 0.9;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+}
+
+.memberActions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.transferBtn {
+    background: transparent;
+    color: var(--c-text-primary);
+    border: 1px solid var(--border-color);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.transferBtn:hover {
+    background: var(--c-accent); /* Match Create Group button */
+    color: white;
+    border-color: var(--c-accent);
 }
 
 .createGroupBtn svg {

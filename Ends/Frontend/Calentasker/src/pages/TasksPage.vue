@@ -50,6 +50,12 @@ const canCreateTask = computed(() => {
     return group && (group.myRole === 'leader' || group.myRole === 'operator');
 });
 
+const canDeleteGroup = computed(() => {
+    if (!selectedGroupId.value || selectedGroupId.value === 'own') return false;
+    const group = groups.value.find(g => g.id == selectedGroupId.value);
+    return group && group.myRole === 'leader';
+});
+
 // Filtered Tasks
 const filteredTasks = computed(() => {
     if (!selectedDate.value) return tasks.value;
@@ -111,7 +117,7 @@ const fetchTasks = async (groupId = null) => {
              // Note: The previous code just fetched /tasks/?group=ID.
              
              // OPTION 1: Filter by creator and no group.
-             url += `?created_by_userid=${currentUserId}`; 
+             url += `?created_by_userid=${currentUserId}&group__isnull=true`; 
              // We might need to handle the "no group" part in client if backend ignores it.
         } else if (groupId) {
             url += `?group=${groupId}`; 
@@ -120,10 +126,7 @@ const fetchTasks = async (groupId = null) => {
         const response = await axios.get(url);
         
         if (groupId === 'own') {
-            // Client-side filter to ensure we show only personal tasks (no group)
-            // or we could show ALL tasks assigned to user?
-            // "Own Tasks is a place where the user can create tasks for themselves" -> Personal Tasks.
-            tasks.value = response.data.filter(t => t.created_by_userid === currentUserId && !t.group);
+            tasks.value = response.data;
         } else {
             tasks.value = response.data;
         }
@@ -201,6 +204,23 @@ const onTaskCreated = (newTask) => {
     fetchTasks(selectedGroupId.value);
 };
 
+const deleteGroup = async () => {
+    if (!selectedGroupId.value || selectedGroupId.value === 'own') return;
+    if (!confirm(`Are you sure you want to delete the group "${selectedGroup.value?.groupname}"? This cannot be undone.`)) return;
+
+    try {
+        await axios.delete(`http://127.0.0.1:8000/api/groups/${selectedGroupId.value}/`);
+        // Refresh groups list
+        await fetchGroups();
+        // Redirect to Own Tasks or first available
+        const nextId = groups.value.length > 0 ? groups.value[0].id : 'own';
+        handleGroupClick(nextId); 
+    } catch (error) {
+        console.error("Failed to delete group", error);
+        alert("Failed to delete group. You might not have permission.");
+    }
+};
+
 // --- HELPERS ---
 const getGroupUrl = (group) => {
     if (group.imageUrl) return group.imageUrl;
@@ -255,6 +275,7 @@ onMounted(() => {
                 <div class="stickyHeader">
                     <div class="headerLeft">
                         <h1 class="groupTitle">{{ selectedGroup?.groupname || 'Select a Group' }}</h1>
+                        
                         <div class="tasksSubheading">
                             <h2 class="sectionTitle">Tasks</h2>
                             <span v-if="selectedDate" class="dateBadge">{{ selectedDate }}</span>
@@ -314,6 +335,7 @@ onMounted(() => {
     <TaskDetailModal 
         :isOpen="isTaskDetailOpen"
         :task="detailTask"
+        :userRole="selectedGroupId === 'own' ? 'owner' : (selectedGroup ? selectedGroup.myRole : null)"
         @close="closeTaskDetail"
         @task-updated="fetchTasks(selectedGroupId)"
     />
@@ -522,6 +544,26 @@ onMounted(() => {
     font-weight: 700; /* Bold as requested */
     transform: translateY(-1px); /* Visual correction */
     margin-top: -2px; /* Fine-tune centering */
+}
+
+.btnDeleteGroup {
+    background: transparent;
+    border: none;
+    color: var(--c-text-secondary);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 10px;
+    opacity: 0.6;
+    transition: all 0.2s;
+}
+.btnDeleteGroup:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    opacity: 1;
 }
 
 @keyframes fadeIn {

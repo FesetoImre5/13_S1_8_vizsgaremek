@@ -4,7 +4,8 @@ import axios from 'axios';
 
 const props = defineProps({
     task: { type: Object, default: null },
-    isOpen: { type: Boolean, default: false }
+    isOpen: { type: Boolean, default: false },
+    userRole: { type: String, default: null } // 'leader', 'operator', 'owner', or null
 });
 
 const emit = defineEmits(['close', 'task-updated']);
@@ -46,6 +47,14 @@ const formatStatus = (status) => {
     };
     return map[status] || status;
 };
+
+const canDelete = computed(() => {
+    if (props.userRole === 'leader' || props.userRole === 'operator') return true;
+    if (props.userRole === 'owner') return isCreator.value; // For Own Tasks, only creator
+    // Optional: Allow creator to delete in groups too? "Make sure only group leaders or operators can delete" 
+    // implies creators cannot delete in groups. So we stick to the above.
+    return false; 
+});
 
 // --- ACTIONS ---
 const fetchComments = async () => {
@@ -98,8 +107,79 @@ const markComplete = async () => {
     }
 };
 
+const deleteTask = async () => {
+    if (!props.task) return;
+    if (!confirm("Are you sure you want to delete this task? This cannot be undone.")) return;
+    
+    try {
+        await axios.delete(`http://127.0.0.1:8000/api/tasks/${props.task.id}/`);
+        emit('task-updated'); // Will refresh list
+        emit('close');
+    } catch (error) {
+        console.error("Failed to delete task", error);
+        alert("Failed to delete task. You might not have permission.");
+    }
+};
+
 const editTask = () => {
     alert("Edit functionality coming soon!");
+};
+
+// --- WATCHERS ---
+const editingCommentId = ref(null);
+const editContent = ref('');
+
+const isCommentOwner = (comment) => {
+    // Handling case where user_detail might be number or object depending on serialization depth
+    // Usually it's object from serializer.
+    const uid = comment.user_detail?.id || comment.user;
+    return uid === currentUserId.value;
+};
+
+const isEdited = (comment) => {
+    if (!comment.updated_at || !comment.created_at) return false;
+    // Check if updated_at is significantly after created_at (e.g. > 2 seconds)
+    const created = new Date(comment.created_at).getTime();
+    const updated = new Date(comment.updated_at).getTime();
+    return (updated - created) > 2000;
+};
+
+const startEdit = (comment) => {
+    editingCommentId.value = comment.id;
+    editContent.value = comment.content;
+};
+
+const cancelEdit = () => {
+    editingCommentId.value = null;
+    editContent.value = '';
+};
+
+const saveEdit = async (commentId) => {
+    if (!editContent.value.trim()) return;
+    
+    try {
+        await axios.patch(`http://127.0.0.1:8000/api/comments/${commentId}/`, {
+            content: editContent.value
+        });
+        await fetchComments();
+        cancelEdit();
+    } catch (error) {
+        console.error("Failed to update comment", error);
+        alert("Failed to update comment.");
+    }
+};
+
+const deleteComment = async (commentId) => {
+    if (!confirm("Delete this comment?")) return;
+    
+    try {
+        await axios.delete(`http://127.0.0.1:8000/api/comments/${commentId}/`);
+        // Remove locally to be snappy, or refresh
+        comments.value = comments.value.filter(c => c.id !== commentId);
+    } catch (error) {
+        console.error("Failed to delete comment", error);
+        alert("Failed to delete comment.");
+    }
 };
 
 // --- WATCHERS ---
@@ -194,6 +274,7 @@ watch(() => props.isOpen, (newVal) => {
                         <div class="actions-bar">
                             <button class="btn btn-primary" @click="markComplete">Mark Complete</button>
                             <button v-if="isCreator" class="btn btn-secondary" @click="editTask">Edit</button>
+                            <button v-if="canDelete" class="btn btn-danger" @click="deleteTask">Delete</button>
                         </div>
                     </div>
                 </div>
@@ -227,9 +308,29 @@ watch(() => props.isOpen, (newVal) => {
                                 <div class="comment-content">
                                     <div class="comment-header">
                                         <span class="username">{{ comment.user_detail?.username || 'Unknown' }}</span>
-                                        <span class="timestamp">{{ formattedDate(comment.created_at) }}</span>
+                                        <span class="timestamp">
+                                            {{ formattedDate(comment.created_at) }}
+                                            <span v-if="isEdited(comment)" class="edited-label">(edited)</span>
+                                        </span>
                                     </div>
-                                    <p class="text">{{ comment.content }}</p>
+                                    
+                                    <!-- EDIT MODE -->
+                                    <div v-if="editingCommentId === comment.id" class="edit-mode">
+                                        <textarea v-model="editContent" rows="2" class="edit-input"></textarea>
+                                        <div class="edit-actions">
+                                            <button class="btn-xs btn-save" @click="saveEdit(comment.id)">Save</button>
+                                            <button class="btn-xs btn-cancel" @click="cancelEdit">Cancel</button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- VIEW MODE -->
+                                    <div v-else>
+                                        <p class="text">{{ comment.content }}</p>
+                                        <div v-if="isCommentOwner(comment)" class="comment-actions">
+                                            <button class="action-link" @click="startEdit(comment)">Edit</button>
+                                            <button class="action-link delete" @click="deleteComment(comment.id)">Delete</button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -592,7 +693,10 @@ watch(() => props.isOpen, (newVal) => {
 }
 .btn:hover { filter: brightness(1.1); }
 .btn-primary { background: var(--c-accent); color: white; }
+.btn-primary { background: var(--c-accent); color: white; }
 .btn-secondary { background: transparent; color: var(--c-text-primary); border: 1px solid var(--border-color); }
+.btn-danger { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; }
+.btn-danger:hover { background: #ef4444; color: white; }
 
 /* SCROLLBAR CUSTOMIZATION */
 .custom-scroll::-webkit-scrollbar { width: 6px; }
@@ -623,4 +727,63 @@ watch(() => props.isOpen, (newVal) => {
         height: 90vh; /* Taller on mobile */
     }
 }
+
+/* NEW STYLES FOR COMMENT EDITING */
+.edited-label {
+    font-size: 0.75rem;
+    color: var(--c-text-secondary);
+    font-style: italic;
+    margin-left: 5px;
+}
+
+.comment-actions {
+    margin-top: 8px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end; /* Move to bottom right */
+}
+
+.action-link {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.8rem;
+    color: var(--c-text-secondary);
+    cursor: pointer;
+    text-decoration: underline;
+    opacity: 0.7;
+}
+.action-link:hover { opacity: 1; color: var(--c-accent); }
+.action-link.delete:hover { color: #ef4444; }
+
+.edit-mode {
+    margin-top: 5px;
+}
+.edit-input {
+    width: 100%;
+    background: var(--c-bg);
+    border: 1px solid var(--c-accent);
+    color: var(--c-text-primary);
+    border-radius: 6px;
+    padding: 8px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    resize: none;
+}
+.edit-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+    justify-content: flex-end;
+}
+.btn-xs {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+}
+.btn-save { background: var(--c-accent); color: white; }
+.btn-cancel { background: transparent; border: 1px solid var(--border-color); color: var(--c-text-secondary); }
 </style>

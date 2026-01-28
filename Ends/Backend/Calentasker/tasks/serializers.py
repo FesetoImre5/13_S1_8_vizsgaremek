@@ -63,6 +63,7 @@ class CommentSerializer(serializers.ModelSerializer):
             'user_detail',
             'content', 
             'created_at', 
+            'updated_at',
             'active',
         )
         read_only_fields = ('created_at', 'user_detail', 'task_detail', 'active',)
@@ -132,6 +133,8 @@ class TaskSerializer(serializers.ModelSerializer):
         queryset = Group.objects.all(),
         write_only = True,
         label = 'in Group',
+        required=False, 
+        allow_null=True
     )
     group_detail = GroupSerializer(source = 'group', read_only = True)
     created_by = UserListSerializer(source = 'created_by_userid', read_only = True)

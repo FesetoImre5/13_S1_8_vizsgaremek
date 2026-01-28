@@ -17,6 +17,13 @@ const addMemberError = ref('');
 const addMemberSuccess = ref('');
 
 const showCreateModal = ref(false);
+const showEditModal = ref(false);
+
+const canEditGroup = computed(() => {
+    if (!selectedGroup.value) return false;
+    // Check if I am leader using the role we stored in the group object
+    return selectedGroup.value.myRole === 'leader';
+});
 
 // --- API ACTIONS ---
 const fetchMyGroups = async () => {
@@ -25,7 +32,11 @@ const fetchMyGroups = async () => {
         const currentUserId = parseInt(localStorage.getItem('user_id'));
         // Updated to use server-side filtering
         const response = await axios.get(`http://127.0.0.1:8000/api/group-members/?user=${currentUserId}`);
-        groups.value = response.data.map(item => item.group_detail);
+        // Store group details AND the role
+        groups.value = response.data.map(item => ({
+            ...item.group_detail,
+            myRole: item.role
+        }));
     } catch (error) {
         console.error("Failed to load groups", error);
     } finally {
@@ -115,6 +126,40 @@ const handleGroupCreated = (newGroup) => {
     fetchMyGroups();
 };
 
+const handleGroupUpdated = (updatedGroup) => {
+    // Update local list
+    const index = groups.value.findIndex(g => g.id === updatedGroup.id);
+    if (index !== -1) {
+        // Preserve role!
+        groups.value[index] = { ...updatedGroup, myRole: groups.value[index].myRole };
+    }
+    // Update selected group details if match
+    if (selectedGroup.value && selectedGroup.value.id === updatedGroup.id) {
+        selectedGroup.value = { ...updatedGroup, myRole: selectedGroup.value.myRole };
+    }
+    fetchMyGroups(); // Refresh to be safe
+};
+
+const openEditModal = () => {
+    showEditModal.value = true;
+};
+
+const deleteGroup = async () => {
+    if (!selectedGroup.value) return;
+    if (!confirm(`Are you sure you want to delete "${selectedGroup.value.groupname}"?`)) return;
+
+    try {
+        await axios.delete(`http://127.0.0.1:8000/api/groups/${selectedGroup.value.id}/`);
+        // Refresh and clear selection
+        await fetchMyGroups();
+        selectedGroup.value = null;
+        groupMembers.value = [];
+    } catch (error) {
+         console.error("Failed to delete group", error);
+         alert("Failed to delete group.");
+    }
+};
+
 onMounted(() => {
     fetchMyGroups();
 });
@@ -157,8 +202,19 @@ onMounted(() => {
                 </div>
                 <div v-else class="detailsInner">
                     <div class="header">
-                        <img :src="getGroupUrl(selectedGroup)" class="gImg">
-                        <h3>{{ selectedGroup.groupname }}</h3>
+                        <div class="headerLeft">
+                            <img :src="getGroupUrl(selectedGroup)" class="gImg">
+                            <h3>{{ selectedGroup.groupname }}</h3>
+                        </div>
+                        <div v-if="canEditGroup" class="headerRight">
+                             <button class="editBtn" @click="openEditModal">Edit</button>
+                             <button class="deleteBtn" @click="deleteGroup">Delete</button>
+                        </div>
+                    </div>
+
+                    <!-- Description Box -->
+                    <div v-if="selectedGroup.description" class="descriptionBox">
+                        <p>{{ selectedGroup.description }}</p>
                     </div>
                     
                     <div class="divider"></div>
@@ -202,6 +258,14 @@ onMounted(() => {
             v-if="showCreateModal" 
             @close="closeCreateModal"
             @groupCreated="handleGroupCreated"
+        />
+
+        <!-- Edit Group Modal (Reusing existing component) -->
+        <create-group-modal 
+            v-if="showEditModal" 
+            :group="selectedGroup"
+            @close="showEditModal = false"
+            @groupUpdated="handleGroupUpdated"
         />
     </div>
 </template>
@@ -251,10 +315,35 @@ onMounted(() => {
 }
 
 /* Header & Images */
-.header { display: flex; align-items: center; margin-bottom: 20px; }
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.headerLeft { display: flex; align-items: center; }
+.headerRight { display: flex; gap: 10px; }
+
 .gImg { width: 64px; height: 64px; border-radius: var(--radius-md); margin-right: 20px; object-fit: cover; }
 .header h3 { color: var(--c-text-primary); margin: 0; }
 .divider { height: 1px; background: var(--border-color); margin: 20px 0; }
+
+.descriptionBox {
+    background: var(--c-surface-hover);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+}
+.descriptionBox p { margin: 0; color: var(--c-text-secondary); font-size: 0.95rem; line-height: 1.5; }
+
+/* Buttons */
+.editBtn { 
+    background: var(--c-surface); color: var(--c-text-primary); border: 1px solid var(--border-color); 
+    padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s;
+}
+.editBtn:hover { background: var(--c-bg); }
+
+.deleteBtn { 
+    background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);
+    padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s;
+}
+.deleteBtn:hover { background: rgba(239, 68, 68, 0.2); }
 
 /* Inputs & Actions */
 .actionBox {

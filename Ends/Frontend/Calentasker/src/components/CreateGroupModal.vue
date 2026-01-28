@@ -1,9 +1,13 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 import UserSearch from './UserSearch.vue';
 
-const emit = defineEmits(['close', 'groupCreated']);
+const props = defineProps({
+    group: { type: Object, default: null } // If provided, we are in Edit Mode
+});
+
+const emit = defineEmits(['close', 'groupCreated', 'groupUpdated']);
 
 // Form state
 const groupTitle = ref('');
@@ -17,6 +21,33 @@ const selectedMembers = ref([]);
 const isSubmitting = ref(false);
 const error = ref('');
 const success = ref('');
+
+// Helper to init form
+onMounted(() => {
+    if (props.group) {
+        groupTitle.value = props.group.groupname || '';
+        groupDescription.value = props.group.description || '';
+        
+        // Handle existing image
+        if (props.group.imageUrl) {
+            imageMode.value = 'url';
+            imageUrl.value = props.group.imageUrl;
+        } else if (props.group.image) {
+            // Can't show file preview of server path in input[type=file], 
+            // but we can show it as a visual preview.
+            // For now, default to Upload mode empty, User can upload new one.
+            // Or show current image? We'll just leave it empty to indicate "no change" unless user uploads.
+            // Maybe show a "current image" label?
+        }
+    }
+});
+
+const isEditMode = computed(() => !!props.group);
+const modalTitle = computed(() => isEditMode.value ? 'Edit Group' : 'Create New Group');
+const submitButtonText = computed(() => {
+    if (isSubmitting.value) return isEditMode.value ? 'Saving...' : 'Creating...';
+    return isEditMode.value ? 'Save Changes' : 'Create Group';
+});
 
 const excludedUsers = computed(() => {
     const ids = selectedMembers.value.map(m => m.id);
@@ -60,8 +91,19 @@ const removeMember = (userId) => {
     selectedMembers.value = selectedMembers.value.filter(m => m.id !== userId);
 };
 
-// Create group
-const createGroup = async () => {
+// Simple helper for error handling
+const handleApiError = (err, defaultMsg) => {
+    console.error(defaultMsg, err);
+    if (err.response && err.response.data) {
+        const data = err.response.data;
+        error.value = data.detail || data.groupname?.[0] || defaultMsg;
+    } else {
+        error.value = 'Network error. Please try again.';
+    }
+};
+
+// Submit handler
+const handleSubmit = async () => {
     error.value = '';
     success.value = '';
     
@@ -73,57 +115,60 @@ const createGroup = async () => {
     isSubmitting.value = true;
     
     try {
-        // Create FormData for file upload
         const formData = new FormData();
         formData.append('groupname', groupTitle.value);
-        if (groupDescription.value.trim()) {
-            formData.append('description', groupDescription.value);
-        }
+        formData.append('description', groupDescription.value || '');
         
         // Handle Image Logic
         if (imageMode.value === 'upload' && coverImage.value) {
             formData.append('image', coverImage.value);
-        } else if (imageMode.value === 'url' && imageUrl.value.trim()) {
+            formData.append('imageUrl', ''); // Clear URL if uploading
+        } else if (imageMode.value === 'url') {
              formData.append('imageUrl', imageUrl.value.trim());
+             // Note: Can't easily "clear" file field via API unless we send null/empty? 
+             // DRF usually ignores if not sent. We rely on logic or overwrite.
         }
-        
-        // Create the group
-        const response = await axios.post('http://127.0.0.1:8000/api/groups/', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        });
-        
-        const newGroup = response.data;
-        
-        // Add members if specified
-        if (selectedMembers.value.length > 0) {
-            for (const member of selectedMembers.value) {
-                try {
-                    await axios.post('http://127.0.0.1:8000/api/group-members/', {
-                        group: newGroup.id,
-                        user: member.id  // sending user ID instead of username
-                    });
-                } catch (err) {
-                    console.error(`Failed to add member ${member.display_username || member.username}:`, err);
+
+        if (isEditMode.value) {
+            // EDIT GROUP
+            const response = await axios.patch(`http://127.0.0.1:8000/api/groups/${props.group.id}/`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            success.value = 'Group updated!';
+            setTimeout(() => {
+                emit('groupUpdated', response.data);
+                emit('close');
+            }, 1000);
+
+        } else {
+            // CREATE GROUP
+            const response = await axios.post('http://127.0.0.1:8000/api/groups/', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            
+            const newGroup = response.data;
+            
+            // Add members if specified (Only for Create)
+            if (selectedMembers.value.length > 0) {
+                for (const member of selectedMembers.value) {
+                    try {
+                        await axios.post('http://127.0.0.1:8000/api/group-members/', {
+                            group: newGroup.id,
+                            user: member.id 
+                        });
+                    } catch (err) { console.error("Failed to add member", err); }
                 }
             }
+            
+            success.value = 'Group created successfully!';
+            setTimeout(() => {
+                emit('groupCreated', newGroup);
+                emit('close');
+            }, 1000);
         }
-        
-        success.value = 'Group created successfully!';
-        setTimeout(() => {
-            emit('groupCreated', newGroup);
-            emit('close');
-        }, 1000);
-        
+
     } catch (err) {
-        console.error('Failed to create group:', err);
-        if (err.response && err.response.data) {
-            const data = err.response.data;
-            error.value = data.detail || data.groupname?.[0] || 'Failed to create group';
-        } else {
-            error.value = 'Network error. Please try again.';
-        }
+        handleApiError(err, isEditMode.value ? 'Failed to update group' : 'Failed to create group');
     } finally {
         isSubmitting.value = false;
     }
@@ -152,7 +197,7 @@ const handleImageError = (userId) => {
     <div class="modalOverlay" @click.self="closeModal">
         <div class="modalContent">
             <div class="modalHeader">
-                <h3>Create New Group</h3>
+                <h3>{{ modalTitle }}</h3>
                 <button class="closeBtn" @click="closeModal">&times;</button>
             </div>
             
@@ -217,8 +262,8 @@ const handleImageError = (userId) => {
                     ></textarea>
                 </div>
                 
-                <!-- Add Members -->
-                <div class="formGroup">
+                <!-- Add Members (Create Only) -->
+                <div v-if="!isEditMode" class="formGroup">
                     <label>Add Members (optional)</label>
                     
                     <!-- Selected Members Chips -->
@@ -255,8 +300,8 @@ const handleImageError = (userId) => {
             
             <div class="modalFooter">
                 <button class="cancelBtn" @click="closeModal" :disabled="isSubmitting">Cancel</button>
-                <button class="createBtn" @click="createGroup" :disabled="isSubmitting">
-                    {{ isSubmitting ? 'Creating...' : 'Create Group' }}
+                <button class="createBtn" @click="handleSubmit" :disabled="isSubmitting">
+                    {{ submitButtonText }}
                 </button>
             </div>
         </div>

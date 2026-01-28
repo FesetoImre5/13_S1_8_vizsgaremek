@@ -86,8 +86,30 @@ const dueDate = ref('');
             } finally {
                 loadingMembers.value = false;
             }
-        } else {
-            groupMembers.value = [];
+        } else if (newVal) {
+            // Own Tasks (No Group)
+            loadingMembers.value = true;
+            try {
+                const userId = parseInt(localStorage.getItem('user_id'));
+                if (userId) {
+                    const response = await axios.get(`http://127.0.0.1:8000/api/users/${userId}/`);
+                    const user = response.data;
+                    const meMember = {
+                        id: 'self',
+                        user_detail: user,
+                        role: 'Owner'
+                    };
+                    groupMembers.value = [meMember];
+                    selectedAssignees.value = [meMember];
+                } else {
+                     groupMembers.value = [];
+                }
+            } catch (e) {
+                console.error("Failed to fetch user for auto-assignment", e);
+                groupMembers.value = [];
+            } finally {
+                loadingMembers.value = false;
+            }
         }
     });
 
