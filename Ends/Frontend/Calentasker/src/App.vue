@@ -31,9 +31,9 @@ onMounted(() => {
 <style>
 :root {
     /* --- COLOR PALETTE FROM IMAGE --- */
-    --c-bg: #121212;          /* The Almost Black */
-    --c-surface: #1E1E1E;     /* The Dark Gray */
-    --c-surface-hover: #2D2D2D;
+    --c-bg: #313338;          /* Discord Dark Background */
+    --c-surface: #2B2D31;     /* Discord Dark Surface */
+    --c-surface-hover: #404249;
     
     --c-text-primary: #E5E7EB; /* The Light Gray */
     --c-text-secondary: #9CA3AF;

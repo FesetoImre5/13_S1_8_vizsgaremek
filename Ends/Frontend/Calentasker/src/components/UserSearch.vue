@@ -61,10 +61,22 @@ const selectUser = (user) => {
 };
 
 const closeDropdown = () => {
-    // Delay to allow click to register
     setTimeout(() => {
         showDropdown.value = false;
     }, 200);
+};
+
+// Image handling
+const imageLoadErrors = ref({});
+
+const getProfilePictureUrl = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    return `http://127.0.0.1:8000${url}`;
+};
+
+const handleImageError = (userId) => {
+    imageLoadErrors.value[userId] = true;
 };
 
 </script>
@@ -88,7 +100,12 @@ const closeDropdown = () => {
         <ul v-if="showDropdown && results.length > 0" class="results-dropdown">
             <li v-for="user in results" :key="user.id" @mousedown.prevent="selectUser(user)" class="result-item">
                 <div class="user-avatar">
-                   <img v-if="user.profile_picture" :src="user.profile_picture" alt="Avatar">
+                   <img 
+                        v-if="user.profile_picture && !imageLoadErrors[user.id]" 
+                        :src="getProfilePictureUrl(user.profile_picture)" 
+                        alt="Avatar"
+                        @error="handleImageError(user.id)"
+                    >
                    <div v-else class="avatar-placeholder">{{ (user.first_name?.[0] || user.display_username?.[0] || user.email?.[0] || '?').toUpperCase() }}</div>
                 </div>
                 <div class="user-info">

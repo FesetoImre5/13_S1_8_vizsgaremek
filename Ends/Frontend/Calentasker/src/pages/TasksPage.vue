@@ -6,6 +6,7 @@ import ListTask from '../components/ListTask.vue';
 import ListGroupIcon from '../components/ListGroupIcon.vue';
 import TaskCalendar from '../components/TaskCalendar.vue';
 import TaskDetailModal from '../components/TaskDetailModal.vue';
+import CreateTaskModal from '../components/CreateTaskModal.vue';
 
 // --- STATE ---
 const route = useRoute();
@@ -24,8 +25,34 @@ const isCalendarModalOpen = ref(false);
 const isTaskDetailOpen = ref(false);
 const detailTask = ref(null);
 
+// Create Task Modal State
+const isCreateTaskOpen = ref(false);
+
 // New State for Date Filtering
 const selectedDate = ref(null);
+
+// --- COMPUTED ---
+const selectedGroup = computed(() => {
+    return groups.value.find(g => g.id == selectedGroupId.value);
+});
+
+// Filtered Tasks
+const filteredTasks = computed(() => {
+    if (!selectedDate.value) return tasks.value;
+    
+    return tasks.value.filter(task => {
+        if (!task.created_at && !task.start_date) return false;
+        
+        const rawStart = task.start_date || task.created_at;
+        const rawEnd = task.due_date || task.start_date || task.created_at;
+        
+        const start = rawStart.substring(0, 10);
+        const end = rawEnd.substring(0, 10);
+        
+        // Check if selectedDate falls within the task's range
+        return selectedDate.value >= start && selectedDate.value <= end;
+    });
+});
 
 // --- API ACTIONS ---
 const fetchGroups = async () => {
@@ -56,24 +83,6 @@ const fetchTasks = async (groupId = null) => {
         loading.value = false;
     }
 };
-
-// --- COMPUTED: Filtered Tasks ---
-const filteredTasks = computed(() => {
-    if (!selectedDate.value) return tasks.value;
-    
-    return tasks.value.filter(task => {
-        if (!task.created_at && !task.start_date) return false;
-        
-        const rawStart = task.start_date || task.created_at;
-        const rawEnd = task.due_date || task.start_date || task.created_at;
-        
-        const start = rawStart.substring(0, 10);
-        const end = rawEnd.substring(0, 10);
-        
-        // Check if selectedDate falls within the task's range
-        return selectedDate.value >= start && selectedDate.value <= end;
-    });
-});
 
 // --- INTERACTION ---
 const handleGroupClick = (groupId) => {
@@ -141,6 +150,19 @@ const closeTaskDetail = () => {
     detailTask.value = null;
 };
 
+const openCreateTask = () => {
+    if (!selectedGroupId.value) {
+        alert("Please select a group first.");
+        return;
+    }
+    isCreateTaskOpen.value = true;
+};
+
+const onTaskCreated = (newTask) => {
+    // Refresh tasks efficiently or invoke fetch
+    fetchTasks(selectedGroupId.value);
+};
+
 // --- HELPERS ---
 const getGroupUrl = (group) => {
     if (group.imageUrl) return group.imageUrl;
@@ -182,10 +204,21 @@ onMounted(() => {
             <!-- COLUMN 2: TASKS -->
             <div class="tasks-area">    
                 <div class="stickyHeader">
-                    <h2 style="margin:0; font-size:1.5rem; color:var(--c-text-primary);">
-                        Tasks <span v-if="selectedDate" style="font-size: 0.9rem; opacity: 0.7;">({{ selectedDate }})</span>
-                    </h2>
+                    <div class="header-left">
+                        <h1 class="group-title">{{ selectedGroup?.groupname || 'Select a Group' }}</h1>
+                        <div class="tasks-subheading">
+                            <h2 class="section-title">Tasks</h2>
+                            <span v-if="selectedDate" class="date-badge">{{ selectedDate }}</span>
+                        </div>
+                    </div>
+
+                    <div class="header-right">
+                         <button class="btn-new-task" @click="openCreateTask">
+                            <span class="plus-icon">+</span> New Task
+                         </button>
+                    </div>
                 </div>
+
                 <div class="task-scroll custom-scroll">
                     <div v-if="loading" style="padding: 20px;">
                         <div class="skeleton" style="height: 100px; width: 100%; margin-bottom: 15px;"></div>
@@ -233,7 +266,14 @@ onMounted(() => {
         :isOpen="isTaskDetailOpen"
         :task="detailTask"
         @close="closeTaskDetail"
-        @task-updated="fetchTasks"
+        @task-updated="fetchTasks(selectedGroupId)"
+    />
+
+    <CreateTaskModal 
+        :isOpen="isCreateTaskOpen"
+        :groupId="selectedGroupId ? parseInt(selectedGroupId) : null"
+        @close="isCreateTaskOpen = false"
+        @task-created="onTaskCreated"
     />
 
     <!-- MODAL OVERLAY (Calendar) -->
@@ -293,7 +333,7 @@ onMounted(() => {
 /* TASKS AREA */
 .tasks-area {
     background-color: var(--c-bg);
-    padding: 0; /* REMOVED padding: 0 20px to let scrollbar sit at edge/prevent clipping */
+    padding: 0; 
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -302,7 +342,7 @@ onMounted(() => {
 .task-scroll {
     flex-grow: 1;
     overflow-y: auto;
-    padding: 20px; /* Added full padding here (top/bottom/left/right) */
+    padding: 20px; 
 }
 
 /* CALENDAR AREA (Right Column) */
@@ -341,7 +381,6 @@ onMounted(() => {
 .modalContent {
     width: 90%;
     max-width: 900px;
-    /* UPDATED: Height is auto so it shrinks to fit the calendar */
     height: auto;
     max-height: 90vh; /* Safety limit */
     
@@ -353,17 +392,84 @@ onMounted(() => {
     overflow: hidden;
 }
 
+/* HEADER REDESIGN */
 .stickyHeader {
     position: sticky;
     top: 0;
     z-index: 50;
-    background: rgba(18, 18, 18, 0.85); /* Semi-transparent */
-    backdrop-filter: blur(12px);        /* Blur effect */
+    background: var(--c-surface); /* Lighter background as requested */
     border-bottom: 1px solid var(--border-color);
-    padding: 20px;
+    padding: 20px 30px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2); /* Added shadow for better separation */
+}
+
+/* Combined Left Section */
+.header-left {
+    display: flex;
+    align-items: baseline; /* Align by text baseline */
+    gap: 20px;
+}
+
+.group-title {
+    margin: 0;
+    font-size: 1.8rem;
+    color: var(--c-text-primary);
+    font-weight: 700;
+}
+
+.tasks-subheading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.section-title {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--c-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.date-badge {
+    background: var(--c-bg); /* Use bg color for contrast against surface */
+    color: var(--c-text-primary);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    border: 1px solid var(--border-color);
+}
+
+.btn-new-task {
+    background: var(--c-accent);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.btn-new-task:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.plus-icon {
+    font-size: 1.2rem;
+    line-height: 1;
+    font-weight: bold;
 }
 
 @keyframes fadeIn {
@@ -377,7 +483,23 @@ onMounted(() => {
         grid-template-columns: 80px 1fr;
     }
     .calendar-area { display: none; }
-    .calendar-fab { display: flex; }
+}
+
+@media (max-width: 768px) {
+    /* Stack header on mobile/tablet */
+    .stickyHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    .header-left {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+    .btn-new-task {
+        width: 100%;
+        justify-content: center;
+    }
 }
 
 @media (max-width: 530px) {
@@ -385,8 +507,7 @@ onMounted(() => {
         grid-template-columns: 70px 1fr;
     }
     .calendar-area { display: none; }
-    .tasks-area { padding: 0 10px; }
-    .calendar-fab { display: none; }
+    .tasks-area { padding: 0 5px; }
     
     .modalContent {
         width: 100%;
@@ -399,6 +520,11 @@ onMounted(() => {
         border-bottom: none;
         animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
+    
+    .stickyHeader {
+        padding: 15px;
+    }
+    .group-title { font-size: 1.4rem; }
 }
 
 @keyframes slideUp {

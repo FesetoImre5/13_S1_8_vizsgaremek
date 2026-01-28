@@ -133,6 +133,19 @@ const createGroup = async () => {
 const closeModal = () => {
     emit('close');
 };
+
+// Image handling for member chips
+const imageLoadErrors = ref({});
+
+const getProfilePictureUrl = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    return `http://127.0.0.1:8000${url}`;
+};
+
+const handleImageError = (userId) => {
+    imageLoadErrors.value[userId] = true;
+};
 </script>
 
 <template>
@@ -228,10 +241,11 @@ const closeModal = () => {
                     <div v-if="selectedMembers.length > 0" class="selected-members-container">
                         <div v-for="member in selectedMembers" :key="member.id" class="member-chip">
                             <img 
-                                v-if="member.profile_picture" 
-                                :src="member.profile_picture" 
+                                v-if="member.profile_picture && !imageLoadErrors[member.id]" 
+                                :src="getProfilePictureUrl(member.profile_picture)" 
                                 alt="avatar" 
                                 class="chip-avatar"
+                                @error="handleImageError(member.id)"
                             >
                              <div v-else class="chip-avatar-placeholder">
                                 {{ (member.first_name?.[0] || member.display_username?.[0] || member.email?.[0] || '?').toUpperCase() }}
