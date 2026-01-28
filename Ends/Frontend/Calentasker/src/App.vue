@@ -30,24 +30,30 @@ onMounted(() => {
 
 <style>
 :root {
-    /* --- COLOR PALETTE FROM IMAGE --- */
-    --c-bg: #313338;          /* Discord Dark Background */
-    --c-surface: #2B2D31;     /* Discord Dark Surface */
-    --c-surface-hover: #404249;
+    /* --- COLOR PALETTE (Enhanced Contrast) --- */
+    --c-bg: #101113;          /* Much darker background for depth */
+    --c-surface: #26272D;     /* Slightly lighter surface to pop against bg */
+    --c-surface-hover: #32333A;
     
-    --c-text-primary: #E5E7EB; /* The Light Gray */
+    --c-text-primary: #EDECEC; /* Brighter text */
     --c-text-secondary: #9CA3AF;
     
-    --c-primary: #F97316;      /* Orange */
+    --c-primary: #F97316;      
     --c-primary-hover: #EA580C;
     
-    --c-accent: #F97316;       /* The Bright Orange */
+    --c-accent: #F97316;       
     
     /* --- BORDERS & SPACING --- */
-    --border-color: #333333;
+    --border-color: #2F3036;   /* Subtle border */
     --radius-md: 12px;
     --radius-lg: 16px;
     --nav-height: 70px;
+
+    /* --- SHADOWS --- */
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.4);
+    --shadow-lg: 0 10px 15px rgba(0,0,0,0.5);
+    --shadow-glow: 0 0 15px rgba(249, 115, 22, 0.15); /* Orange glow */
 }
 main {
     background-color: var(--c-bg);
