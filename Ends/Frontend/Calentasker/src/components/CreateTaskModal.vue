@@ -79,16 +79,16 @@ const createTask = async () => {
 </script>
 
 <template>
-    <div v-if="isOpen" class="modal-overlay" @click.self="closeModal">
-        <div class="modal-content">
-            <div class="modal-header">
+    <div v-if="isOpen" class="modalOverlay" @click.self="closeModal">
+        <div class="modalContent">
+            <div class="modalHeader">
                 <h3>Create New Task</h3>
-                <button class="close-btn" @click="closeModal">&times;</button>
+                <button class="closeBtn" @click="closeModal">&times;</button>
             </div>
             
-            <div class="modal-body">
+            <div class="modalBody">
                 <!-- Title -->
-                <div class="form-group">
+                <div class="formGroup">
                     <label>Title *</label>
                     <input 
                         v-model="title" 
@@ -99,7 +99,7 @@ const createTask = async () => {
                 </div>
 
                 <!-- Description -->
-                <div class="form-group">
+                <div class="formGroup">
                     <label>Description</label>
                     <textarea 
                         v-model="description" 
@@ -110,7 +110,7 @@ const createTask = async () => {
 
                 <div class="row">
                     <!-- Priority -->
-                    <div class="form-group">
+                    <div class="formGroup">
                         <label>Priority</label>
                         <select v-model="priority">
                             <option value="low">Low</option>
@@ -121,7 +121,7 @@ const createTask = async () => {
                     </div>
 
                     <!-- Due Date -->
-                    <div class="form-group">
+                    <div class="formGroup">
                         <label>Due Date</label>
                         <input 
                             v-model="dueDate" 
@@ -131,12 +131,12 @@ const createTask = async () => {
                     </div>
                 </div>
 
-                <div v-if="error" class="error-message">{{ error }}</div>
+                <div v-if="error" class="errorMessage">{{ error }}</div>
             </div>
 
-            <div class="modal-footer">
-                <button class="btn-cancel" @click="closeModal" :disabled="isSubmitting">Cancel</button>
-                <button class="btn-create" @click="createTask" :disabled="isSubmitting">
+            <div class="modalFooter">
+                <button class="btnCancel" @click="closeModal" :disabled="isSubmitting">Cancel</button>
+                <button class="btnCreate" @click="createTask" :disabled="isSubmitting">
                     {{ isSubmitting ? 'Creating...' : 'Create Task' }}
                 </button>
             </div>
@@ -145,7 +145,7 @@ const createTask = async () => {
 </template>
 
 <style scoped>
-.modal-overlay {
+.modalOverlay {
     position: fixed;
     top: 0; left: 0;
     width: 100vw; height: 100vh;
@@ -158,7 +158,7 @@ const createTask = async () => {
     animation: fadeIn 0.2s ease;
 }
 
-.modal-content {
+.modalContent {
     background: var(--c-surface);
     width: 90%;
     max-width: 500px;
@@ -171,7 +171,7 @@ const createTask = async () => {
     animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.modal-header {
+.modalHeader {
     padding: 20px 24px;
     border-bottom: 1px solid var(--border-color);
     display: flex;
@@ -179,13 +179,13 @@ const createTask = async () => {
     align-items: center;
 }
 
-.modal-header h3 {
+.modalHeader h3 {
     margin: 0;
     color: var(--c-text-primary);
     font-size: 1.2rem;
 }
 
-.close-btn {
+.closeBtn {
     background: none;
     border: none;
     color: var(--c-text-secondary);
@@ -194,31 +194,31 @@ const createTask = async () => {
     cursor: pointer;
     padding: 0;
 }
-.close-btn:hover { color: var(--c-text-primary); }
+.closeBtn:hover { color: var(--c-text-primary); }
 
-.modal-body {
+.modalBody {
     padding: 24px;
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
-.form-group {
+.formGroup {
     display: flex;
     flex-direction: column;
     gap: 8px;
     flex: 1;
 }
 
-.form-group label {
+.formGroup label {
     font-size: 0.9rem;
     color: var(--c-text-secondary);
     font-weight: 600;
 }
 
-.form-group input,
-.form-group textarea,
-.form-group select {
+.formGroup input,
+.formGroup textarea,
+.formGroup select {
     background: var(--c-bg);
     border: 1px solid var(--border-color);
     color: var(--c-text-primary);
@@ -229,9 +229,9 @@ const createTask = async () => {
     font-family: inherit;
 }
 
-.form-group input:focus,
-.form-group textarea:focus,
-.form-group select:focus {
+.formGroup input:focus,
+.formGroup textarea:focus,
+.formGroup select:focus {
     border-color: var(--c-accent);
 }
 
@@ -240,7 +240,7 @@ const createTask = async () => {
     gap: 20px;
 }
 
-.error-message {
+.errorMessage {
     color: #ef4444;
     font-size: 0.9rem;
     background: rgba(239, 68, 68, 0.1);
@@ -248,7 +248,7 @@ const createTask = async () => {
     border-radius: 6px;
 }
 
-.modal-footer {
+.modalFooter {
     padding: 20px 24px;
     border-top: 1px solid var(--border-color);
     display: flex;
@@ -256,7 +256,7 @@ const createTask = async () => {
     gap: 12px;
 }
 
-.btn-cancel {
+.btnCancel {
     background: transparent;
     border: 1px solid var(--border-color);
     color: var(--c-text-secondary);
@@ -265,9 +265,9 @@ const createTask = async () => {
     cursor: pointer;
     font-weight: 600;
 }
-.btn-cancel:hover { background: var(--c-bg); color: var(--c-text-primary); }
+.btnCancel:hover { background: var(--c-bg); color: var(--c-text-primary); }
 
-.btn-create {
+.btnCreate {
     background: var(--c-accent);
     border: none;
     color: white;
@@ -276,8 +276,8 @@ const createTask = async () => {
     cursor: pointer;
     font-weight: 600;
 }
-.btn-create:hover { filter: brightness(1.1); }
-.btn-create:disabled { opacity: 0.7; cursor: not-allowed; }
+.btnCreate:hover { filter: brightness(1.1); }
+.btnCreate:disabled { opacity: 0.7; cursor: not-allowed; }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }

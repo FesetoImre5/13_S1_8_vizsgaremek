@@ -206,13 +206,13 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="page-container">
+    <div class="pageContainer">
         <!-- CUSTOM GRID LAYOUT -->
-        <div class="layout-grid">
+        <div class="layoutGrid">
             
             <!-- COLUMN 1: SIDEBAR -->
-            <div class="sidebar-area">
-                <div class="sidebar-scroll">
+            <div class="sidebarArea">
+                <div class="sidebarScroll">
                     <!-- Own Tasks Item -->
                     <list-group-icon
                         url="/src/assets/view-list.svg"
@@ -235,24 +235,24 @@ onMounted(() => {
             </div>
 
             <!-- COLUMN 2: TASKS -->
-            <div class="tasks-area">    
+            <div class="tasksArea">    
                 <div class="stickyHeader">
-                    <div class="header-left">
-                        <h1 class="group-title">{{ selectedGroup?.groupname || 'Select a Group' }}</h1>
-                        <div class="tasks-subheading">
-                            <h2 class="section-title">Tasks</h2>
-                            <span v-if="selectedDate" class="date-badge">{{ selectedDate }}</span>
+                    <div class="headerLeft">
+                        <h1 class="groupTitle">{{ selectedGroup?.groupname || 'Select a Group' }}</h1>
+                        <div class="tasksSubheading">
+                            <h2 class="sectionTitle">Tasks</h2>
+                            <span v-if="selectedDate" class="dateBadge">{{ selectedDate }}</span>
                         </div>
                     </div>
 
-                    <div class="header-right">
-                         <button class="btn-new-task" @click="openCreateTask">
-                            <span class="plus-icon">+</span> New Task
+                    <div class="headerRight">
+                         <button class="btnNewTask" @click="openCreateTask">
+                            <span class="plusIcon">+</span> New Task
                          </button>
                     </div>
                 </div>
 
-                <div class="task-scroll custom-scroll">
+                <div class="taskScroll customScroll">
                     <div v-if="loading" style="padding: 20px;">
                         <div class="skeleton" style="height: 100px; width: 100%; margin-bottom: 15px;"></div>
                         <div class="skeleton" style="height: 100px; width: 100%; margin-bottom: 15px;"></div>
@@ -267,7 +267,7 @@ onMounted(() => {
                         v-else
                         v-for="(task, index) in filteredTasks"
                         :key="task.id"
-                        class="fade-in-item"
+                        class="fadeInItem"
                         :style="{ animationDelay: `${index * 50}ms` }"
                         :id="task.id"
                         :url="getTaskUrl(task)"
@@ -285,7 +285,7 @@ onMounted(() => {
             </div>
 
             <!-- COLUMN 3: CALENDAR (Desktop) -->
-            <div class="calendar-area">
+            <div class="calendarArea">
                 <TaskCalendar 
                     :tasks="tasks"
                     :hoveredTaskId="hoveredTaskId"
@@ -310,7 +310,7 @@ onMounted(() => {
     />
 
     <!-- MODAL OVERLAY (Calendar) -->
-    <div v-if="isCalendarModalOpen" class="modal-overlay" @click.self="isCalendarModalOpen = false">
+    <div v-if="isCalendarModalOpen" class="modalOverlay" @click.self="isCalendarModalOpen = false">
         <div class="modalContent">
             <TaskCalendar 
                 :tasks="tasks"
@@ -326,7 +326,7 @@ onMounted(() => {
 <style scoped>
 * { box-sizing: border-box; }
 
-.page-container {
+.pageContainer {
     height: calc(100vh - 70px);
     width: 100%;
     overflow: hidden;
@@ -335,7 +335,7 @@ onMounted(() => {
 }
 
 /* GRID LAYOUT */
-.layout-grid {
+.layoutGrid {
     display: grid;
     grid-template-columns: 80px 1fr 450px;
     height: 100%;
@@ -343,7 +343,7 @@ onMounted(() => {
 }
 
 /* SIDEBAR AREA */
-.sidebar-area {
+.sidebarArea {
     background-color: var(--c-surface);
     border-right: 1px solid var(--border-color);
     padding: 10px 0;
@@ -353,7 +353,7 @@ onMounted(() => {
     z-index: 100;
 }
 
-.sidebar-scroll {
+.sidebarScroll {
     width: 100%;
     overflow-y: auto;
     display: flex;
@@ -361,10 +361,10 @@ onMounted(() => {
     align-items: center;
     scrollbar-width: none;
 }
-.sidebar-scroll::-webkit-scrollbar { display: none; }
+.sidebarScroll::-webkit-scrollbar { display: none; }
 
 /* TASKS AREA */
-.tasks-area {
+.tasksArea {
     background-color: var(--c-bg);
     padding: 0; 
     display: flex;
@@ -372,31 +372,31 @@ onMounted(() => {
     overflow: hidden;
 }
 
-.task-scroll {
+.taskScroll {
     flex-grow: 1;
     overflow-y: auto;
     padding: 20px; 
 }
 
 /* CALENDAR AREA (Right Column) */
-.calendar-area {
+.calendarArea {
     background-color: var(--c-surface);
     border-left: 1px solid var(--border-color);
     display: block; 
 }
 
 /* SCROLLBAR */
-.custom-scroll::-webkit-scrollbar { width: 8px; }
-.custom-scroll::-webkit-scrollbar-thumb { 
+.customScroll::-webkit-scrollbar { width: 8px; }
+.customScroll::-webkit-scrollbar-thumb { 
     background: var(--c-surface-hover); 
     border-radius: 4px; 
 }
-.custom-scroll::-webkit-scrollbar-thumb:hover { 
+.customScroll::-webkit-scrollbar-thumb:hover { 
     background: var(--c-accent); 
 }
 
 /* MODAL */
-.modal-overlay {
+.modalOverlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -440,26 +440,26 @@ onMounted(() => {
 }
 
 /* Combined Left Section */
-.header-left {
+.headerLeft {
     display: flex;
     align-items: baseline; /* Align by text baseline */
     gap: 20px;
 }
 
-.group-title {
+.groupTitle {
     margin: 0;
     font-size: 1.8rem;
     color: var(--c-text-primary);
     font-weight: 700;
 }
 
-.tasks-subheading {
+.tasksSubheading {
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
-.section-title {
+.sectionTitle {
     margin: 0;
     font-size: 1.1rem;
     color: var(--c-text-secondary);
@@ -468,7 +468,7 @@ onMounted(() => {
     font-weight: 600;
 }
 
-.date-badge {
+.dateBadge {
     background: var(--c-bg); /* Use bg color for contrast against surface */
     color: var(--c-text-primary);
     padding: 4px 10px;
@@ -477,7 +477,7 @@ onMounted(() => {
     border: 1px solid var(--border-color);
 }
 
-.btn-new-task {
+.btnNewTask {
     background: var(--c-accent);
     color: white;
     border: none;
@@ -493,13 +493,13 @@ onMounted(() => {
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
-.btn-new-task:hover {
+.btnNewTask:hover {
     filter: brightness(1.1);
     transform: translateY(-1px);
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
-.plus-icon {
+.plusIcon {
     font-size: 1.2rem;
     line-height: 1;
     font-weight: bold;
@@ -512,10 +512,10 @@ onMounted(() => {
 
 /* RESPONSIVE BREAKPOINTS */
 @media (max-width: 1300px) {
-    .layout-grid {
+    .layoutGrid {
         grid-template-columns: 80px 1fr;
     }
-    .calendar-area { display: none; }
+    .calendarArea { display: none; }
 }
 
 @media (max-width: 768px) {
@@ -525,22 +525,22 @@ onMounted(() => {
         align-items: flex-start;
         gap: 15px;
     }
-    .header-left {
+    .headerLeft {
         width: 100%;
         flex-wrap: wrap;
     }
-    .btn-new-task {
+    .btnNewTask {
         width: 100%;
         justify-content: center;
     }
 }
 
 @media (max-width: 530px) {
-    .layout-grid {
+    .layoutGrid {
         grid-template-columns: 70px 1fr;
     }
-    .calendar-area { display: none; }
-    .tasks-area { padding: 0 5px; }
+    .calendarArea { display: none; }
+    .tasksArea { padding: 0 5px; }
     
     .modalContent {
         width: 100%;
@@ -557,7 +557,7 @@ onMounted(() => {
     .stickyHeader {
         padding: 15px;
     }
-    .group-title { font-size: 1.4rem; }
+    .groupTitle { font-size: 1.4rem; }
 }
 
 @keyframes slideUp {
@@ -566,7 +566,7 @@ onMounted(() => {
 }
 
 /* FADE IN ANIMATION */
-.fade-in-item {
+.fadeInItem {
     opacity: 0;
     animation: fadeInTask 0.4s ease forwards;
 }

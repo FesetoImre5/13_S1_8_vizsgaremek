@@ -54,7 +54,7 @@ const handleMouseLeave = () => {
         @mouseleave="handleMouseLeave"
     >
         <!-- The Icon Box -->
-        <div class="listGroup" :class="{ 'active-group': isActive, 'system-icon-container': isSystemIcon }">
+        <div class="listGroup" :class="{ 'activeGroup': isActive, 'systemIconContainer': isSystemIcon }">
             <img :src="url" alt="">
         </div>
 
@@ -106,7 +106,7 @@ const handleMouseLeave = () => {
 
 /* Hover Effect */
 .listGroupWrapper:hover .listGroup,
-.listGroup.active-group {
+.listGroup.activeGroup {
     border-radius: 15px; /* Squircle */
     background-color: var(--c-accent);
     border-color: var(--c-accent);
@@ -121,7 +121,7 @@ const handleMouseLeave = () => {
 }
 
 /* System Icon Styles */
-.listGroup.system-icon-container img {
+.listGroup.systemIconContainer img {
     width: 60%; /* Shrink the icon */
     height: 60%;
     object-fit: contain; /* Ensure standard icon aspect ratio */
@@ -130,7 +130,7 @@ const handleMouseLeave = () => {
 }
 
 /* Selected State */
-.listGroup.active-group {
+.listGroup.activeGroup {
     box-shadow: 0 0 10px rgba(249, 115, 22, 0.4);
 }
 
