@@ -225,7 +225,6 @@ onMounted(() => {
                                             <option value="reader">Reader</option>
                                             <option value="operator">Operator</option>
                                             <option value="moderator">Moderator</option>
-                                            <option value="leader">Leader</option>
                                         </select>
                                     </div>
                                     <div v-else class="roleDisplay">

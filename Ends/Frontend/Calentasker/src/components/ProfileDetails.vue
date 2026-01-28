@@ -10,6 +10,13 @@ const isEditing = ref(false);
 const saveError = ref('');
 const saveSuccess = ref('');
 
+const newPassword = ref('');
+const confirmPassword = ref('');
+const pwError = ref('');
+const pwSuccess = ref('');
+const fileInput = ref(null);
+
+
 const fetchUserProfile = async () => {
     try {
         const userId = localStorage.getItem('user_id');
@@ -65,6 +72,56 @@ const cancelEdit = () => {
     saveError.value = '';
 };
 
+const triggerFileInput = () => {
+    fileInput.value.click();
+};
+
+const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('profile_picture', file);
+
+    try {
+        const userId = localStorage.getItem('user_id');
+        const response = await axios.patch(`http://127.0.0.1:8000/api/users/${userId}/`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        userData.value = response.data;
+    } catch (e) {
+        console.error("Failed to upload image", e);
+        alert("Failed to upload profile picture.");
+    }
+};
+
+
+
+const updatePassword = async () => {
+    if (newPassword.value !== confirmPassword.value) {
+        pwError.value = "Passwords do not match.";
+        return;
+    }
+    if (!newPassword.value) return;
+
+    pwError.value = '';
+    pwSuccess.value = '';
+
+    try {
+        const userId = localStorage.getItem('user_id');
+        await axios.patch(`http://127.0.0.1:8000/api/users/${userId}/`, {
+            password: newPassword.value
+        });
+        pwSuccess.value = "Password changed successfully!";
+        newPassword.value = '';
+        confirmPassword.value = '';
+        setTimeout(() => pwSuccess.value = '', 3000);
+    } catch (e) {
+        console.error(e);
+        pwError.value = "Failed to update password.";
+    }
+};
+
 onMounted(() => {
     fetchUserProfile();
 });
@@ -74,8 +131,20 @@ onMounted(() => {
     <div class="detailsPageContainer">
         <div class="detailsCard fullHeight">
             <div class="header">
-                <h2 class="sectionTitle">Profile Details</h2>
-                <p class="sectionSubtitle">Manage your personal account information</p>
+                <div class="profileInfo">
+                    <div class="profilePicWrapper" @click="triggerFileInput">
+                        <img v-if="userData.profile_picture" :src="userData.profile_picture" class="profilePic">
+                        <div v-else class="profilePic placeholder">{{ userData.username ? userData.username.charAt(0).toUpperCase() : '?' }}</div>
+                        <div class="editOverlay">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                        </div>
+                        <input type="file" ref="fileInput" @change="handleFileChange" accept="image/*" style="display: none;">
+                    </div>
+                    <div>
+                        <h2 class="sectionTitle">Profile Details</h2>
+                        <p class="sectionSubtitle">Manage your personal account information</p>
+                    </div>
+                </div>
             </div>
             
             <div class="divider"></div>
@@ -130,6 +199,26 @@ onMounted(() => {
                         <div class="valueField">{{ userData.last_name }}</div>
                     </div>
                 </div>
+
+                <div class="divider"></div>
+
+                <!-- Password Section -->
+                <div class="infoGroup">
+                    <label>Change Password</label>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <input type="password" v-model="newPassword" placeholder="New Password" class="valueField">
+                        </div>
+                        <div class="col-md-6">
+                            <input type="password" v-model="confirmPassword" placeholder="Confirm Password" class="valueField">
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                         <button class="saveBtn" @click="updatePassword" :disabled="!newPassword">Update Password</button>
+                    </div>
+                    <p v-if="pwError" class="errorMessage">{{ pwError }}</p>
+                    <p v-if="pwSuccess" class="successMessage">{{ pwSuccess }}</p>
+                </div>
             </div>
         </div>
     </div>
@@ -150,19 +239,66 @@ onMounted(() => {
     background: var(--c-surface);
     height: 100%;
     width: 100%;
+    max-width: 850px; /* Constrain width to avoid dead space */
+    margin: 0 auto;   /* Center */
     padding: 40px;
     overflow-y: auto; /* Scroll inside if content gets too long */
     
     /* Remove border radius if you want it to look like a full panel, 
        or keep it if there is padding around it in ProfilePage. 
        Based on "fill out", usually implies 0 margin. */
-    border-radius: 0; 
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); 
 }
 
 /* Header Styling */
 .header {
     margin-bottom: 20px;
 }
+.profileInfo {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.profilePicWrapper {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    cursor: pointer;
+}
+.profilePic {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--c-surface);
+    box-shadow: 0 0 0 2px var(--c-accent);
+}
+.profilePic.placeholder {
+    background: var(--c-accent);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+}
+.editOverlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.profilePicWrapper:hover .editOverlay {
+    opacity: 1;
+}
+
 .sectionTitle {
     color: var(--c-text-primary);
     font-size: 1.75rem;
@@ -282,7 +418,7 @@ onMounted(() => {
 }
 
 .saveBtn, .cancelBtn {
-    padding: 0 20px;
+    padding: 12px 24px;
     border-radius: 8px;
     font-weight: 600;
     cursor: pointer;

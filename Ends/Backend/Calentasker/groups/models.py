@@ -40,6 +40,6 @@ class GroupMember(models.Model):
     role = models.CharField(
         max_length=10,
         choices=ROLE_CHOICES,
-        default='member',
+        default='reader',
     )
     joined_at = models.DateTimeField(auto_now_add=True)
