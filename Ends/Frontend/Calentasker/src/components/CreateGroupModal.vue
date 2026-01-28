@@ -1,6 +1,7 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import axios from 'axios';
+import UserSearch from './UserSearch.vue';
 
 const emit = defineEmits(['close', 'groupCreated']);
 
@@ -9,10 +10,22 @@ const groupTitle = ref('');
 const groupDescription = ref('');
 const coverImage = ref(null);
 const coverImagePreview = ref('');
-const memberUsernames = ref('');
+const imageUrl = ref('');
+const imageMode = ref('upload'); // 'upload' or 'url'
+// Replaced memberUsernames with selectedMembers array
+const selectedMembers = ref([]); 
 const isSubmitting = ref(false);
 const error = ref('');
 const success = ref('');
+
+const excludedUsers = computed(() => {
+    const ids = selectedMembers.value.map(m => m.id);
+    const userId = Number(localStorage.getItem('user_id'));
+    if (userId && !isNaN(userId)) {
+        ids.push(userId);
+    }
+    return ids;
+});
 
 // Handle image upload
 const handleImageUpload = (event) => {
@@ -31,6 +44,20 @@ const handleImageUpload = (event) => {
 const removeImage = () => {
     coverImage.value = null;
     coverImagePreview.value = '';
+};
+
+// Handle User Selection from UserSearch
+const handleUserSelect = (user) => {
+    // Check if already selected
+    if (selectedMembers.value.some(m => m.id === user.id)) {
+        return;
+    }
+    selectedMembers.value.push(user);
+};
+
+// Remove member from list
+const removeMember = (userId) => {
+    selectedMembers.value = selectedMembers.value.filter(m => m.id !== userId);
 };
 
 // Create group
@@ -52,8 +79,12 @@ const createGroup = async () => {
         if (groupDescription.value.trim()) {
             formData.append('description', groupDescription.value);
         }
-        if (coverImage.value) {
-            formData.append('imageUrl', coverImage.value);
+        
+        // Handle Image Logic
+        if (imageMode.value === 'upload' && coverImage.value) {
+            formData.append('image', coverImage.value);
+        } else if (imageMode.value === 'url' && imageUrl.value.trim()) {
+             formData.append('imageUrl', imageUrl.value.trim());
         }
         
         // Create the group
@@ -66,16 +97,15 @@ const createGroup = async () => {
         const newGroup = response.data;
         
         // Add members if specified
-        if (memberUsernames.value.trim()) {
-            const usernames = memberUsernames.value.split(',').map(u => u.trim()).filter(u => u);
-            for (const username of usernames) {
+        if (selectedMembers.value.length > 0) {
+            for (const member of selectedMembers.value) {
                 try {
                     await axios.post('http://127.0.0.1:8000/api/group-members/', {
                         group: newGroup.id,
-                        username: username
+                        user: member.id  // sending user ID instead of username
                     });
                 } catch (err) {
-                    console.error(`Failed to add member ${username}:`, err);
+                    console.error(`Failed to add member ${member.display_username || member.username}:`, err);
                 }
             }
         }
@@ -103,6 +133,19 @@ const createGroup = async () => {
 const closeModal = () => {
     emit('close');
 };
+
+// Image handling for member chips
+const imageLoadErrors = ref({});
+
+const getProfilePictureUrl = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    return `http://127.0.0.1:8000${url}`;
+};
+
+const handleImageError = (userId) => {
+    imageLoadErrors.value[userId] = true;
+};
 </script>
 
 <template>
@@ -114,11 +157,23 @@ const closeModal = () => {
             </div>
             
             <div class="modalBody">
-                <!-- Cover Image Upload -->
+                <!-- Cover Image Section -->
                 <div class="formGroup">
-                    <label>Cover Image</label>
-                    <div class="imageUploadArea">
-                        <div v-if="!coverImagePreview" class="uploadPlaceholder">
+                    <div class="label-row">
+                        <label>Cover Image</label>
+                        <div class="toggle-switch">
+                            <span :class="{ active: imageMode === 'upload' }" @click="imageMode = 'upload'">Upload</span>
+                            <span :class="{ active: imageMode === 'url' }" @click="imageMode = 'url'">URL</span>
+                        </div>
+                    </div>
+
+                    <!-- UPLOAD MODE -->
+                    <div v-if="imageMode === 'upload'">
+                         <div class="file-upload-wrapper">
+                            <label for="coverImageInput" class="uploadLabel">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                <span>{{ coverImage ? coverImage.name : 'Upload File' }}</span>
+                            </label>
                             <input 
                                 type="file" 
                                 id="coverImageInput" 
@@ -126,19 +181,16 @@ const closeModal = () => {
                                 @change="handleImageUpload"
                                 style="display: none;"
                             >
-                            <label for="coverImageInput" class="uploadLabel">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                                    <polyline points="21 15 16 10 5 21"></polyline>
-                                </svg>
-                                <span>Click to upload cover image</span>
-                            </label>
                         </div>
-                        <div v-else class="imagePreview">
-                            <img :src="coverImagePreview" alt="Cover preview">
-                            <button class="removeImageBtn" @click="removeImage">&times;</button>
-                        </div>
+                    </div>
+
+                    <!-- URL MODE -->
+                    <div v-else>
+                         <input 
+                            v-model="imageUrl" 
+                            type="text" 
+                            placeholder="https://example.com/image.png"
+                        >
                     </div>
                 </div>
                 
@@ -167,14 +219,33 @@ const closeModal = () => {
                 
                 <!-- Add Members -->
                 <div class="formGroup">
-                    <label for="memberUsernames">Add Members (optional)</label>
-                    <input 
-                        id="memberUsernames"
-                        v-model="memberUsernames" 
-                        type="text" 
-                        placeholder="Enter usernames separated by commas..."
-                    >
-                    <small class="helpText">Example: user1, user2, user3</small>
+                    <label>Add Members (optional)</label>
+                    
+                    <!-- Selected Members Chips -->
+                    <div v-if="selectedMembers.length > 0" class="selected-members-container">
+                        <div v-for="member in selectedMembers" :key="member.id" class="member-chip">
+                            <img 
+                                v-if="member.profile_picture && !imageLoadErrors[member.id]" 
+                                :src="getProfilePictureUrl(member.profile_picture)" 
+                                alt="avatar" 
+                                class="chip-avatar"
+                                @error="handleImageError(member.id)"
+                            >
+                             <div v-else class="chip-avatar-placeholder">
+                                {{ (member.first_name?.[0] || member.display_username?.[0] || member.email?.[0] || '?').toUpperCase() }}
+                             </div>
+                            
+                            <span class="chip-name">{{ member.display_username || member.email }}</span>
+                            <button class="chip-remove" @click="removeMember(member.id)">&times;</button>
+                        </div>
+                    </div>
+
+                    <!-- User Search Component -->
+                    <UserSearch 
+                        placeholder="Search by email or name to add members..." 
+                        :exclude="excludedUsers"
+                        @select="handleUserSelect"
+                    />
                 </div>
                 
                 <!-- Error/Success Messages -->
@@ -304,82 +375,88 @@ const closeModal = () => {
     font-size: 0.85rem;
 }
 
-/* Image Upload */
-.imageUploadArea {
-    width: 100%;
-    height: 200px;
-    border-radius: 12px;
-    overflow: hidden;
-}
-
-.uploadPlaceholder {
-    width: 100%;
-    height: 100%;
-    background: var(--c-bg);
-    border: 2px dashed var(--border-color);
-    border-radius: 12px;
+.file-upload-wrapper {
     display: flex;
+}
+label.uploadLabel {
+    display: flex;
+    flex-direction: row; /* Explicitly set row to avoid any inheritance issues */
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start; /* Left align */
+    gap: 12px;
+    background: #0d0d0d; /* Dark background to match image */
+    border: 1px dashed #333; /* Darker border */
+    padding: 14px 16px; /* Increased padding */
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    color: var(--c-text-secondary);
     transition: all 0.2s;
 }
-
-.uploadPlaceholder:hover {
+label.uploadLabel:hover {
     border-color: var(--c-accent);
-    background: var(--c-surface);
+    color: var(--c-accent);
+    background: rgba(255, 255, 255, 0.05);
+}
+label.uploadLabel svg {
+    display: block;
+    opacity: 0.8;
+}
+label.uploadLabel span {
+    font-size: 0.9rem;
+    line-height: 1;
+    padding-top: 2px;
 }
 
-.uploadLabel {
+/* Toggle Switch - Consolidated */
+.toggle-switch {
+    display: flex;
+    background: var(--c-bg);
+    border-radius: 6px;
+    padding: 2px;
+    border: 1px solid var(--border-color);
+}
+.toggle-switch span {
+    padding: 4px 12px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    border-radius: 4px;
+    color: var(--c-text-secondary);
+    font-weight: 600;
+    transition: all 0.2s;
+}
+.toggle-switch span.active {
+    background: var(--c-accent);
+    color: white;
+    box-shadow: none;
+}
+
+/* URL Input Styles */
+.label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.urlInputArea {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    cursor: pointer;
-    color: var(--c-text-secondary);
-    padding: 20px;
+    gap: 10px;
 }
 
-.uploadLabel svg {
-    opacity: 0.5;
+.urlPreview {
+    height: 150px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    background: black;
 }
 
-.uploadLabel span {
-    font-size: 0.9rem;
-}
-
-.imagePreview {
+.urlPreview img {
     width: 100%;
     height: 100%;
-    position: relative;
-}
-
-.imagePreview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.removeImageBtn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    border: none;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    font-size: 1.5rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-}
-
-.removeImageBtn:hover {
-    background: rgba(255, 0, 0, 0.8);
-    transform: scale(1.1);
+    object-fit: contain;
 }
 
 /* Messages */
@@ -457,5 +534,66 @@ const closeModal = () => {
 .modalBody::-webkit-scrollbar-thumb {
     background: var(--border-color);
     border-radius: 10px;
+}
+
+/* Selected Members Chips */
+.selected-members-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.member-chip {
+    display: flex;
+    align-items: center;
+    background: var(--c-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 4px 12px 4px 4px;
+    font-size: 0.9rem;
+}
+
+.chip-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    margin-right: 8px;
+    object-fit: cover;
+}
+
+.chip-avatar-placeholder {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    margin-right: 8px;
+    background: #ccc;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.chip-name {
+    margin-right: 8px;
+    color: var(--c-text-primary);
+}
+
+.chip-remove {
+    background: none;
+    border: none;
+    color: var(--c-text-secondary);
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    line-height: 1;
+}
+
+.chip-remove:hover {
+    color: #ef4444;
 }
 </style>

@@ -36,6 +36,25 @@ class TaskViewSet(viewsets.ModelViewSet):
             
         return queryset
 
+    def perform_create(self, serializer):
+        group = serializer.validated_data.get('group')
+        created_by = serializer.validated_data.get('created_by_userid')
+
+        # If no group specified, allow creation (or handle as per requirement, assumed allowed for personal if supported)
+        if group and created_by:
+            from groups.models import GroupMember
+            from rest_framework.exceptions import PermissionDenied
+            
+            try:
+                membership = GroupMember.objects.get(group=group, user=created_by)
+                # Check Role
+                if membership.role not in ['leader', 'operator']:
+                    raise PermissionDenied("Only Leaders and Operators can create tasks for this server.")
+            except GroupMember.DoesNotExist:
+                 raise PermissionDenied("You are not a member of this server.")
+
+        serializer.save()
+
     def perform_destroy(self, instance):
         instance.active = False
         instance.save()
@@ -70,5 +89,6 @@ class CustomAuthToken(ObtainAuthToken):
         return Response({
             'token': token.key,
             'user_id': user.pk,
-            'username': user.username
+            'username': user.username,
+            'display_username': user.display_username
         })

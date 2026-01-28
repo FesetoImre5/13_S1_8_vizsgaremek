@@ -20,6 +20,28 @@ class GroupViewSet(viewsets.ModelViewSet):
              
         return queryset
 
+    def perform_create(self, serializer):
+        # Save group with the creator
+        group = serializer.save(created_by_userid=self.request.user)
+        
+        # Add creator as a member (Leader)
+        GroupMember.objects.create(
+            group=group,
+            user=self.request.user,
+            role='leader'
+        )
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.created_by_userid != request.user:
+            from rest_framework.response import Response
+            from rest_framework import status
+            return Response(
+                {"detail": "Only the group creator can delete this group."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().destroy(request, *args, **kwargs)
+
 class GroupMemberViewSet(viewsets.ModelViewSet):
     queryset = GroupMember.objects.all()
     serializer_class = GroupMemberSerializer
@@ -27,6 +49,12 @@ class GroupMemberViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = self.queryset
         group_id = self.request.query_params.get('group')
+        user_id = self.request.query_params.get('user')
+        
         if group_id is not None:
             queryset = queryset.filter(group_id=group_id)
+            
+        if user_id is not None:
+            queryset = queryset.filter(user_id=user_id)
+            
         return queryset

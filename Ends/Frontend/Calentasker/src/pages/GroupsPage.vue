@@ -1,8 +1,9 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 import ListGroup from '../components/ListGroup.vue';
 import CreateGroupModal from '../components/CreateGroupModal.vue';
+import UserSearch from '../components/UserSearch.vue';
 
 // --- STATE ---
 const groups = ref([]);
@@ -10,8 +11,32 @@ const selectedGroup = ref(null);
 const groupMembers = ref([]);
 const loading = ref(false);
 const memberLoading = ref(false);
+const currentUserId = ref(Number(localStorage.getItem('user_id')));
 
-const newMemberUsername = ref('');
+const leaders = computed(() => groupMembers.value.filter(m => m.role === 'leader'));
+const regularMembers = computed(() => groupMembers.value.filter(m => m.role !== 'leader'));
+
+const isCurrentUserLeader = computed(() => {
+    const myMembership = groupMembers.value.find(m => m.user_detail.id === currentUserId.value);
+    return myMembership?.role === 'leader';
+});
+
+
+
+
+const excludedUserIds = computed(() => {
+    // Safety check map
+    const ids = groupMembers.value
+        .filter(m => m && m.user_detail)
+        .map(m => m.user_detail.id);
+        
+    const userId = Number(localStorage.getItem('user_id'));
+    if (userId && !isNaN(userId)) {
+        if (!ids.includes(userId)) ids.push(userId);
+    }
+    return ids;
+});
+
 const addMemberError = ref('');
 const addMemberSuccess = ref('');
 
@@ -22,9 +47,9 @@ const fetchMyGroups = async () => {
     loading.value = true;
     try {
         const currentUserId = parseInt(localStorage.getItem('user_id'));
-        const response = await axios.get('http://127.0.0.1:8000/api/group-members/');
-        const myMemberships = response.data.filter(item => item.user_detail.id === currentUserId);
-        groups.value = myMemberships.map(item => item.group_detail);
+        // Updated to use server-side filtering
+        const response = await axios.get(`http://127.0.0.1:8000/api/group-members/?user=${currentUserId}`);
+        groups.value = response.data.map(item => item.group_detail);
     } catch (error) {
         console.error("Failed to load groups", error);
     } finally {
@@ -35,7 +60,6 @@ const fetchMyGroups = async () => {
 const selectGroup = async (group) => {
     selectedGroup.value = group;
     groupMembers.value = [];
-    newMemberUsername.value = '';
     addMemberError.value = ''; 
     addMemberSuccess.value = '';
     
@@ -50,24 +74,37 @@ const selectGroup = async (group) => {
     }
 };
 
-const addMember = async () => {
-    if (!newMemberUsername.value.trim()) return;
+const addMember = async (user) => {
+    if (!user || !user.id) return;
     addMemberError.value = '';
     addMemberSuccess.value = '';
 
     try {
-        const payload = { group: selectedGroup.value.id, username: newMemberUsername.value };
+        const payload = { group: selectedGroup.value.id, user: user.id };
         const response = await axios.post('http://127.0.0.1:8000/api/group-members/', payload);
         groupMembers.value.push(response.data);
         addMemberSuccess.value = `User added!`;
-        newMemberUsername.value = '';
+        
+        setTimeout(() => {
+            addMemberSuccess.value = '';
+        }, 3000);
     } catch (error) {
         if (error.response && error.response.data) {
              const data = error.response.data;
-             addMemberError.value = data.detail || (data.username ? data.username[0] : "Failed to add.");
+             addMemberError.value = data.detail || (data.user ? data.user[0] : "Failed to add.");
         } else {
             addMemberError.value = "Network error.";
         }
+    }
+};
+
+const updateMemberRole = async (member, newRole) => {
+    try {
+        await axios.patch(`http://127.0.0.1:8000/api/group-members/${member.id}/`, { role: newRole });
+        member.role = newRole; // Optimistic update
+    } catch (error) {
+        console.error("Failed to update role", error);
+        alert("Failed to update role.");
     }
 };
 
@@ -82,6 +119,7 @@ const removeMember = async (membershipId) => {
 
 const getGroupUrl = (group) => {
     if (group.imageUrl) return group.imageUrl;
+    if (group.image) return group.image;
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(group.groupname)}&background=random&color=fff&size=128`;
 };
 
@@ -93,8 +131,13 @@ const closeCreateModal = () => {
     showCreateModal.value = false;
 };
 
-const handleGroupCreated = (newGroup) => {
-    fetchMyGroups();
+const handleGroupCreated = async (newGroup) => {
+    await fetchMyGroups();
+    // Fallback: If the new group is not in the list (e.g. race condition/cache), add it manually
+    if (!groups.value.some(g => g.id === newGroup.id)) {
+        groups.value.push(newGroup);
+    }
+    selectGroup(newGroup);
 };
 
 onMounted(() => {
@@ -148,28 +191,54 @@ onMounted(() => {
                     <!-- Add Member -->
                     <div class="actionBox">
                         <label>Add New Member</label>
-                        <div class="inputGroup">
-                            <input v-model="newMemberUsername" type="text" placeholder="Enter username..." @keyup.enter="addMember">
-                            <button @click="addMember">Add</button>
+                        <div class="searchWrapper d-flex gap-2">
+                             <div style="flex: 1;">
+                                <UserSearch 
+                                    placeholder="Search by email or name..." 
+                                    :exclude="excludedUserIds" 
+                                    @select="addMember" 
+                                />
+                             </div>
+                             <!-- Visual Add Button (Functional via search selection) -->
+                             <button class="addBtn" disabled>Add</button>
                         </div>
-                        <small v-if="addMemberError" class="text-danger">{{ addMemberError }}</small>
-                        <small v-if="addMemberSuccess" class="text-success">{{ addMemberSuccess }}</small>
+                        <small v-if="addMemberError" class="text-danger mt-2 d-block">{{ addMemberError }}</small>
+                        <small v-if="addMemberSuccess" class="text-success mt-2 d-block">{{ addMemberSuccess }}</small>
                     </div>
 
-                    <!-- Member List -->
-                    <h6 class="listHeader">Members ({{ groupMembers.length }})</h6>
-                    <ul class="memberList">
-                        <li v-for="m in groupMembers" :key="m.id" class="memberItem">
-                            <div class="memberInfo">
-                                <div class="avatar">{{ m.user_detail.username.charAt(0) }}</div>
-                                <span>
+                    <!-- Unified Member List -->
+                    <div v-if="groupMembers.length > 0">
+                        <h6 class="listHeader">All Members ({{ groupMembers.length }})</h6>
+                        <ul class="memberList">
+                            <li v-for="m in groupMembers" :key="m.id" class="memberItem">
+                                <div class="memberInfo">
+                                    <img v-if="m.user_detail.profile_picture" :src="m.user_detail.profile_picture" class="avatarImg">
+                                    <div v-else class="avatar">{{ m.user_detail.username ? m.user_detail.username.charAt(0).toUpperCase() : '?' }}</div>
                                     <strong>{{ m.user_detail.username }}</strong>
-                                    <span v-if="m.isAdmin" class="adminBadge">ADMIN</span>
-                                </span>
-                            </div>
-                            <button class="removeBtn" @click="removeMember(m.id)">Remove</button>
-                        </li>
-                    </ul>
+                                    
+                                    <!-- Role Display / Edit -->
+                                    <div v-if="isCurrentUserLeader && m.user_detail.id !== currentUserId" class="roleEditor">
+                                        <select 
+                                            :class="['roleSelect', m.role]"
+                                            :value="m.role" 
+                                            @change="updateMemberRole(m, $event.target.value)"
+                                        >
+                                            <option value="reader">Reader</option>
+                                            <option value="operator">Operator</option>
+                                            <option value="moderator">Moderator</option>
+                                        </select>
+                                    </div>
+                                    <div v-else class="roleDisplay">
+                                        <span v-if="m.role === 'leader'" class="roleBadge leader">LEADER</span>
+                                        <span v-else-if="m.role === 'moderator'" class="roleBadge moderator">MOD</span>
+                                        <span v-else-if="m.role === 'operator'" class="roleBadge operator">OP</span>
+                                        <!-- Reader Role Badge Omitted -->
+                                    </div>
+                                </div>
+                                <button v-if="isCurrentUserLeader && m.user_detail.id !== currentUserId" class="removeBtn" @click="removeMember(m.id)">Remove</button>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -184,6 +253,45 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* Role Editor */
+.roleEditor {
+    margin-left: 8px;
+}
+.roleSelect {
+    background: var(--c-bg);
+    color: var(--c-text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    height: 26px;
+    padding: 0 8px; /* Horizontal padding only */
+    font-size: 0.8rem; /* Slightly smaller to fit nicely in 26px */
+    outline: none;
+    cursor: pointer;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: all 0.2s;
+}
+.roleSelect:hover {
+    filter: brightness(1.1);
+}
+
+/* Dynamic Role Colors */
+.roleSelect.reader {
+    background: #6B7280; /* Gray */
+    color: white;
+    border-color: #6B7280;
+}
+.roleSelect.operator {
+    background: #10B981; /* Green */
+    color: white;
+    border-color: #10B981;
+}
+.roleSelect.moderator {
+    background: #3B82F6; /* Blue */
+    color: white;
+    border-color: #3B82F6;
+}
+
 .groupsWrapper {
     height: calc(100vh - 70px); /* Adjust for navbar height */
     /* No background here, letting it blend or using surface */
@@ -217,7 +325,7 @@ onMounted(() => {
 .detailsInner { padding: 30px; }
 
 .emptyState {
-    height: 100%;
+    height: calc(100% - 40px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -241,6 +349,14 @@ onMounted(() => {
     margin-bottom: 30px;
     border: 1px solid var(--border-color);
 }
+
+/* Replaced .inputGroup with .searchWrapper since UserSearch handles conflicts */
+.searchWrapper {
+    width: 100%;
+    position: relative;
+    z-index: 10;
+}
+
 .actionBox label { display: block; color: var(--c-text-primary); margin-bottom: 10px; font-size: 0.9rem; font-weight: 600; }
 .inputGroup { display: flex; gap: 10px; }
 .inputGroup input {
@@ -263,6 +379,17 @@ onMounted(() => {
     font-weight: bold;
 }
 .inputGroup button:hover { opacity: 0.9; }
+
+.addBtn {
+    background: var(--c-accent);
+    color: white;
+    border: none;
+    padding: 0 16px;
+    border-radius: 8px;
+    cursor: default;
+    font-weight: bold;
+    opacity: 0.6; /* Disabled look */
+}
 
 /* Member List */
 .listHeader { color: var(--c-accent); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1.5px; margin-bottom: 15px; font-weight: 700; }
@@ -293,7 +420,14 @@ onMounted(() => {
     width: 36px; height: 36px; background: var(--c-accent); color: white;
     border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 600;
 }
-.adminBadge { font-size: 0.7rem; background: var(--c-accent); color: white; padding: 3px 8px; border-radius: 4px; margin-left: 8px; font-weight: bold; }
+.avatarImg {
+    width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
+}
+.roleBadge { font-size: 0.7rem; color: white; padding: 3px 8px; border-radius: 4px; margin-left: 8px; font-weight: bold; text-transform: uppercase; }
+.roleBadge.leader { background: #EAB308; } /* Yellow/Gold */
+.roleBadge.moderator { background: #3B82F6; } /* Blue */
+.roleBadge.operator { background: #10B981; } /* Green */
+
 .removeBtn { background: transparent; color: var(--c-text-primary); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
 .removeBtn:hover { color: white; background: #ef4444; border-color: #ef4444; }
 

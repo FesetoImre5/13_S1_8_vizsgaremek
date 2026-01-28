@@ -13,6 +13,10 @@ const props = defineProps({
     isActive: {
         type: Boolean,
         default: false
+    },
+    isSystemIcon: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -50,7 +54,7 @@ const handleMouseLeave = () => {
         @mouseleave="handleMouseLeave"
     >
         <!-- The Icon Box -->
-        <div class="listGroup" :class="{ 'active-group': isActive }">
+        <div class="listGroup" :class="{ 'activeGroup': isActive, 'systemIconContainer': isSystemIcon }">
             <img :src="url" alt="">
         </div>
 
@@ -102,7 +106,7 @@ const handleMouseLeave = () => {
 
 /* Hover Effect */
 .listGroupWrapper:hover .listGroup,
-.listGroup.active-group {
+.listGroup.activeGroup {
     border-radius: 15px; /* Squircle */
     background-color: var(--c-accent);
     border-color: var(--c-accent);
@@ -116,8 +120,17 @@ const handleMouseLeave = () => {
     transition: border-radius 0.2s;
 }
 
+/* System Icon Styles */
+.listGroup.systemIconContainer img {
+    width: 60%; /* Shrink the icon */
+    height: 60%;
+    object-fit: contain; /* Ensure standard icon aspect ratio */
+    filter: brightness(0) invert(1); /* Make it white */
+    border-radius: 0; /* Don't round the icon itself if it's a shape */
+}
+
 /* Selected State */
-.listGroup.active-group {
+.listGroup.activeGroup {
     box-shadow: 0 0 10px rgba(249, 115, 22, 0.4);
 }
 

@@ -45,14 +45,14 @@ const handleLogout = () => {
             <!-- GROUP 2 (RIGHT): User Controls -->
             <div class="navRight" v-if="user">
                 <router-link to="/profile" class="usernameLink">
-                    {{ user.username }}
+                    {{ user.display_username || user.username }}
                 </router-link>
                 <button class="logoutBtn" @click="handleLogout">
                     Log Out
                 </button>
             </div>
              <div class="navRight" v-else>
-                 <router-link to="/auth" class="navButton">Login</router-link>
+                 <router-link to="/auth" class="navButton">Login/Register</router-link>
             </div>
 
 
@@ -84,14 +84,14 @@ const handleLogout = () => {
                     <!-- Mobile User Controls -->
                      <li v-if="user" class="mobileUserControls">
                         <router-link to="/profile" class="mobileButton" @click="isMenuOpen = false">
-                            Profile ({{ user.username }})
+                            Profile ({{ user.display_username || user.username }})
                         </router-link>
                         <button class="mobileButton logout" @click="handleLogout; isMenuOpen = false">
                             Log Out
                         </button>
                     </li>
                     <li v-else>
-                         <router-link to="/auth" class="mobileButton" @click="isMenuOpen=false">Login</router-link>
+                         <router-link to="/auth" class="mobileButton" @click="isMenuOpen=false">Login/Register</router-link>
                     </li>
                 </ul>
             </div>

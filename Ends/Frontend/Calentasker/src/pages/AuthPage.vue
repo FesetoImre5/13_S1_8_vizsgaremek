@@ -53,7 +53,7 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    background: #eef2ff;
+    background: var(--c-bg);
 }
 
 .fadeSlide-enter-active, .fadeSlide-leave-active {

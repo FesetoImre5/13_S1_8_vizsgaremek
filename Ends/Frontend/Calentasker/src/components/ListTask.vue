@@ -7,7 +7,8 @@
             desc: { type: String, default: "" },
             isSelected: { type: Boolean, default: false },
             priority: { type: String, default: "low" },
-            dueDate: { type: String, default: null } 
+            dueDate: { type: String, default: null },
+            status: { type: String, default: "todo" }
         },
         emits: ['click', 'hover', 'leave', 'select'],
         computed: {
@@ -22,6 +23,11 @@
                 return `priority-${p}`;
             },
             dueStatus() {
+                // If task is done, show Completed regardless of date
+                if (this.status === 'done') {
+                    return { text: "Completed", colorClass: "due-green" };
+                }
+
                 if (!this.dueDate) return { text: "No Due Date", colorClass: "due-gray" };
 
                 const now = new Date();
@@ -104,6 +110,7 @@
 
 <style scoped>
 /* --- MAIN CARD CONTAINER --- */
+/* --- MAIN CARD CONTAINER --- */
 .taskCard {
     display: flex;
     align-items: center;
@@ -111,29 +118,31 @@
     
     background-color: var(--c-surface);
     border: 1px solid var(--border-color);
-    border-radius: 16px; 
+    border-radius: var(--radius-lg); 
     
-    padding: 15px;
-    margin-bottom: 15px;
+    padding: 16px;
+    margin-bottom: 12px;
     
     width: 100%;
     position: relative;
     cursor: pointer;
     overflow: hidden;
     
-    transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 /* --- HOVER & SELECTION STATES --- */
 .taskCard:hover {
-    transform: translateY(-4px); 
-    background-color: #27272a; 
-    border-color: var(--c-text-secondary);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    transform: translateY(-2px); 
+    background-color: var(--c-surface-hover); 
+    border-color: rgba(255,255,255,0.1);
+    box-shadow: var(--shadow-md);
 }
 
 .taskCard.isSelected {
-    /* No outline/color change for selected state as requested */
+    border-color: var(--c-accent);
+    box-shadow: var(--shadow-glow);
 }
 
 /* --- IMAGE --- */
@@ -247,6 +256,7 @@
     
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
     line-height: 1.4;
@@ -323,6 +333,7 @@
     
     .cardDesc {
         -webkit-line-clamp: 3;
+        line-clamp: 3;
     }
 }
 </style>
