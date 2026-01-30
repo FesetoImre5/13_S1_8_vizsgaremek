@@ -20,7 +20,8 @@ const title = ref('');
 const description = ref('');
 const priority = ref('low'); // low, medium, high, urgent
 const dueDate = ref('');
-    const isSubmitting = ref(false);
+const startDate = ref('');
+const isSubmitting = ref(false);
     const error = ref('');
 
     // New Refs
@@ -72,6 +73,7 @@ const dueDate = ref('');
             description.value = '';
             priority.value = 'low';
             dueDate.value = '';
+            startDate.value = '';
             selectedAssignees.value = [];
             assigneeSearch.value = '';
             imageUrl.value = '';
@@ -128,6 +130,7 @@ const dueDate = ref('');
         description.value = '';
         priority.value = 'low';
         dueDate.value = '';
+        startDate.value = '';
         error.value = '';
         assignedUserId.value = null;
         imageUrl.value = '';
@@ -153,6 +156,9 @@ const dueDate = ref('');
             formData.append('description', description.value);
             formData.append('priority', priority.value);
             
+            if (startDate.value) {
+                formData.append('start_date', startDate.value);
+            }
             if (dueDate.value) {
                 // Ensure YYYY-MM-DD format
                 formData.append('due_date', dueDate.value);
@@ -230,6 +236,15 @@ const dueDate = ref('');
                             <option value="high">High</option>
                             <option value="urgent">Urgent</option>
                         </select>
+                    </div>
+
+                    <!-- Start Date -->
+                    <div class="formGroup">
+                        <label>Start Date</label>
+                        <input 
+                            v-model="startDate" 
+                            type="date" 
+                        >
                     </div>
 
                     <!-- Due Date -->

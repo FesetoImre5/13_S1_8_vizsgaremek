@@ -7,6 +7,7 @@ import ListGroupIcon from '../components/ListGroupIcon.vue';
 import TaskCalendar from '../components/TaskCalendar.vue';
 import TaskDetailModal from '../components/TaskDetailModal.vue';
 import CreateTaskModal from '../components/CreateTaskModal.vue';
+import AlertModal from '../components/AlertModal.vue';
 
 // --- STATE ---
 const route = useRoute();
@@ -27,6 +28,28 @@ const detailTask = ref(null);
 
 // Create Task Modal State
 const isCreateTaskOpen = ref(false);
+
+// Alert Modal State
+const isAlertOpen = ref(false);
+const alertConfig = ref({
+    title: '',
+    message: '',
+    type: 'info',
+    confirmText: 'Confirm',
+    onConfirm: () => {}
+});
+
+const closeAlert = () => { isAlertOpen.value = false; };
+
+const showAlert = ({ title, message, type = 'info', confirmText = 'Confirm', onConfirm }) => {
+    alertConfig.value = { title, message, type, confirmText, onConfirm };
+    isAlertOpen.value = true;
+};
+
+const handleAlertConfirm = () => {
+    alertConfig.value.onConfirm();
+    closeAlert();
+};
 
 // New State for Date Filtering
 const selectedDate = ref(null);
@@ -152,7 +175,11 @@ watch(
             selectedGroupId.value = newGroupId;
             fetchTasks(newGroupId);
         } else {
-            selectedGroupId.value = null;
+            // Default to own tasks if no group specified
+            selectedGroupId.value = 'own';
+            fetchTasks('own');
+            // Optionally push to route to reflect state, but be careful of loops
+            // router.replace({ query: { ...route.query, group: 'own' } });
         }
     },
     { immediate: true } 
@@ -163,7 +190,12 @@ const onTaskLeave = () => { hoveredTaskId.value = null; };
 
 const onTaskSelect = (id) => {
     const width = window.innerWidth;
-    if (width <= 530) return;
+    if (width <= 530) {
+        // On mobile, tap opens details directly
+        const task = tasks.value.find(t => t.id === id);
+        if (task) goToDetails(task);
+        return;
+    }
     if (width > 530 && width <= 1300) {
         selectedTaskId.value = id;
         isCalendarModalOpen.value = true;
@@ -194,7 +226,7 @@ const closeTaskDetail = () => {
 
 const openCreateTask = () => {
     if (!selectedGroupId.value) {
-        alert("Please select a group or 'Own Tasks' first.");
+        showAlert({ title: 'Error', message: "Please select a group or 'Own Tasks' first.", type: 'warning', confirmText: 'OK', onConfirm: () => {} });
         return;
     }
     isCreateTaskOpen.value = true;
@@ -204,21 +236,41 @@ const onTaskCreated = (newTask) => {
     fetchTasks(selectedGroupId.value);
 };
 
+const handleTaskUpdate = (updatedTask) => {
+    // Update local list
+    const index = tasks.value.findIndex(t => t.id === updatedTask.id);
+    if (index !== -1) {
+        tasks.value[index] = updatedTask;
+    }
+    
+    // Update detail view if open
+    if (detailTask.value && detailTask.value.id === updatedTask.id) {
+        detailTask.value = updatedTask;
+    }
+};
+
 const deleteGroup = async () => {
     if (!selectedGroupId.value || selectedGroupId.value === 'own') return;
-    if (!confirm(`Are you sure you want to delete the group "${selectedGroup.value?.groupname}"? This cannot be undone.`)) return;
-
-    try {
-        await axios.delete(`http://127.0.0.1:8000/api/groups/${selectedGroupId.value}/`);
-        // Refresh groups list
-        await fetchGroups();
-        // Redirect to Own Tasks or first available
-        const nextId = groups.value.length > 0 ? groups.value[0].id : 'own';
-        handleGroupClick(nextId); 
-    } catch (error) {
-        console.error("Failed to delete group", error);
-        alert("Failed to delete group. You might not have permission.");
-    }
+    
+    showAlert({
+        title: 'Delete Group',
+        message: `Are you sure you want to delete the group "${selectedGroup.value?.groupname}"? This cannot be undone.`,
+        type: 'danger',
+        confirmText: 'Delete',
+        onConfirm: async () => {
+            try {
+                await axios.delete(`http://127.0.0.1:8000/api/groups/${selectedGroupId.value}/`);
+                // Refresh groups list
+                await fetchGroups();
+                // Redirect to Own Tasks or first available
+                const nextId = groups.value.length > 0 ? groups.value[0].id : 'own';
+                handleGroupClick(nextId); 
+            } catch (error) {
+                console.error("Failed to delete group", error);
+                showAlert({ title: 'Error', message: "Failed to delete group. You might not have permission.", type: 'danger', confirmText: 'OK', onConfirm: () => {} });
+            }
+        }
+    });
 };
 
 // --- HELPERS ---
@@ -337,7 +389,8 @@ onMounted(() => {
         :task="detailTask"
         :userRole="selectedGroupId === 'own' ? 'owner' : (selectedGroup ? selectedGroup.myRole : null)"
         @close="closeTaskDetail"
-        @task-updated="fetchTasks(selectedGroupId)"
+        @task-updated="handleTaskUpdate"
+        @task-deleted="fetchTasks(selectedGroupId)"
     />
 
     <CreateTaskModal 
@@ -357,7 +410,18 @@ onMounted(() => {
                 @date-selected="handleDateSelected"
             />
         </div>
-    </div>
+        </div>
+
+    
+    <AlertModal
+        :isOpen="isAlertOpen"
+        :title="alertConfig.title"
+        :message="alertConfig.message"
+        :type="alertConfig.type"
+        :confirmText="alertConfig.confirmText"
+        @close="closeAlert"
+        @confirm="handleAlertConfirm"
+    />
     </div>
 </template>
 
@@ -378,6 +442,59 @@ onMounted(() => {
     grid-template-columns: 80px 1fr 450px;
     height: 100%;
     width: 100%;
+}
+
+@media (max-width: 1024px) {
+    .layoutGrid {
+        grid-template-columns: 80px 1fr 350px; /* Reduce calendar width */
+    }
+}
+
+@media (max-width: 768px) {
+    .pageContainer {
+        overflow-y: hidden; /* Use internal scrolling */
+        height: calc(100vh - 70px);
+    }
+    
+    .layoutGrid {
+        display: flex; /* Flex row by default */
+        flex-direction: row; 
+        height: 100%;
+        gap: 0;
+        justify-content: flex-start; /* Ensure they stick together */
+    }
+    
+    .sidebarArea {
+        width: 80px; 
+        min-width: 80px;
+        flex-shrink: 0; /* Never shrink */
+        flex-grow: 0;   /* Never grow */
+        height: 100%;
+        border-right: 1px solid var(--border-color);
+        border-bottom: none;
+        padding: 10px 0;
+        flex-direction: column;
+        justify-content: flex-start;
+        margin: 0; /* Ensure no margin */
+    }
+    
+    .sidebarScroll {
+        overflow-y: auto;
+    }
+
+    /* Adjust main content area */
+    .tasksArea {
+        flex: 1; /* Take remaining width */
+        width: auto; /* Let flex handle it */
+        min-width: 0; /* Allow shrinking below content size to prevent overflow */
+        height: 100%;
+        margin: 0;
+    }
+
+    /* Hide Calendar column on mobile */
+    .calendarArea {
+        display: none; 
+    }
 }
 
 /* SIDEBAR AREA */
@@ -464,18 +581,55 @@ onMounted(() => {
 }
 
 /* HEADER REDESIGN */
+/* HEADER REDESIGN */
 .stickyHeader {
     position: sticky;
     top: 0;
     z-index: 50;
-    background: var(--c-surface); /* Lighter background as requested */
+    background: var(--c-surface); 
     border-bottom: 1px solid var(--border-color);
-    padding: 20px 30px;
+    padding: 15px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2); /* Added shadow for better separation */
-    min-height: 84px; /* Slight increase to perfectly match button height + padding */
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2); 
+    min-height: auto; 
+    flex-wrap: wrap; /* Allow wrapping */
+}
+
+@media (max-width: 600px) {
+    .stickyHeader {
+        flex-direction: column;
+        align-items: stretch; 
+        gap: 15px;
+        /* Force overlap to prevent gap */
+        margin-left: -1px;
+        width: calc(100% + 2px); /* Compensate */
+        padding-left: 20px; 
+    }
+
+    .headerLeft {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+        width: 100%;
+    }
+    
+    .headerRight {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end; /* Align button right or stretch? User said "below box", let's make it full width */
+    }
+    
+    .btnNewTask {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .tasksSubheading {
+        width: 100%;
+        justify-content: space-between;
+    }
 }
 
 /* Combined Left Section */

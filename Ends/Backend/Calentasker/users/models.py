@@ -30,6 +30,18 @@ class User(AbstractUser):
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(auto_now_add=True)
 
+    def save(self, *args, **kwargs):
+        if not self.username:
+            # Generate username from first and last name
+            base_username = f"{self.first_name}_{self.last_name}".strip()
+            # Fallback if names are empty? User request specifically asked for first and last names.
+            # If both are empty, base_username will be "_" or "", causing validation error if empty.
+            # Assuming first/last are present as per request context, but good to be same.
+            if base_username and base_username != "_":
+                 self.username = base_username
+            
+        super().save(*args, **kwargs)
+
     @property
     def display_username(self):
         if self.username:

@@ -4,6 +4,7 @@ import axios from 'axios';
 import ListGroup from '../components/ListGroup.vue';
 import CreateGroupModal from '../components/CreateGroupModal.vue';
 import UserSearch from '../components/UserSearch.vue';
+import AlertModal from '../components/AlertModal.vue';
 
 // --- STATE ---
 const groups = ref([]);
@@ -49,6 +50,28 @@ const addMemberSuccess = ref('');
 
 const showCreateModal = ref(false);
 
+// Alert Modal State
+const isAlertOpen = ref(false);
+const alertConfig = ref({
+    title: '',
+    message: '',
+    type: 'info',
+    confirmText: 'Confirm',
+    onConfirm: () => {}
+});
+
+const closeAlert = () => { isAlertOpen.value = false; };
+
+const showAlert = ({ title, message, type = 'info', confirmText = 'Confirm', onConfirm }) => {
+    alertConfig.value = { title, message, type, confirmText, onConfirm };
+    isAlertOpen.value = true;
+};
+
+const handleAlertConfirm = () => {
+    alertConfig.value.onConfirm();
+    closeAlert();
+};
+
 // --- API ACTIONS ---
 const fetchMyGroups = async () => {
     loading.value = true;
@@ -87,18 +110,25 @@ const selectGroup = async (group) => {
 
 const deleteGroup = async () => {
     if (!selectedGroup.value) return;
-    if (!confirm(`Are you sure you want to delete "${selectedGroup.value.groupname}"?`)) return;
-
-    try {
-        await axios.delete(`http://127.0.0.1:8000/api/groups/${selectedGroup.value.id}/`);
-        // Refresh and clear selection
-        await fetchMyGroups();
-        selectedGroup.value = null;
-        groupMembers.value = [];
-    } catch (error) {
-         console.error("Failed to delete group", error);
-         alert("Failed to delete group.");
-    }
+    
+    showAlert({
+        title: 'Delete Group',
+        message: `Are you sure you want to delete "${selectedGroup.value.groupname}"?`,
+        type: 'danger',
+        confirmText: 'Delete',
+        onConfirm: async () => {
+            try {
+                await axios.delete(`http://127.0.0.1:8000/api/groups/${selectedGroup.value.id}/`);
+                // Refresh and clear selection
+                await fetchMyGroups();
+                selectedGroup.value = null;
+                groupMembers.value = [];
+            } catch (error) {
+                 console.error("Failed to delete group", error);
+                 showAlert({ title: 'Error', message: 'Failed to delete group.', type: 'danger', confirmText: 'OK', onConfirm: () => {} });
+            }
+        }
+    });
 };
 
 const addMember = async (user) => {
@@ -131,34 +161,49 @@ const updateMemberRole = async (member, newRole) => {
         member.role = newRole; // Optimistic update
     } catch (error) {
         console.error("Failed to update role", error);
-        alert("Failed to update role.");
+        showAlert({ title: 'Error', message: 'Failed to update role.', type: 'danger', confirmText: 'OK', onConfirm: () => {} });
     }
 };
 
 const transferLeadership = async (member) => {
     if (!member || !member.user_detail) return;
-    const confirmMsg = `Are you sure you want to TRANSFER LEADERSHIP to ${member.user_detail.username}?\n\nYou will lose your Leader privileges and become a Reader.`;
-    if (!confirm(confirmMsg)) return;
-
-    try {
-        await axios.post(`http://127.0.0.1:8000/api/groups/${selectedGroup.value.id}/transfer_leadership/`, {
-            new_leader_id: member.user_detail.id
-        });
-        alert(`Leadership transferred to ${member.user_detail.username}.`);
-        fetchMyGroups(); // Refresh everything as my permissions changed
-    } catch (error) {
-        console.error("Failed to transfer leadership", error);
-        alert(error.response?.data?.detail || "Failed to transfer leadership.");
-    }
+    
+    showAlert({
+        title: 'Transfer Leadership',
+        message: `Are you sure you want to TRANSFER LEADERSHIP to ${member.user_detail.username}?\n\nYou will lose your Leader privileges and become a Reader.`,
+        type: 'warning',
+        confirmText: 'Transfer',
+        onConfirm: async () => {
+            try {
+                await axios.post(`http://127.0.0.1:8000/api/groups/${selectedGroup.value.id}/transfer_leadership/`, {
+                    new_leader_id: member.user_detail.id
+                });
+                showAlert({ title: 'Success', message: `Leadership transferred to ${member.user_detail.username}.`, type: 'success', confirmText: 'OK', onConfirm: () => {} });
+                fetchMyGroups(); // Refresh everything as my permissions changed
+            } catch (error) {
+                console.error("Failed to transfer leadership", error);
+                showAlert({ title: 'Error', message: error.response?.data?.detail || "Failed to transfer leadership.", type: 'danger', confirmText: 'OK', onConfirm: () => {} });
+            }
+        }
+    });
 };
 
 const removeMember = async (membershipId) => {
-    if(!confirm("Remove this member?")) return;
-    try {
-        await axios.delete(`http://127.0.0.1:8000/api/group-members/${membershipId}/`);
-        groupMembers.value = groupMembers.value.filter(m => m.id !== membershipId);
-        fetchMyGroups(); // Refresh list in case I removed myself
-    } catch (e) { alert("Failed to remove."); }
+    showAlert({
+        title: 'Remove Member',
+        message: 'Remove this member?',
+        type: 'danger',
+        confirmText: 'Remove',
+        onConfirm: async () => {
+            try {
+                await axios.delete(`http://127.0.0.1:8000/api/group-members/${membershipId}/`);
+                groupMembers.value = groupMembers.value.filter(m => m.id !== membershipId);
+                fetchMyGroups(); // Refresh list in case I removed myself
+            } catch (e) { 
+                showAlert({ title: 'Error', message: 'Failed to remove.', type: 'danger', confirmText: 'OK', onConfirm: () => {} });
+            }
+        }
+    });
 };
 
 const getGroupUrl = (group) => {
@@ -259,7 +304,7 @@ onMounted(() => {
             <!-- Inner Content: Group Details -->
             <div class="col-md-8 detailsCol">
                 <div v-if="!selectedGroup" class="emptyState">
-                    <p>Select a group to manage details</p>
+                    <center><p>Select a group to manage details</p></center>
                 </div>
                 <div v-else class="detailsInner">
                     <div class="header">
@@ -351,13 +396,22 @@ onMounted(() => {
             </div>
         </div>
         
-        <!-- Create Group Modal -->
         <create-group-modal 
             v-if="showCreateModal" 
             :group="groupToEdit"
             @close="closeCreateModal"
             @groupCreated="handleGroupCreated"
             @groupUpdated="handleGroupUpdated"
+        />
+        
+        <AlertModal
+            :isOpen="isAlertOpen"
+            :title="alertConfig.title"
+            :message="alertConfig.message"
+            :type="alertConfig.type"
+            :confirmText="alertConfig.confirmText"
+            @close="closeAlert"
+            @confirm="handleAlertConfirm"
         />
     </div>
 </template>
@@ -475,6 +529,92 @@ onMounted(() => {
     background: var(--c-bg);
     height: 100%;
     overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+    /* Force Flex Row even on mobile to keep split view as requested */
+    .row.h-100 {
+        flex-wrap: nowrap;
+    }
+
+    .groupListCol {
+        /* Sidebar becomes narrow on mobile */
+        min-width: 80px;
+        width: 80px; 
+        padding: 10px 5px;
+        align-items: center;
+        flex-direction: column;
+    }
+
+    .groupListCol h5.sectionTitle,
+    .groupListCol .createGroupBtn {
+        font-size: 0; /* Hide text by setting font size to 0 */
+        justify-content: center;
+        padding: 10px;
+    }
+    
+    .groupListCol .createGroupBtn svg {
+        display: block; /* Ensure SVG is visible */
+        margin: 0;
+    }
+
+    .groupListCol .listContainer ::v-deep .groupName {
+        display: none; /* Hide group names */
+    }
+
+    .detailsCol {
+        flex: 1;
+        width: calc(100% - 80px); /* Remaining space */
+    }
+    
+    /* Fix Header wrapping */
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .headerRight {
+        align-self: flex-end;
+    }
+
+    /* Fix Member Item wrapping */
+    .memberItem {
+        flex-direction: column;
+        align-items: stretch; /* Stretch to fill */
+        gap: 12px;
+        padding: 15px;
+    }
+    
+    .memberInfo {
+        flex-wrap: wrap; /* Allow name/badge to wrap if needed */
+    }
+
+    .memberActions {
+        width: 100%;
+        display: flex;
+        flex-direction: column; /* Stack buttons vertically on mobile */
+        gap: 8px;
+    }
+
+    .memberActions button {
+        width: 100%; /* Full width buttons */
+        justify-content: center;
+    }
+    
+    /* Ensure dropdown fits */
+    .roleEditor {
+        width: 100%;
+        margin: 5px 0 0 0;
+    }
+    .roleSelect {
+        width: 100%;
+    }
+    
+    .groupsWrapper {
+       height: calc(100vh - 70px);
+       overflow: hidden; /* Prevent body scroll, use internal scroll */
+    }
 }
 
 .detailsInner { padding: 30px; }

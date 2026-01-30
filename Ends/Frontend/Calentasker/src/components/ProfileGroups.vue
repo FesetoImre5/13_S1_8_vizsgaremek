@@ -3,7 +3,10 @@ import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 import ListGroup from './ListGroup.vue';
 import CreateGroupModal from './CreateGroupModal.vue';
+import ListGroup from './ListGroup.vue';
+import CreateGroupModal from './CreateGroupModal.vue';
 import UserSearch from './UserSearch.vue';
+import AlertModal from './AlertModal.vue';
 
 // --- STATE ---
 const groups = ref([]);
@@ -18,6 +21,28 @@ const addMemberSuccess = ref('');
 
 const showCreateModal = ref(false);
 const showEditModal = ref(false);
+
+// Alert Modal State
+const isAlertOpen = ref(false);
+const alertConfig = ref({
+    title: '',
+    message: '',
+    type: 'info',
+    confirmText: 'Confirm',
+    onConfirm: () => {}
+});
+
+const closeAlert = () => { isAlertOpen.value = false; };
+
+const showAlert = ({ title, message, type = 'info', confirmText = 'Confirm', onConfirm }) => {
+    alertConfig.value = { title, message, type, confirmText, onConfirm };
+    isAlertOpen.value = true;
+};
+
+const handleAlertConfirm = () => {
+    alertConfig.value.onConfirm();
+    closeAlert();
+};
 
 const canEditGroup = computed(() => {
     if (!selectedGroup.value) return false;
@@ -101,12 +126,21 @@ const addMember = async (user) => {
 };
 
 const removeMember = async (membershipId) => {
-    if(!confirm("Remove this member?")) return;
-    try {
-        await axios.delete(`http://127.0.0.1:8000/api/group-members/${membershipId}/`);
-        groupMembers.value = groupMembers.value.filter(m => m.id !== membershipId);
-        fetchMyGroups(); // Refresh list in case I removed myself
-    } catch (e) { alert("Failed to remove."); }
+    showAlert({
+        title: 'Remove Member',
+        message: 'Remove this member?',
+        type: 'danger',
+        confirmText: 'Remove',
+        onConfirm: async () => {
+            try {
+                await axios.delete(`http://127.0.0.1:8000/api/group-members/${membershipId}/`);
+                groupMembers.value = groupMembers.value.filter(m => m.id !== membershipId);
+                fetchMyGroups(); // Refresh list in case I removed myself
+            } catch (e) { 
+                showAlert({ title: 'Error', message: 'Failed to remove.', type: 'danger', confirmText: 'OK', onConfirm: () => {} });
+            }
+        }
+    });
 };
 
 const getGroupUrl = (group) => {
@@ -146,18 +180,25 @@ const openEditModal = () => {
 
 const deleteGroup = async () => {
     if (!selectedGroup.value) return;
-    if (!confirm(`Are you sure you want to delete "${selectedGroup.value.groupname}"?`)) return;
-
-    try {
-        await axios.delete(`http://127.0.0.1:8000/api/groups/${selectedGroup.value.id}/`);
-        // Refresh and clear selection
-        await fetchMyGroups();
-        selectedGroup.value = null;
-        groupMembers.value = [];
-    } catch (error) {
-         console.error("Failed to delete group", error);
-         alert("Failed to delete group.");
-    }
+    
+    showAlert({
+        title: 'Delete Group',
+        message: `Are you sure you want to delete "${selectedGroup.value.groupname}"?`,
+        type: 'danger',
+        confirmText: 'Delete',
+        onConfirm: async () => {
+            try {
+                await axios.delete(`http://127.0.0.1:8000/api/groups/${selectedGroup.value.id}/`);
+                // Refresh and clear selection
+                await fetchMyGroups();
+                selectedGroup.value = null;
+                groupMembers.value = [];
+            } catch (error) {
+                 console.error("Failed to delete group", error);
+                 showAlert({ title: 'Error', message: 'Failed to delete group.', type: 'danger', confirmText: 'OK', onConfirm: () => {} });
+            }
+        }
+    });
 };
 
 onMounted(() => {
@@ -260,12 +301,21 @@ onMounted(() => {
             @groupCreated="handleGroupCreated"
         />
 
-        <!-- Edit Group Modal (Reusing existing component) -->
         <create-group-modal 
             v-if="showEditModal" 
             :group="selectedGroup"
             @close="showEditModal = false"
             @groupUpdated="handleGroupUpdated"
+        />
+        
+        <AlertModal
+            :isOpen="isAlertOpen"
+            :title="alertConfig.title"
+            :message="alertConfig.message"
+            :type="alertConfig.type"
+            :confirmText="alertConfig.confirmText"
+            @close="closeAlert"
+            @confirm="handleAlertConfirm"
         />
     </div>
 </template>

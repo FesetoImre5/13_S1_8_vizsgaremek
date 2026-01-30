@@ -209,8 +209,9 @@ export default {
 
 .authCard { 
     background: var(--c-surface, #1E1E1E); 
-    padding: 30px; 
-    width: 350px; 
+    padding: 30px;
+    width: 100%;
+    max-width: 350px;
     border-radius: 20px; 
     box-shadow: 0 10px 25px rgba(0,0,0,0.5); 
     animation: pop 0.4s ease; 

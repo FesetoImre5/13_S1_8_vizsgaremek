@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
+import AlertModal from './AlertModal.vue';
 
 const userData = ref({});
 const editableUsername = ref('');
@@ -15,6 +16,28 @@ const confirmPassword = ref('');
 const pwError = ref('');
 const pwSuccess = ref('');
 const fileInput = ref(null);
+
+// Alert Modal State
+const isAlertOpen = ref(false);
+const alertConfig = ref({
+    title: '',
+    message: '',
+    type: 'info',
+    confirmText: 'Confirm',
+    onConfirm: () => {}
+});
+
+const closeAlert = () => { isAlertOpen.value = false; };
+
+const showAlert = ({ title, message, type = 'info', confirmText = 'Confirm', onConfirm }) => {
+    alertConfig.value = { title, message, type, confirmText, onConfirm };
+    isAlertOpen.value = true;
+};
+
+const handleAlertConfirm = () => {
+    alertConfig.value.onConfirm();
+    closeAlert();
+};
 
 
 const fetchUserProfile = async () => {
@@ -91,7 +114,7 @@ const handleFileChange = async (event) => {
         userData.value = response.data;
     } catch (e) {
         console.error("Failed to upload image", e);
-        alert("Failed to upload profile picture.");
+        showAlert({ title: 'Error', message: "Failed to upload profile picture.", type: 'danger', confirmText: 'OK', onConfirm: () => {} });
     }
 };
 
@@ -221,6 +244,16 @@ onMounted(() => {
                 </div>
             </div>
         </div>
+
+        <AlertModal
+            :isOpen="isAlertOpen"
+            :title="alertConfig.title"
+            :message="alertConfig.message"
+            :type="alertConfig.type"
+            :confirmText="alertConfig.confirmText"
+            @close="closeAlert"
+            @confirm="handleAlertConfirm"
+        />
     </div>
 </template>
 
@@ -249,6 +282,17 @@ onMounted(() => {
        Based on "fill out", usually implies 0 margin. */
     border-radius: 12px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); 
+}
+
+@media (max-width: 600px) {
+    .detailsCard {
+        padding: 20px;
+    }
+    
+    .profileInfo {
+        flex-direction: column;
+        text-align: center;
+    }
 }
 
 /* Header Styling */

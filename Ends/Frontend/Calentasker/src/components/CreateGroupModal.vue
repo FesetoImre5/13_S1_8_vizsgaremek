@@ -327,6 +327,7 @@ const handleImageError = (userId) => {
     background: var(--c-surface);
     border: 1px solid var(--border-color);
     border-radius: 16px;
+    border-radius: 16px;
     width: 90%;
     max-width: 600px;
     max-height: 90vh;

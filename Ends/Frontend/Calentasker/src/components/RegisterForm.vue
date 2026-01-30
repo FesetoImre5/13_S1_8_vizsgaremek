@@ -183,7 +183,9 @@ export default {
                 });
 
                 // 4. On Success
-                this.addToast('Account created successfully! Please log in.', 'success');
+                // 4. On Success
+                // The parent will show the success message
+                this.$emit('registration-success');
                 this.$emit('switchMode', 'login');
 
             } catch (error) {
@@ -467,7 +469,8 @@ export default {
 .authCard {
     background: var(--c-surface, #1E1E1E); /* Dark card background */
     padding: 30px;
-    width: 350px;
+    width: 100%;
+    max-width: 350px;
     border-radius: 20px;
     box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     animation: pop 0.4s ease;

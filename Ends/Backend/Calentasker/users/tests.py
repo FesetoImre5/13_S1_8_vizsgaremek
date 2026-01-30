@@ -11,7 +11,8 @@ class UserModelTest(TestCase):
 
     def test_display_username_without_username(self):
         user = User.objects.create(username=None, first_name='John', last_name='Doe', email='john@example.com')
-        self.assertEqual(user.display_username, 'John Doe')
+        # Username is now auto-generated as First_Last
+        self.assertEqual(user.display_username, 'John_Doe')
 
     def test_display_username_fallback_email(self):
         user = User.objects.create(username=None, first_name='', last_name='', email='fallback@example.com')
@@ -80,5 +81,13 @@ class UserCreationTest(TestCase):
         
         self.assertEqual(user.first_name, 'New')
         self.assertEqual(user.last_name, 'User')
-        self.assertIsNone(user.username)
-        self.assertEqual(user.display_username, 'New User')
+        # Expect generated username
+        self.assertEqual(user.username, 'New_User')
+        self.assertEqual(user.display_username, 'New_User')
+
+    def test_update_user_clearing_username(self):
+        user = User.objects.create_user(username='original', first_name='John', last_name='Doe', email='john@example.com', password='pass')
+        user.username = ''
+        user.save()
+        user.refresh_from_db()
+        self.assertEqual(user.username, 'John_Doe')

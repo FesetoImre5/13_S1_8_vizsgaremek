@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch, computed, nextTick } from 'vue';
 import axios from 'axios';
+import AlertModal from './AlertModal.vue';
 
 const props = defineProps({
     task: { type: Object, default: null },
@@ -8,18 +9,39 @@ const props = defineProps({
     userRole: { type: String, default: null } // 'leader', 'operator', 'owner', or null
 });
 
-const emit = defineEmits(['close', 'task-updated']);
+const emit = defineEmits(['close', 'task-updated', 'task-deleted']);
 
 const comments = ref([]);
 const newComment = ref('');
 const isSubmitting = ref(false);
 const isLoadingComments = ref(false);
 
+const isAlertOpen = ref(false);
+const alertConfig = ref({
+    title: '',
+    message: '',
+    type: 'info',
+    confirmText: 'Confirm',
+    onConfirm: () => {}
+});
+
+const closeAlert = () => { isAlertOpen.value = false; };
+
+const showAlert = ({ title, message, type = 'info', confirmText = 'Confirm', onConfirm }) => {
+    alertConfig.value = { title, message, type, confirmText, onConfirm };
+    isAlertOpen.value = true;
+};
+
+const handleAlertConfirm = () => {
+    alertConfig.value.onConfirm();
+    closeAlert();
+};
+
 const currentUserId = ref(parseInt(localStorage.getItem('user_id') || '0'));
 
 // --- COMPUTED ---
 const formattedDate = (dateStr) => {
-    if (!dateStr) return 'N/A';
+    if (!dateStr) return 'None';
     return new Date(dateStr).toLocaleDateString('en-US', { 
         month: 'short', day: 'numeric', year: 'numeric' 
     });
@@ -92,37 +114,101 @@ const submitComment = async () => {
 
 const markComplete = async () => {
     if (!props.task) return;
-    if (!confirm("Mark this task as complete?")) return;
-
-    try {
-        await axios.patch(`http://127.0.0.1:8000/api/tasks/${props.task.id}/`, {
-            status: 'done',
-            completed_at: new Date().toISOString()
-        });
-        emit('task-updated');
-        emit('close');
-    } catch (error) {
-        console.error("Failed to update task", error);
-        alert("Failed to mark complete");
-    }
+    
+    showAlert({
+        title: 'Mark as Complete?',
+        message: 'Are you sure you want to mark this task as complete?',
+        type: 'success',
+        confirmText: 'Complete',
+        onConfirm: async () => {
+            try {
+                const response = await axios.patch(`http://127.0.0.1:8000/api/tasks/${props.task.id}/`, {
+                    status: 'done',
+                    completed_at: new Date().toISOString()
+                });
+                emit('task-updated', response.data);
+                emit('close');
+            } catch (error) {
+                console.error("Failed to update task", error);
+                showAlert({ title: 'Error', message: "Failed to mark complete", type: 'danger', confirmText: 'OK', onConfirm: () => {} });
+            }
+        }
+    });
 };
 
 const deleteTask = async () => {
     if (!props.task) return;
-    if (!confirm("Are you sure you want to delete this task? This cannot be undone.")) return;
     
-    try {
-        await axios.delete(`http://127.0.0.1:8000/api/tasks/${props.task.id}/`);
-        emit('task-updated'); // Will refresh list
-        emit('close');
-    } catch (error) {
-        console.error("Failed to delete task", error);
-        alert("Failed to delete task. You might not have permission.");
-    }
+    showAlert({
+        title: 'Delete Task',
+        message: 'Are you sure you want to delete this task? This cannot be undone.',
+        type: 'danger',
+        confirmText: 'Delete',
+        onConfirm: async () => {
+            try {
+                await axios.delete(`http://127.0.0.1:8000/api/tasks/${props.task.id}/`);
+                emit('task-deleted', props.task.id); // Emit specific delete event
+                emit('close');
+            } catch (error) {
+                console.error("Failed to delete task", error);
+                showAlert({ title: 'Error', message: "Failed to delete task. You might not have permission.", type: 'danger', confirmText: 'OK', onConfirm: () => {} });
+            }
+        }
+    });
 };
 
-const editTask = () => {
-    alert("Edit functionality coming soon!");
+const isEditing = ref(false);
+const editableTask = ref({});
+const isSaving = ref(false);
+
+const startEditTask = () => {
+    // Clone task data to avoid mutating props directly
+    editableTask.value = JSON.parse(JSON.stringify(props.task));
+    
+    // Format dates for input type="date" (YYYY-MM-DD)
+    if (editableTask.value.start_date) {
+        editableTask.value.start_date = editableTask.value.start_date.split('T')[0];
+    }
+    if (editableTask.value.due_date) {
+        editableTask.value.due_date = editableTask.value.due_date.split('T')[0];
+    }
+    
+    isEditing.value = true;
+};
+
+const cancelEditTask = () => {
+    isEditing.value = false;
+    editableTask.value = {};
+};
+
+const saveTask = async () => {
+    if (!editableTask.value.title || !editableTask.value.title.trim()) {
+        showAlert({ title: 'Validation Logic', message: "Title is required", type: 'warning', confirmText: 'OK', onConfirm: () => {} });
+        return;
+    }
+
+    isSaving.value = true;
+    try {
+        const payload = {
+            title: editableTask.value.title,
+            description: editableTask.value.description,
+            priority: editableTask.value.priority,
+            start_date: editableTask.value.start_date || null,
+            due_date: editableTask.value.due_date || null,
+        };
+
+        const response = await axios.patch(`http://127.0.0.1:8000/api/tasks/${props.task.id}/`, payload);
+        
+        // Update local data via emit, or parent re-fetches. 
+        // Best to emit updated task
+        emit('task-updated', response.data); 
+        isEditing.value = false;
+    } catch (error) {
+        console.error("Failed to update task", error);
+        showAlert({ title: 'Error', message: "Failed to save changes.", type: 'danger', confirmText: 'OK', onConfirm: () => {} });
+    } finally {
+        isSaving.value = false;
+    }
 };
 
 // --- WATCHERS ---
@@ -165,21 +251,27 @@ const saveEdit = async (commentId) => {
         cancelEdit();
     } catch (error) {
         console.error("Failed to update comment", error);
-        alert("Failed to update comment.");
+        showAlert({ title: 'Error', message: "Failed to update comment.", type: 'danger', confirmText: 'OK', onConfirm: () => {} });
     }
 };
 
 const deleteComment = async (commentId) => {
-    if (!confirm("Delete this comment?")) return;
-    
-    try {
-        await axios.delete(`http://127.0.0.1:8000/api/comments/${commentId}/`);
-        // Remove locally to be snappy, or refresh
-        comments.value = comments.value.filter(c => c.id !== commentId);
-    } catch (error) {
-        console.error("Failed to delete comment", error);
-        alert("Failed to delete comment.");
-    }
+    showAlert({
+        title: 'Delete Comment',
+        message: 'Are you sure you want to delete this comment?',
+        type: 'danger',
+        confirmText: 'Delete',
+        onConfirm: async () => {
+           try {
+                await axios.delete(`http://127.0.0.1:8000/api/comments/${commentId}/`);
+                // Remove locally to be snappy, or refresh
+                comments.value = comments.value.filter(c => c.id !== commentId);
+            } catch (error) {
+                console.error("Failed to delete comment", error);
+                showAlert({ title: 'Error', message: "Failed to delete comment.", type: 'danger', confirmText: 'OK', onConfirm: () => {} });
+            }
+        }
+    });
 };
 
 // --- WATCHERS ---
@@ -219,8 +311,16 @@ watch(() => props.isOpen, (newVal) => {
                         <!-- Right of Image: Title + Assigned -->
                         <div class="header-info">
                             <div class="title-row">
-                                <h2>{{ task.title }}</h2>
-                                <span class="status-badge" :class="priorityClass">{{ task.priority }}</span>
+                                <h2 v-if="!isEditing">{{ task.title }}</h2>
+                                <input v-else v-model="editableTask.title" type="text" class="edit-input-title" placeholder="Task Title">
+                                
+                                <span v-if="!isEditing" class="status-badge" :class="priorityClass">{{ task.priority }}</span>
+                                <select v-else v-model="editableTask.priority" class="edit-select">
+                                    <option value="low">Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                    <option value="urgent">Urgent</option>
+                                </select>
                             </div>
                             
                             <!-- Assigned Users (Under Title) -->
@@ -238,7 +338,8 @@ watch(() => props.isOpen, (newVal) => {
                     <!-- DESCRIPTION (Under Image/Title) -->
                     <div class="description-section">
                         <label>Description</label>
-                        <p class="description">{{ task.description || "No description provided." }}</p>
+                        <p v-if="!isEditing" class="description">{{ task.description || "No description provided." }}</p>
+                        <textarea v-else v-model="editableTask.description" rows="5" class="edit-textarea" placeholder="Add a description..."></textarea>
                     </div>
 
                     <!-- META ROW: TIMESPAN + STATUS -->
@@ -247,12 +348,14 @@ watch(() => props.isOpen, (newVal) => {
                         <div class="timespan-section">
                             <div class="time-block">
                                 <span class="label-icon">📅 Start</span>
-                                <span class="value">{{ formattedDate(task.start_date || new Date()) }}</span>
+                                <span v-if="!isEditing" class="value">{{ formattedDate(task.start_date) }}</span>
+                                <input v-else v-model="editableTask.start_date" type="date" class="edit-date">
                             </div>
                             <div class="arrow">→</div>
                             <div class="time-block">
                                 <span class="label-icon">🏁 Due</span>
-                                <span class="value">{{ formattedDate(task.due_date) }}</span>
+                                <span v-if="!isEditing" class="value">{{ formattedDate(task.due_date) }}</span>
+                                <input v-else v-model="editableTask.due_date" type="date" class="edit-date">
                             </div>
                         </div>
 
@@ -272,9 +375,17 @@ watch(() => props.isOpen, (newVal) => {
                             <span class="meta-text">Created by {{ task.created_by?.username }}</span>
                         </div>
                         <div class="actions-bar">
-                            <button class="btn btn-primary" @click="markComplete">Mark Complete</button>
-                            <button v-if="isCreator" class="btn btn-secondary" @click="editTask">Edit</button>
-                            <button v-if="canDelete" class="btn btn-danger" @click="deleteTask">Delete</button>
+                            <template v-if="!isEditing">
+                                <button class="btn btn-primary" @click="markComplete" :disabled="task.status === 'done'">
+                                    {{ task.status === 'done' ? 'Completed' : 'Mark Complete' }}
+                                </button>
+                                <button v-if="isCreator" class="btn btn-secondary" @click="startEditTask">Edit</button>
+                                <button v-if="canDelete" class="btn btn-danger" @click="deleteTask">Delete</button>
+                            </template>
+                            <template v-else>
+                                <button class="btn btn-primary" @click="saveTask" :disabled="isSaving">{{ isSaving ? 'Saving...' : 'Save Changes' }}</button>
+                                <button class="btn btn-secondary" @click="cancelEditTask">Cancel</button>
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -338,8 +449,19 @@ watch(() => props.isOpen, (newVal) => {
                 </div>
 
             </div>
+
         </div>
     </div>
+    
+    <AlertModal
+        :isOpen="isAlertOpen"
+        :title="alertConfig.title"
+        :message="alertConfig.message"
+        :type="alertConfig.type"
+        :confirmText="alertConfig.confirmText"
+        @close="closeAlert"
+        @confirm="handleAlertConfirm"
+    />
 </template>
 
 <style scoped>
@@ -728,6 +850,100 @@ watch(() => props.isOpen, (newVal) => {
     }
 }
 
+@media (max-width: 400px) {
+    .modal-content {
+        width: 95%; 
+        max-width: 100%;
+        height: 95vh;
+        border-radius: 12px;
+    }
+    
+    .details-column {
+        padding: 15px; 
+    }
+    
+    /* Header Re-layout for small screens */
+    .mobile-header-stack {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .task-header-info {
+        margin-top: 10px;
+        width: 100%;
+    }
+    
+    .task-title {
+        font-size: 1.3rem;
+        margin-right: 0;
+        margin-bottom: 5px;
+        word-break: break-word;
+    }
+    
+    .priority-badge {
+        position: relative;
+        top: auto; right: auto;
+        display: inline-block;
+        margin-bottom: 5px;
+    }
+    
+    /* Fix Footer Buttons */
+    .actions-bar {
+        flex-direction: column;
+        width: 100%;
+        gap: 10px;
+    }
+    
+    .actions-bar .btn {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+    
+    .close-btn {
+        top: 8px;
+        right: 8px;
+        background: rgba(0,0,0,0.6); /* Ensure visibility */
+    }
+}
+
+@media (max-width: 380px) {
+    .modal-content {
+        width: 95%; /* Use more width on tiny screens */
+        height: 95vh;
+    }
+    
+    .details-column {
+        padding: 15px; /* Reduce padding */
+    }
+    
+    .task-title {
+        font-size: 1.4rem; /* Smaller title */
+        margin-right: 35px; /* Avoid close button overlap */
+        word-wrap: break-word; /* Ensure wrapping */
+    }
+    
+    /* Stack footer actions */
+    .actions-bar {
+        flex-direction: column;
+        width: 100%;
+        gap: 8px;
+    }
+    
+    .actions-bar .btn {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+    }
+    
+    .close-btn {
+        top: 10px;
+        right: 10px;
+        width: 28px;
+        height: 28px;
+    }
+}
+
 /* NEW STYLES FOR COMMENT EDITING */
 .edited-label {
     font-size: 0.75rem;
@@ -786,4 +1002,57 @@ watch(() => props.isOpen, (newVal) => {
 }
 .btn-save { background: var(--c-accent); color: white; }
 .btn-cancel { background: transparent; border: 1px solid var(--border-color); color: var(--c-text-secondary); }
+
+/* --- EDIT MODE INPUTS --- */
+.edit-input-title {
+    font-size: 1.6rem;
+    font-weight: bold;
+    color: var(--c-text-primary);
+    background: var(--c-bg);
+    border: 1px solid var(--c-accent);
+    border-radius: 6px;
+    padding: 5px 10px;
+    width: 100%;
+    font-family: inherit;
+    line-height: 1.2;
+}
+
+.edit-select {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    background: var(--c-surface-hover);
+    color: var(--c-text-primary);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+.edit-textarea {
+    width: 100%;
+    background: var(--c-bg);
+    border: 1px solid var(--c-accent);
+    border-radius: 8px;
+    padding: 15px;
+    color: var(--c-text-primary);
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: 1.6;
+    resize: vertical;
+}
+
+.edit-date {
+    background: var(--c-bg);
+    border: 1px solid var(--border-color);
+    color: var(--c-text-primary);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-family: inherit;
+}
+.edit-date:focus {
+    border-color: var(--c-accent);
+    outline: none;
+}
 </style>
