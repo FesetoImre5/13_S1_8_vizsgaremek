@@ -30,7 +30,8 @@ const handleLogout = () => {
             <div class="navLeft">
                 <div class="logo">
                     <router-link to="/tasks">
-                        <img src="../assets/logo-with-text.svg" alt="Logo">
+                        <img src="../assets/logo-with-text.svg" alt="Calentasker" class="logo-full">
+                        <img src="../assets/logo.svg" alt="Calentasker" class="logo-icon">
                     </router-link>
                 </div>
                 <ul class="desktopLinks">
@@ -86,7 +87,7 @@ const handleLogout = () => {
                         <router-link to="/profile" class="mobileButton" @click="isMenuOpen = false">
                             Profile ({{ user.display_username || user.username }})
                         </router-link>
-                        <button class="mobileButton logout" @click="handleLogout; isMenuOpen = false">
+                        <button class="mobileButton logout" @click="handleLogout(); isMenuOpen = false">
                             Log Out
                         </button>
                     </li>
@@ -117,7 +118,7 @@ const handleLogout = () => {
     top: 0;
     left: 0;
     width: 100%;
-    z-index: 1000;
+    z-index: 2000;
 }
 
 .navbarContainer {
@@ -136,10 +137,17 @@ const handleLogout = () => {
     gap: 30px; 
 }
 
-.logo img {
-    height: 40px;
-    width: auto;
-    display: block;
+.logo a {
+    display: flex;
+    align-items: center;
+}
+
+.logo-full { display: block; height: 35px; width: auto; }
+.logo-icon { display: none; }
+
+@media (max-width: 480px) {
+    .logo-full { display: none; }
+    .logo-icon { display: block; height: 32px; width: auto; }
 }
 
 .desktopLinks {

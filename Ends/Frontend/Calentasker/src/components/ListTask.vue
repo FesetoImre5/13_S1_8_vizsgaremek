@@ -319,12 +319,20 @@
     }
 
     .cardContent {
-        padding: 15px;
+        padding: 10px; /* Reduce padding */
         width: 100%;
+        min-width: 0; /* Enable flex shrink for text */
     }
 
     .cardHeader {
-        justify-content: flex-start; /* flow normally on mobile, or keep space-between if desired */
+        justify-content: flex-start;
+        flex-wrap: wrap; /* Allow wrapping */
+        gap: 5px; /* Tighter gap */
+    }
+    
+    .cardTitle {
+        font-size: 1rem; /* Smaller title */
+        width: 100%; /* Force full width line */
     }
 
     .cardAction {
@@ -332,8 +340,23 @@
     }
     
     .cardDesc {
-        -webkit-line-clamp: 3;
-        line-clamp: 3;
+        font-size: 0.85rem;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+    }
+    
+    /* Ensure image fits */
+    .cardImageWrapper {
+         width: 100%;
+         height: 120px;
+    }
+}
+
+@media (max-width: 360px) {
+    /* Critical 320px fix */
+    .taskCard {
+        margin: 0 0 10px 0;
+        width: 100%;
     }
 }
 </style>
