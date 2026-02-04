@@ -29,11 +29,18 @@ const routes = [
         component: AuthPage,
         meta: { title: 'Login' }
     },
+
     {
         path: '/profile',
         name: 'Profile',
         component: ProfilePage,
         meta: { title: 'User Profile' }
+    },
+    {
+        path: '/verify-email/:uid/:token',
+        name: 'VerifyEmail',
+        component: () => import('./pages/VerifyEmailPage.vue'),
+        meta: { title: 'Verify Email' }
     },
     // 2. ADD THIS CATCH-ALL ROUTE AT THE END
     {

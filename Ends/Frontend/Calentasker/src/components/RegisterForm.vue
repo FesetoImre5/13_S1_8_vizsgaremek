@@ -183,9 +183,8 @@ export default {
                 });
 
                 // 4. On Success
-                // 4. On Success
-                // The parent will show the success message
-                this.$emit('registration-success');
+                // Show message instead of auto-login
+                this.addToast('Registration successful! Please check your email to activate your account.', 'success');
                 this.$emit('switchMode', 'login');
 
             } catch (error) {
