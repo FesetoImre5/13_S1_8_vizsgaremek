@@ -140,10 +140,7 @@
     box-shadow: var(--shadow-md);
 }
 
-.taskCard.isSelected {
-    border-color: var(--c-accent);
-    box-shadow: var(--shadow-glow);
-}
+
 
 /* --- IMAGE --- */
 .cardImageWrapper {
