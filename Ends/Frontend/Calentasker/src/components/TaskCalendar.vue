@@ -143,7 +143,7 @@ const handleDayClick = (day) => {
 .calendarGrid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 8px; 
+    gap: 8px; /* Consistent gap */
     width: 100%;
     max-width: 600px; 
     margin: 0 auto;
@@ -174,11 +174,12 @@ const handleDayClick = (day) => {
     
     position: relative;
     color: var(--c-text-primary);
-    border: 1px solid transparent;
+    border: 1px solid transparent; /* Reserve border space */
     
     transition: all 0.2s;
     user-select: none;
     cursor: pointer;
+    overflow: hidden; /* Ensure content doesn't push size */
 }
 
 .daySquare.empty {
@@ -200,13 +201,14 @@ const handleDayClick = (day) => {
 
 .daySquare.isSelected {
     background-color: rgba(249, 115, 22, 0.2);
-    border: 1px solid var(--c-accent);
+    border: 1px solid var(--c-accent); /* Takes up the transparent border space */
 }
 
-/* Orange Underline (Inset Shadow) for tasks */
+/* Orange Underline (Inset Shadow) for tasks - RESTORED */
 .daySquare.hasTasks {
     box-shadow: inset 0 -4px 0 0 var(--c-accent);
 }
+
 .daySquare.hasTasks.isToday {
     /* Combine both shadows if today has tasks */
     box-shadow: inset 0 0 0 2px white, inset 0 -4px 0 0 var(--c-accent);
