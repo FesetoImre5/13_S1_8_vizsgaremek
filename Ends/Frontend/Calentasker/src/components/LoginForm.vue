@@ -34,7 +34,7 @@ export default {
         
         validateIdentifier() {
             if (this.identifier.trim() === '') {
-                this.identifierError = 'Email or Username is required.';
+                this.identifierError = this.$t('errors.emailRequired');
                 return false;
             }
             this.identifierError = '';
@@ -42,7 +42,7 @@ export default {
         },
         validatePassword() {
             if (this.password.length === 0) {
-                this.passwordError = 'Password is required.';
+                this.passwordError = this.$t('errors.passwordRequired');
                 return false;
             }
             this.passwordError = '';
@@ -79,14 +79,14 @@ export default {
                 if (error.response) {
                     const data = error.response.data;
                     if (data.non_field_errors) {
-                        this.passwordError = "Invalid username or password.";
+                        this.passwordError = this.$t('errors.loginFailed');
                     } else if (data.detail) {
                         this.passwordError = data.detail;
                     } else {
-                        this.passwordError = "Login failed. Please check credentials.";
+                        this.passwordError = this.$t('errors.loginFailed');
                     }
                 } else {
-                    this.passwordError = "Network error. Is the server running?";
+                    this.passwordError = this.$t('errors.network');
                 }
             }
         }
@@ -96,27 +96,26 @@ export default {
 
 <template>
     <div class="authCard">
-        <h2 class="title">Login</h2>
+        <h2 class="title">{{ $t('auth.loginTitle') }}</h2>
 
         <form @submit.prevent="login">
             <p v-if="identifierError" class="errorMessage">{{ identifierError }}</p>
             <div class="inputGroup" :class="{ 'is-active': identifier || isIdentifierFocused }">
                 <input v-model="identifier" type="text" @input="identifierError = ''" @focus="isIdentifierFocused = true" @blur="handleIdentifierBlur"/>
-                <label>Email or Username</label>
+                <label>{{ $t('auth.emailOrUsername') }}</label>
             </div>
             
             <p v-if="passwordError" class="errorMessage">{{ passwordError }}</p>
             <div class="inputGroup passwordField" :class="{ 'is-active': password || isPasswordFocused }">
                 <input :type="showPassword ? 'text' : 'password'" v-model="password" @keyup="checkCapsLock($event)" @input="passwordError = ''" @focus="isPasswordFocused = true" @blur="handlePasswordBlur"/>
-                <label>Password</label>
-                <button type="button" class="toggle" @click="showPassword = !showPassword">{{ showPassword ? 'Hide' : 'Show' }}</button>
+                <label>{{ $t('auth.password') }}</label>
+                <button type="button" class="toggle" @click="showPassword = !showPassword">{{ showPassword ? $t('auth.hide') : $t('auth.show') }}</button>
             </div>
-            <p v-if="capsLockOn" class="capsWarning">Caps Lock is ON</p>
+            <p v-if="capsLockOn" class="capsWarning">{{ $t('auth.capsLock') }}</p>
 
-            <!--div class="remember"><input type="checkbox" v-model="rememberMe" /> Remember me</div-->
-            <button type="submit" class="primaryBtn" :disabled="!isFormFilled">Login</button>
+            <button type="submit" class="primaryBtn" :disabled="!isFormFilled">{{ $t('auth.loginBtn') }}</button>
         </form>
-        <p class="switchText">No account? <span class="switch" @click="$emit('switchMode', 'register')">Register</span></p>
+        <p class="switchText">{{ $t('auth.noAccount') }} <span class="switch" @click="$emit('switchMode', 'register')">{{ $t('auth.registerLink') }}</span></p>
     </div>
 </template>
 

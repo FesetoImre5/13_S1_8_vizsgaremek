@@ -1,5 +1,6 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import axios from 'axios';
 
 const props = defineProps({
@@ -12,6 +13,8 @@ const props = defineProps({
         default: () => []
     }
 });
+
+const { t } = useI18n();
 
 const emit = defineEmits(['select']);
 
@@ -88,7 +91,7 @@ const handleImageError = (userId) => {
                 ref="searchInput"
                 type="text" 
                 v-model="searchQuery" 
-                :placeholder="placeholder"
+                :placeholder="placeholder || $t('tasks.searchMembers')"
                 @input="handleInput"
                 @focus="performSearch"
                 @blur="closeDropdown"
@@ -115,7 +118,7 @@ const handleImageError = (userId) => {
             </li>
         </ul>
         <div v-if="showDropdown && searchQuery && !isLoading && results.length === 0" class="no-results">
-            No users found.
+            {{ $t('tasks.noMembers') }}
         </div>
     </div>
 </template>

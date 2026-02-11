@@ -1,7 +1,9 @@
 <script setup>
 import { ref, watch, computed, nextTick } from 'vue';
+import { useI18n } from 'vue-i18n';
 import axios from 'axios';
 import AlertModal from './AlertModal.vue';
+import CustomDatePicker from './CustomDatePicker.vue';
 
 const props = defineProps({
     task: { type: Object, default: null },
@@ -10,6 +12,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['close', 'task-updated', 'task-deleted']);
+
+const { t, locale } = useI18n();
 
 const comments = ref([]);
 const newComment = ref('');
@@ -41,8 +45,8 @@ const currentUserId = ref(parseInt(localStorage.getItem('user_id') || '0'));
 
 // --- COMPUTED ---
 const formattedDate = (dateStr) => {
-    if (!dateStr) return 'None';
-    return new Date(dateStr).toLocaleDateString('en-US', { 
+    if (!dateStr) return t('tasks.time.noDueDate');
+    return new Date(dateStr).toLocaleDateString(locale.value, { 
         month: 'short', day: 'numeric', year: 'numeric' 
     });
 };
@@ -60,15 +64,9 @@ const priorityClass = computed(() => {
 });
 
 const formatStatus = (status) => {
-    const map = {
-        'todo': 'To Do',
-        'in_progress': 'In Progress',
-        'done': 'Done',
-        'missed': 'Missed',
-        'archived': 'Archived'
-    };
-    return map[status] || status;
+    return t(`tasks.status.${status}`) || status;
 };
+
 
 const canDelete = computed(() => {
     if (props.userRole === 'leader' || props.userRole === 'operator') return true;
@@ -118,13 +116,13 @@ const markComplete = async () => {
     // Toggle logic
     const isDone = props.task.status === 'done';
     const newStatus = isDone ? 'in_progress' : 'done';
-    const actionText = isDone ? 'Mark as In Progress' : 'Mark as Complete';
-    const confirmText = isDone ? 'Revert' : 'Complete';
+    const actionText = isDone ? t('tasks.alerts.markInProgress') : t('tasks.alerts.markComplete');
+    const confirmText = isDone ? t('common.confirm') : t('tasks.time.completed');
     const type = isDone ? 'warning' : 'success';
 
     showAlert({
         title: `${actionText}?`,
-        message: `Are you sure you want to change the status to ${isDone ? 'In Progress' : 'Completed'}?`,
+        message: t('tasks.alerts.statusChangeMsg', { status: isDone ? t('tasks.status.in_progress') : t('tasks.status.done') }),
         type: type,
         confirmText: confirmText,
         onConfirm: async () => {
@@ -141,7 +139,7 @@ const markComplete = async () => {
                 emit('close');
             } catch (error) {
                 console.error("Failed to update task", error);
-                showAlert({ title: 'Error', message: "Failed to update status", type: 'danger', confirmText: 'OK', onConfirm: () => {} });
+                showAlert({ title: t('common.error'), message: t('tasks.errors.failedUpdate'), type: 'danger', confirmText: 'OK', onConfirm: () => {} });
             }
         }
     });
@@ -151,10 +149,10 @@ const deleteTask = async () => {
     if (!props.task) return;
     
     showAlert({
-        title: 'Delete Task',
-        message: 'Are you sure you want to delete this task? This cannot be undone.',
+        title: t('tasks.alerts.deleteTitle'),
+        message: t('tasks.alerts.deleteMsg'),
         type: 'danger',
-        confirmText: 'Delete',
+        confirmText: t('common.delete'),
         onConfirm: async () => {
             try {
                 await axios.delete(`http://127.0.0.1:8000/api/tasks/${props.task.id}/`);
@@ -162,7 +160,7 @@ const deleteTask = async () => {
                 emit('close');
             } catch (error) {
                 console.error("Failed to delete task", error);
-                showAlert({ title: 'Error', message: "Failed to delete task. You might not have permission.", type: 'danger', confirmText: 'OK', onConfirm: () => {} });
+                showAlert({ title: t('common.error'), message: t('tasks.errors.failedDelete'), type: 'danger', confirmText: 'OK', onConfirm: () => {} });
             }
         }
     });
@@ -194,7 +192,7 @@ const cancelEditTask = () => {
 
 const saveTask = async () => {
     if (!editableTask.value.title || !editableTask.value.title.trim()) {
-        showAlert({ title: 'Validation Logic', message: "Title is required", type: 'warning', confirmText: 'OK', onConfirm: () => {} });
+        showAlert({ title: t('common.warning'), message: t('tasks.errors.titleRequired'), type: 'warning', confirmText: 'OK', onConfirm: () => {} });
         return;
     }
 
@@ -216,7 +214,7 @@ const saveTask = async () => {
         isEditing.value = false;
     } catch (error) {
         console.error("Failed to update task", error);
-        showAlert({ title: 'Error', message: "Failed to save changes.", type: 'danger', confirmText: 'OK', onConfirm: () => {} });
+        showAlert({ title: t('common.error'), message: t('tasks.errors.failedUpdate'), type: 'danger', confirmText: 'OK', onConfirm: () => {} });
     } finally {
         isSaving.value = false;
     }
@@ -268,10 +266,10 @@ const saveEdit = async (commentId) => {
 
 const deleteComment = async (commentId) => {
     showAlert({
-        title: 'Delete Comment',
-        message: 'Are you sure you want to delete this comment?',
+        title: t('tasks.alerts.deleteCommentTitle'),
+        message: t('tasks.alerts.deleteCommentMsg'),
         type: 'danger',
-        confirmText: 'Delete',
+        confirmText: t('common.delete'),
         onConfirm: async () => {
            try {
                 await axios.delete(`http://127.0.0.1:8000/api/comments/${commentId}/`);
@@ -295,184 +293,187 @@ watch(() => props.isOpen, (newVal) => {
 </script>
 
 <template>
-    <div v-if="isOpen" class="modal-overlay" @click.self="$emit('close')">
-        <div class="modal-content">
-            <button class="close-btn" @click="$emit('close')">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
-            
-            <div v-if="task" class="modal-body-grid">
-
-                <!-- LEFT COLUMN: DETAILS -->
-                <div class="details-column custom-scroll">
-                    
-                    <!-- TOP SECTION: IMAGE + TITLE/ASSIGNED -->
-                    <div class="top-section">
-                        <!-- Small Image Top Left -->
-                        <div v-if="task.imageUrl || task.image" class="small-task-image">
-                            <img :src="task.imageUrl || task.image" alt="Task Cover">
-                        </div>
-                        <div v-else class="small-task-image placeholder-img">
-                            <span>No Image</span>
-                        </div>
-
-                        <!-- Right of Image: Title + Assigned -->
-                        <div class="header-info">
-                            <div class="title-row">
-                                <h2 v-if="!isEditing">{{ task.title }}</h2>
-                                <input v-else v-model="editableTask.title" type="text" class="edit-input-title" placeholder="Task Title">
-                                
-                                <span v-if="!isEditing" class="status-badge" :class="priorityClass">{{ task.priority }}</span>
-                                <select v-else v-model="editableTask.priority" class="edit-select">
-                                    <option value="low">Low</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="high">High</option>
-                                    <option value="urgent">Urgent</option>
-                                </select>
-                            </div>
-                            
-                            <!-- Assigned Users (Under Title) -->
-                            <div class="assigned-row">
-                                <span class="label-small">Assigned to:</span>
-                                <div class="user-chip">
-                                    <img v-if="task.assigned_to?.profile_picture" :src="task.assigned_to.profile_picture" class="avatar-small img-fit">
-                                    <span v-else class="avatar-small">{{ task.assigned_to?.username?.charAt(0).toUpperCase() || '?' }}</span>
-                                    <span>{{ task.assigned_to?.username || 'Unassigned' }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- DESCRIPTION (Under Image/Title) -->
-                    <div class="description-section">
-                        <label>Description</label>
-                        <p v-if="!isEditing" class="description">{{ task.description || "No description provided." }}</p>
-                        <textarea v-else v-model="editableTask.description" rows="5" class="edit-textarea" placeholder="Add a description..."></textarea>
-                    </div>
-
-                    <!-- META ROW: TIMESPAN + STATUS -->
-                    <div class="meta-row">
-                        <!-- TIMESPAN (Usage already existing styles, now inside row) -->
-                        <div class="timespan-section">
-                            <div class="time-block">
-                                <span class="label-icon">📅 Start</span>
-                                <span v-if="!isEditing" class="value">{{ formattedDate(task.start_date) }}</span>
-                                <input v-else v-model="editableTask.start_date" type="date" class="edit-date">
-                            </div>
-                            <div class="arrow">→</div>
-                            <div class="time-block">
-                                <span class="label-icon">🏁 Due</span>
-                                <span v-if="!isEditing" class="value">{{ formattedDate(task.due_date) }}</span>
-                                <input v-else v-model="editableTask.due_date" type="date" class="edit-date">
-                            </div>
-                        </div>
-
-                        <!-- NEW: STATUS INDICATOR -->
-                        <div class="status-indicator">
-                            <span class="label-icon">Current Status</span>
-                            <div class="status-value" :class="`status-${task.status}`">
-                                <span class="status-dot"></span>
-                                {{ formatStatus(task.status) }}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- META / ACTIONS (Bottom) -->
-                    <div class="meta-footer">
-                        <div class="meta-info">
-                            <span class="meta-text">Created by {{ task.created_by?.username }}</span>
-                        </div>
-                        <div class="actions-bar">
-                            <template v-if="!isEditing">
-                                <button class="btn btn-primary" @click="markComplete">
-                                    {{ task.status === 'done' ? 'Mark In Progress' : 'Mark Complete' }}
-                                </button>
-                                <button v-if="isCreator" class="btn btn-secondary" @click="startEditTask">Edit</button>
-                                <button v-if="canDelete" class="btn btn-danger" @click="deleteTask">Delete</button>
-                            </template>
-                            <template v-else>
-                                <button class="btn btn-primary" @click="saveTask" :disabled="isSaving">{{ isSaving ? 'Saving...' : 'Save Changes' }}</button>
-                                <button class="btn btn-secondary" @click="cancelEditTask">Cancel</button>
-                            </template>
-                        </div>
-                    </div>
-                </div>
+    <Teleport to="body">
+        <div v-if="isOpen" class="modal-overlay" @click.self="$emit('close')">
+            <div class="modal-content">
+                <button class="close-btn" @click="$emit('close')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
                 
-                <!-- RIGHT COLUMN: COMMENTS -->
-                <div class="comments-column custom-scroll">
-                    <div class="comments-section">
-                        <h3>Comments</h3>
+                <div v-if="task" class="modal-body-grid">
+
+                    <!-- LEFT COLUMN: DETAILS -->
+                    <div class="details-column custom-scroll">
                         
-                        <!-- ADD COMMENT -->
-                        <div class="add-comment">
-                            <textarea 
-                                v-model="newComment" 
-                                placeholder="Write a comment..."
-                                rows="2"
-                            ></textarea>
-                            <button :disabled="isSubmitting" @click="submitComment">
-                                {{ isSubmitting ? '...' : 'Post' }}
-                            </button>
+                        <!-- TOP SECTION: IMAGE + TITLE/ASSIGNED -->
+                        <div class="top-section">
+                            <!-- Small Image Top Left -->
+                            <div v-if="task.imageUrl || task.image" class="small-task-image">
+                                <img :src="task.imageUrl || task.image" alt="Task Cover">
+                            </div>
+                            <div v-else class="small-task-image placeholder-img">
+                                <span>{{ $t('common.noImage') || 'No Image' }}</span>
+                            </div>
+
+                            <!-- Right of Image: Title + Assigned -->
+                            <div class="header-info">
+                                <div class="title-row">
+                                    <h2 v-if="!isEditing">{{ task.title }}</h2>
+                                    <input v-else v-model="editableTask.title" type="text" class="edit-input-title" :placeholder="$t('tasks.taskTitle')">
+                                    
+                                    <span v-if="!isEditing" class="status-badge" :class="priorityClass">{{ task.priority }}</span>
+                                    <select v-else v-model="editableTask.priority" class="edit-select">
+
+                                        <option value="low">{{ $t('tasks.priorities.low') }}</option>
+                                        <option value="medium">{{ $t('tasks.priorities.medium') }}</option>
+                                        <option value="high">{{ $t('tasks.priorities.high') }}</option>
+                                        <option value="urgent">{{ $t('tasks.priorities.urgent') }}</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Assigned Users (Under Title) -->
+                                <div class="assigned-row">
+                                    <span class="label-small">{{ $t('tasks.assignedTo') }}</span>
+                                    <div class="user-chip">
+                                        <img v-if="task.assigned_to?.profile_picture" :src="task.assigned_to.profile_picture" class="avatar-small img-fit">
+                                        <span v-else class="avatar-small">{{ task.assigned_to?.username?.charAt(0).toUpperCase() || '?' }}</span>
+                                        <span>{{ task.assigned_to?.username || $t('tasks.unassigned') }}</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="comments-list">
-                            <div v-if="isLoadingComments" class="loading-text">Loading comments...</div>
-                            <div v-else-if="comments.length === 0" class="no-comments">No comments yet.</div>
-                            
-                            <div v-for="comment in comments" :key="comment.id" class="comment-item">
-                                <img v-if="comment.user_detail?.profile_picture" :src="comment.user_detail.profile_picture" class="comment-avatar img-fit">
-                                <div v-else class="comment-avatar">
-                                    {{ comment.user_detail?.username?.charAt(0).toUpperCase() || '?' }}
+                        <!-- DESCRIPTION (Under Image/Title) -->
+                        <div class="description-section">
+                            <label>{{ $t('tasks.description') }}</label>
+                            <p v-if="!isEditing" class="description">{{ task.description || $t('tasks.noDesc') }}</p>
+                            <textarea v-else v-model="editableTask.description" rows="5" class="edit-textarea" :placeholder="$t('tasks.placeholderDesc')"></textarea>
+                        </div>
+
+                        <!-- META ROW: TIMESPAN + STATUS -->
+                        <div class="meta-row">
+                            <!-- TIMESPAN (Usage already existing styles, now inside row) -->
+                            <div class="timespan-section">
+                                <div class="time-block">
+                                    <span class="label-icon">📅 {{ $t('tasks.startDate') }}</span>
+                                    <span v-if="!isEditing" class="value">{{ formattedDate(task.start_date) }}</span>
+                                    <CustomDatePicker v-else v-model="editableTask.start_date" :placeholder="$t('tasks.startDate')" class="custom-date-override"/>
                                 </div>
-                                <div class="comment-content">
-                                    <div class="comment-header">
-                                        <span class="username">{{ comment.user_detail?.username || 'Unknown' }}</span>
-                                        <span class="timestamp">
-                                            {{ formattedDate(comment.created_at) }}
-                                            <span v-if="isEdited(comment)" class="edited-label">(edited)</span>
-                                        </span>
+                                <div class="arrow">→</div>
+                                <div class="time-block">
+                                    <span class="label-icon">🏁 {{ $t('tasks.dueDate') }}</span>
+                                    <span v-if="!isEditing" class="value">{{ formattedDate(task.due_date) }}</span>
+                                    <CustomDatePicker v-else v-model="editableTask.due_date" :placeholder="$t('tasks.dueDate')" class="custom-date-override"/>
+                                </div>
+                            </div>
+
+                            <!-- NEW: STATUS INDICATOR -->
+                            <div class="status-indicator">
+                                <span class="label-icon">{{ $t('tasks.status.label') }}</span>
+                                <div class="status-value" :class="`status-${task.status}`">
+                                    <span class="status-dot"></span>
+                                    {{ formatStatus(task.status) }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- META / ACTIONS (Bottom) -->
+                        <div class="meta-footer">
+                            <div class="meta-info">
+                                <span class="meta-text">{{ $t('tasks.createdBy') }} {{ task.created_by?.username }}</span>
+                            </div>
+                            <div class="actions-bar">
+                                <template v-if="!isEditing">
+                                    <button class="btn btn-primary" @click="markComplete">
+                                        {{ task.status === 'done' ? $t('tasks.alerts.markInProgress') : $t('tasks.alerts.markComplete') }}
+                                    </button>
+                                    <button v-if="isCreator" class="btn btn-secondary" @click="startEditTask">{{ $t('groups.edit') }}</button>
+                                    <button v-if="canDelete" class="btn btn-danger" @click="deleteTask">{{ $t('groups.delete') }}</button>
+                                </template>
+                                <template v-else>
+                                    <button class="btn btn-primary" @click="saveTask" :disabled="isSaving">{{ isSaving ? $t('tasks.saving') : $t('tasks.saveBtn') }}</button>
+                                    <button class="btn btn-secondary" @click="cancelEditTask">{{ $t('tasks.cancelBtn') }}</button>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- RIGHT COLUMN: COMMENTS -->
+                    <div class="comments-column custom-scroll">
+                        <div class="comments-section">
+                            <h3>{{ $t('tasks.comments') }}</h3>
+                            
+                            <!-- ADD COMMENT -->
+                            <div class="add-comment">
+                                <textarea 
+                                    v-model="newComment" 
+                                    :placeholder="$t('tasks.writeComment')"
+                                    rows="2"
+                                ></textarea>
+                                <button :disabled="isSubmitting" @click="submitComment">
+                                    {{ isSubmitting ? '...' : $t('tasks.postBtn') }}
+                                </button>
+                            </div>
+
+                            <div class="comments-list">
+                                <div v-if="isLoadingComments" class="loading-text">{{ $t('tasks.loadingComments') }}</div>
+                                <div v-else-if="comments.length === 0" class="no-comments">{{ $t('tasks.noComments') }}</div>
+                                
+                                <div v-for="comment in comments" :key="comment.id" class="comment-item">
+                                    <img v-if="comment.user_detail?.profile_picture" :src="comment.user_detail.profile_picture" class="comment-avatar img-fit">
+                                    <div v-else class="comment-avatar">
+                                        {{ comment.user_detail?.username?.charAt(0).toUpperCase() || '?' }}
                                     </div>
-                                    
-                                    <!-- EDIT MODE -->
-                                    <div v-if="editingCommentId === comment.id" class="edit-mode">
-                                        <textarea v-model="editContent" rows="2" class="edit-input"></textarea>
-                                        <div class="edit-actions">
-                                            <button class="btn-xs btn-save" @click="saveEdit(comment.id)">Save</button>
-                                            <button class="btn-xs btn-cancel" @click="cancelEdit">Cancel</button>
+                                    <div class="comment-content">
+                                        <div class="comment-header">
+                                            <span class="username">{{ comment.user_detail?.username || 'Unknown' }}</span>
+                                            <span class="timestamp">
+                                                {{ formattedDate(comment.created_at) }}
+                                                <span v-if="isEdited(comment)" class="edited-label">(edited)</span>
+                                            </span>
                                         </div>
-                                    </div>
-                                    
-                                    <!-- VIEW MODE -->
-                                    <div v-else>
-                                        <p class="text">{{ comment.content }}</p>
-                                        <div v-if="isCommentOwner(comment)" class="comment-actions">
-                                            <button class="action-link" @click="startEdit(comment)">Edit</button>
-                                            <button class="action-link delete" @click="deleteComment(comment.id)">Delete</button>
+                                        
+                                        <!-- EDIT MODE -->
+                                        <div v-if="editingCommentId === comment.id" class="edit-mode">
+                                            <textarea v-model="editContent" rows="2" class="edit-input"></textarea>
+                                            <div class="edit-actions">
+                                                <button class="btn-xs btn-save" @click="saveEdit(comment.id)">{{ $t('common.save') }}</button>
+                                                <button class="btn-xs btn-cancel" @click="cancelEdit">{{ $t('common.cancel') }}</button>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- VIEW MODE -->
+                                        <div v-else>
+                                            <p class="text">{{ comment.content }}</p>
+                                            <div v-if="isCommentOwner(comment)" class="comment-actions">
+                                                <button class="action-link" @click="startEdit(comment)">{{ $t('groups.edit') }}</button>
+                                                <button class="action-link delete" @click="deleteComment(comment.id)">{{ $t('groups.delete') }}</button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
                 </div>
 
             </div>
-
         </div>
-    </div>
-    
-    <AlertModal
-        :isOpen="isAlertOpen"
-        :title="alertConfig.title"
-        :message="alertConfig.message"
-        :type="alertConfig.type"
-        :confirmText="alertConfig.confirmText"
-        @close="closeAlert"
-        @confirm="handleAlertConfirm"
-    />
+        
+        <AlertModal
+            :isOpen="isAlertOpen"
+            :title="alertConfig.title"
+            :message="alertConfig.message"
+            :type="alertConfig.type"
+            :confirmText="alertConfig.confirmText"
+            @close="closeAlert"
+            @confirm="handleAlertConfirm"
+        />
+    </Teleport>
 </template>
 
 <style scoped>
@@ -482,7 +483,7 @@ watch(() => props.isOpen, (newVal) => {
     width: 100vw; height: 100vh;
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(5px);
-    z-index: 2000;
+    z-index: 2100;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -798,6 +799,18 @@ watch(() => props.isOpen, (newVal) => {
 
 /* Status Colors */
 .status-todo .status-dot { background: #3b82f6; box-shadow: 0 0 8px rgba(59, 130, 246, 0.4); }
+
+.custom-date-override {
+    min-width: 140px;
+    height: 32px;
+}
+
+.custom-date-override :deep(.date-input) {
+    padding: 2px 8px;
+    height: 32px;
+    background: transparent;
+    border-color: rgba(255,255,255,0.1);
+}
 .status-in_progress .status-dot { background: #f59e0b; box-shadow: 0 0 8px rgba(245, 158, 11, 0.4); }
 .status-done .status-dot { background: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.4); }
 .status-missed .status-dot { background: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }

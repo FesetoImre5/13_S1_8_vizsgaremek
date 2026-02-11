@@ -3,16 +3,16 @@ defineProps({
     isOpen: Boolean,
     title: {
         type: String,
-        default: 'Are you sure?'
+        default: ''
     },
     message: String,
     confirmText: {
         type: String,
-        default: 'Confirm'
+        default: ''
     },
     cancelText: {
         type: String,
-        default: 'Cancel'
+        default: ''
     },
     type: {
         type: String,
@@ -25,23 +25,25 @@ const emit = defineEmits(['close', 'confirm']);
 </script>
 
 <template>
-    <div v-if="isOpen" class="alert-overlay" @click.self="emit('close')">
-        <div class="alert-content">
-            <h3 :class="type">{{ title }}</h3>
-            <p>{{ message }}</p>
-            
-            <div class="alert-actions">
-                <button class="btn-cancel" @click="emit('close')">{{ cancelText }}</button>
-                <button 
-                    class="btn-confirm" 
-                    :class="type" 
-                    @click="emit('confirm')"
-                >
-                    {{ confirmText }}
-                </button>
+    <Teleport to="body">
+        <div v-if="isOpen" class="alert-overlay" @click.self="emit('close')">
+            <div class="alert-content">
+                <h3 :class="type">{{ title }}</h3>
+                <p>{{ message }}</p>
+                
+                <div class="alert-actions">
+                    <button class="btn-cancel" @click="emit('close')">{{ cancelText || $t('common.cancel') }}</button>
+                    <button 
+                        class="btn-confirm" 
+                        :class="type" 
+                        @click="emit('confirm')"
+                    >
+                        {{ confirmText || $t('common.confirm') }}
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
+    </Teleport>
 </template>
 
 <style scoped>

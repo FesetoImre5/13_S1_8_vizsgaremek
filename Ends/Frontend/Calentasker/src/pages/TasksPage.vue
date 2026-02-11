@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router'; 
 import ListTask from '../components/ListTask.vue';
@@ -12,6 +13,7 @@ import AlertModal from '../components/AlertModal.vue';
 // --- STATE ---
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 const groups = ref([]);
 const tasks = ref([]);
@@ -61,7 +63,7 @@ const showMobileFilters = ref(false); // Toggle for mobile filter menu
 // --- COMPUTED ---
 const selectedGroup = computed(() => {
     if (selectedGroupId.value === 'own') {
-        return { groupname: 'Own Tasks', id: 'own' };
+        return { groupname: t('tasks.ownTasks'), id: 'own' };
     }
     return groups.value.find(g => g.id == selectedGroupId.value);
 });
@@ -310,7 +312,7 @@ const closeTaskDetail = () => {
 
 const openCreateTask = () => {
     if (!selectedGroupId.value) {
-        showAlert({ title: 'Error', message: "Please select a group or 'Own Tasks' first.", type: 'warning', confirmText: 'OK', onConfirm: () => {} });
+        showAlert({ title: t('common.warning'), message: t('tasks.selectGroup'), type: 'warning', confirmText: 'OK', onConfirm: () => {} });
         return;
     }
     isCreateTaskOpen.value = true;
@@ -337,10 +339,10 @@ const deleteGroup = async () => {
     if (!selectedGroupId.value || selectedGroupId.value === 'own') return;
     
     showAlert({
-        title: 'Delete Group',
-        message: `Are you sure you want to delete the group "${selectedGroup.value?.groupname}"? This cannot be undone.`,
+        title: t('groups.confirmDeleteTitle'),
+        message: t('groups.confirmDeleteMsg', { name: selectedGroup.value?.groupname }),
         type: 'danger',
-        confirmText: 'Delete',
+        confirmText: t('common.delete'),
         onConfirm: async () => {
             try {
                 await axios.delete(`http://127.0.0.1:8000/api/groups/${selectedGroupId.value}/`);
@@ -351,7 +353,7 @@ const deleteGroup = async () => {
                 handleGroupClick(nextId); 
             } catch (error) {
                 console.error("Failed to delete group", error);
-                showAlert({ title: 'Error', message: "Failed to delete group. You might not have permission.", type: 'danger', confirmText: 'OK', onConfirm: () => {} });
+                showAlert({ title: t('common.error'), message: t('groups.failedDelete'), type: 'danger', confirmText: 'OK', onConfirm: () => {} });
             }
         }
     });
@@ -388,7 +390,7 @@ onMounted(() => {
                     <!-- Own Tasks Item -->
                     <list-group-icon
                         url="/src/assets/view-list.svg"
-                        name="Own Tasks"
+                        :name="$t('tasks.ownTasks')"
                         :isActive="selectedGroupId === 'own'"
                         :isSystemIcon="true"
                         @click="handleGroupClick('own')"
@@ -410,10 +412,10 @@ onMounted(() => {
             <div class="tasksArea">    
                 <div class="stickyHeader">
                     <div class="headerLeft">
-                        <h1 class="groupTitle">{{ selectedGroup?.groupname || 'Select a Group' }}</h1>
+                        <h1 class="groupTitle">{{ selectedGroup?.groupname || $t('tasks.selectGroup') }}</h1>
                         
                         <div class="tasksSubheading">
-                            <h2 class="sectionTitle">Tasks</h2>
+                            <h2 class="sectionTitle">{{ $t('tasks.title') }}</h2>
                             <span v-if="selectedDate" class="dateBadge">{{ selectedDate }}</span>
 
                             <!-- MOBILE TOGGLES -->
@@ -430,7 +432,8 @@ onMounted(() => {
                                         <line x1="9" y1="8" x2="15" y2="8"></line>
                                         <line x1="17" y1="16" x2="23" y2="16"></line>
                                     </svg>
-                                    Filters
+
+                                    {{ $t('tasks.filters') }}
                                 </button>
                                 <button class="control-btn mobile-only" @click="isCalendarModalOpen = true">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -439,7 +442,7 @@ onMounted(() => {
                                         <line x1="8" y1="2" x2="8" y2="6"></line>
                                         <line x1="3" y1="10" x2="21" y2="10"></line>
                                     </svg>
-                                    Calendar
+                                    {{ $t('tasks.calendar') }}
                                 </button>
                             </div>
 
@@ -447,24 +450,24 @@ onMounted(() => {
                             <div class="filter-group" :class="{ 'show-mobile': showMobileFilters }">
                                 <!-- Sorting Dropdown -->
                                 <select v-model="sortBy" class="control-select">
-                                    <option value="date-desc">Newest First</option>
-                                    <option value="date-asc">Oldest First</option>
-                                    <option value="due-asc">Due Soonest</option>
-                                    <option value="priority">Priority</option>
+                                    <option value="date-desc">{{ $t('tasks.sort.newest') }}</option>
+                                    <option value="date-asc">{{ $t('tasks.sort.oldest') }}</option>
+                                    <option value="due-asc">{{ $t('tasks.sort.dueSoonest') }}</option>
+                                    <option value="priority">{{ $t('tasks.sort.priority') }}</option>
                                 </select>
 
                                 <!-- Priority Filter -->
                                 <select v-model="filterPriority" class="control-select">
-                                    <option value="all">All Priorities</option>
-                                    <option value="low">Low</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="high">High</option>
-                                    <option value="urgent">Urgent</option>
+                                    <option value="all">{{ $t('tasks.priorities.all') }}</option>
+                                    <option value="low">{{ $t('tasks.priorities.low') }}</option>
+                                    <option value="medium">{{ $t('tasks.priorities.medium') }}</option>
+                                    <option value="high">{{ $t('tasks.priorities.high') }}</option>
+                                    <option value="urgent">{{ $t('tasks.priorities.urgent') }}</option>
                                 </select>
 
                                 <!-- Show Completed Toggle -->
                                 <button class="control-btn" @click="showCompleted = !showCompleted">
-                                    {{ showCompleted ? 'Hide Completed' : 'Show Completed' }}
+                                    {{ showCompleted ? $t('tasks.toggle.hideCompleted') : $t('tasks.toggle.showCompleted') }}
                                 </button>
                             </div>
                         </div>
@@ -476,21 +479,21 @@ onMounted(() => {
                             class="btnNewTask" 
                             @click="openCreateTask"
                          >
-                            <span class="plusIcon">+</span> New Task
+                            <span class="plusIcon">+</span> {{ $t('tasks.newTask') }}
                          </button>
                     </div>
                 </div>
 
                 <div class="taskScroll customScroll">
                     <div v-if="!loading && tasks.length === 0" style="padding: 20px; color:white;">
-                        <span v-if="selectedDate">No tasks for this date.</span>
-                        <span v-else>No tasks found.</span>
+                        <span v-if="selectedDate">{{ $t('tasks.empty.date') }}</span>
+                        <span v-else>{{ $t('tasks.empty.general') }}</span>
                     </div>
 
                     <template v-else>
                         <!-- 1. Due Soon (<= 7 days) -->
                         <div v-if="groupedTasks.dueSoon.length > 0">
-                            <h3 class="group-header">Due Soon</h3>
+                            <h3 class="group-header">{{ $t('tasks.groups.dueSoon') }}</h3>
                             <list-task 
                                 v-for="(task, index) in groupedTasks.dueSoon"
                                 :key="task.id"
@@ -516,7 +519,7 @@ onMounted(() => {
 
                         <!-- 2. Upcoming (> 7 days) -->
                         <div v-if="groupedTasks.upcoming.length > 0">
-                            <h3 class="group-header">Upcoming</h3>
+                            <h3 class="group-header">{{ $t('tasks.groups.upcoming') }}</h3>
                             <list-task 
                                 v-for="(task, index) in groupedTasks.upcoming"
                                 :key="task.id"
@@ -542,7 +545,7 @@ onMounted(() => {
                             <!-- Divider if Upcoming exists -->
                             <hr v-if="groupedTasks.upcoming.length > 0" class="divider">
                             
-                            <h3 class="group-header">No Due Date</h3>
+                            <h3 class="group-header">{{ $t('tasks.groups.noDueDate') }}</h3>
                             <list-task 
                                 v-for="(task, index) in groupedTasks.noDueDate"
                                 :key="task.id"
@@ -568,7 +571,7 @@ onMounted(() => {
                             <!-- Divider if Upcoming or NoDueDate exists. Note: DueSoon uses RedBreak. -->
                             <hr v-if="groupedTasks.upcoming.length > 0 || groupedTasks.noDueDate.length > 0" class="divider">
 
-                            <h3 class="group-header text-danger">Overdue</h3>
+                            <h3 class="group-header text-danger">{{ $t('tasks.groups.overdue') }}</h3>
                             <list-task 
                                 v-for="(task, index) in groupedTasks.overdue"
                                 :key="task.id"
@@ -592,7 +595,7 @@ onMounted(() => {
                         <!-- 5. Completed -->
                         <div v-if="showCompleted && groupedTasks.completed.length > 0">
                             <hr class="divider">
-                            <h3 class="group-header text-muted">Completed</h3>
+                            <h3 class="group-header text-muted">{{ $t('tasks.groups.completed') }}</h3>
                             <list-task 
                                 v-for="(task, index) in groupedTasks.completed"
                                 :key="task.id"

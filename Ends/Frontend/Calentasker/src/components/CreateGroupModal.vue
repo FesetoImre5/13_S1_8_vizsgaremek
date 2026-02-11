@@ -1,11 +1,14 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import axios from 'axios';
 import UserSearch from './UserSearch.vue';
 
 const props = defineProps({
     group: { type: Object, default: null } // If provided, we are in Edit Mode
 });
+
+const { t } = useI18n();
 
 const emit = defineEmits(['close', 'groupCreated', 'groupUpdated']);
 
@@ -43,10 +46,10 @@ onMounted(() => {
 });
 
 const isEditMode = computed(() => !!props.group);
-const modalTitle = computed(() => isEditMode.value ? 'Edit Group' : 'Create New Group');
+const modalTitle = computed(() => isEditMode.value ? t('groups.editTitle') : t('groups.createTitle'));
 const submitButtonText = computed(() => {
-    if (isSubmitting.value) return isEditMode.value ? 'Saving...' : 'Creating...';
-    return isEditMode.value ? 'Save Changes' : 'Create Group';
+    if (isSubmitting.value) return isEditMode.value ? t('groups.saving') : t('groups.creating');
+    return isEditMode.value ? t('groups.save') : t('groups.createBtn');
 });
 
 const excludedUsers = computed(() => {
@@ -98,7 +101,7 @@ const handleApiError = (err, defaultMsg) => {
         const data = err.response.data;
         error.value = data.detail || data.groupname?.[0] || defaultMsg;
     } else {
-        error.value = 'Network error. Please try again.';
+        error.value = t('errors.network');
     }
 };
 
@@ -134,7 +137,7 @@ const handleSubmit = async () => {
             const response = await axios.patch(`http://127.0.0.1:8000/api/groups/${props.group.id}/`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            success.value = 'Group updated!';
+            success.value = t('groups.updated');
             setTimeout(() => {
                 emit('groupUpdated', response.data);
                 emit('close');
@@ -160,7 +163,7 @@ const handleSubmit = async () => {
                 }
             }
             
-            success.value = 'Group created successfully!';
+            success.value = t('groups.created');
             setTimeout(() => {
                 emit('groupCreated', newGroup);
                 emit('close');
@@ -168,7 +171,7 @@ const handleSubmit = async () => {
         }
 
     } catch (err) {
-        handleApiError(err, isEditMode.value ? 'Failed to update group' : 'Failed to create group');
+        handleApiError(err, isEditMode.value ? t('common.error') : t('common.error'));
     } finally {
         isSubmitting.value = false;
     }
@@ -205,10 +208,10 @@ const handleImageError = (userId) => {
                 <!-- Cover Image Section -->
                 <div class="formGroup">
                     <div class="label-row">
-                        <label>Cover Image</label>
+                        <label>{{ $t('groups.coverImage') }}</label>
                         <div class="toggle-switch">
-                            <span :class="{ active: imageMode === 'upload' }" @click="imageMode = 'upload'">Upload</span>
-                            <span :class="{ active: imageMode === 'url' }" @click="imageMode = 'url'">URL</span>
+                            <span :class="{ active: imageMode === 'upload' }" @click="imageMode = 'upload'">{{ $t('auth.upload') }}</span>
+                            <span :class="{ active: imageMode === 'url' }" @click="imageMode = 'url'">{{ $t('auth.url') }}</span>
                         </div>
                     </div>
 
@@ -217,7 +220,7 @@ const handleImageError = (userId) => {
                          <div class="file-upload-wrapper">
                             <label for="coverImageInput" class="uploadLabel">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                                <span>{{ coverImage ? coverImage.name : 'Upload File' }}</span>
+                                <span>{{ coverImage ? coverImage.name : $t('tasks.uploadFile') }}</span>
                             </label>
                             <input 
                                 type="file" 
@@ -241,30 +244,30 @@ const handleImageError = (userId) => {
                 
                 <!-- Group Title -->
                 <div class="formGroup">
-                    <label for="groupTitle">Group Title *</label>
+                    <label for="groupTitle">{{ $t('groups.groupTitle') }} *</label>
                     <input 
                         id="groupTitle"
                         v-model="groupTitle" 
                         type="text" 
-                        placeholder="Enter group name..."
+                        :placeholder="$t('groups.groupTitlePlaceholder')"
                         maxlength="100"
                     >
                 </div>
                 
                 <!-- Group Description -->
                 <div class="formGroup">
-                    <label for="groupDescription">Description</label>
+                    <label for="groupDescription">{{ $t('groups.description') }}</label>
                     <textarea 
                         id="groupDescription"
                         v-model="groupDescription" 
-                        placeholder="Enter group description..."
+                        :placeholder="$t('groups.descriptionPlaceholder')"
                         rows="4"
                     ></textarea>
                 </div>
                 
                 <!-- Add Members (Create Only) -->
                 <div v-if="!isEditMode" class="formGroup">
-                    <label>Add Members (optional)</label>
+                    <label>{{ $t('groups.addMembersOptional') }}</label>
                     
                     <!-- Selected Members Chips -->
                     <div v-if="selectedMembers.length > 0" class="selected-members-container">
@@ -287,7 +290,7 @@ const handleImageError = (userId) => {
 
                     <!-- User Search Component -->
                     <UserSearch 
-                        placeholder="Search by email or name to add members..." 
+                        :placeholder="$t('groups.searchPlaceholder')" 
                         :exclude="excludedUsers"
                         @select="handleUserSelect"
                     />
@@ -299,7 +302,7 @@ const handleImageError = (userId) => {
             </div>
             
             <div class="modalFooter">
-                <button class="cancelBtn" @click="closeModal" :disabled="isSubmitting">Cancel</button>
+                <button class="cancelBtn" @click="closeModal" :disabled="isSubmitting">{{ $t('common.cancel') }}</button>
                 <button class="createBtn" @click="handleSubmit" :disabled="isSubmitting">
                     {{ submitButtonText }}
                 </button>
