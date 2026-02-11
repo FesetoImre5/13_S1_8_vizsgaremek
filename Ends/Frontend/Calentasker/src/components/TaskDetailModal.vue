@@ -115,22 +115,33 @@ const submitComment = async () => {
 const markComplete = async () => {
     if (!props.task) return;
     
+    // Toggle logic
+    const isDone = props.task.status === 'done';
+    const newStatus = isDone ? 'in_progress' : 'done';
+    const actionText = isDone ? 'Mark as In Progress' : 'Mark as Complete';
+    const confirmText = isDone ? 'Revert' : 'Complete';
+    const type = isDone ? 'warning' : 'success';
+
     showAlert({
-        title: 'Mark as Complete?',
-        message: 'Are you sure you want to mark this task as complete?',
-        type: 'success',
-        confirmText: 'Complete',
+        title: `${actionText}?`,
+        message: `Are you sure you want to change the status to ${isDone ? 'In Progress' : 'Completed'}?`,
+        type: type,
+        confirmText: confirmText,
         onConfirm: async () => {
             try {
-                const response = await axios.patch(`http://127.0.0.1:8000/api/tasks/${props.task.id}/`, {
-                    status: 'done',
-                    completed_at: new Date().toISOString()
-                });
+                const payload = { status: newStatus };
+                if (!isDone) {
+                    payload.completed_at = new Date().toISOString();
+                } else {
+                    payload.completed_at = null; // Clear completion date if reverting
+                }
+
+                const response = await axios.patch(`http://127.0.0.1:8000/api/tasks/${props.task.id}/`, payload);
                 emit('task-updated', response.data);
                 emit('close');
             } catch (error) {
                 console.error("Failed to update task", error);
-                showAlert({ title: 'Error', message: "Failed to mark complete", type: 'danger', confirmText: 'OK', onConfirm: () => {} });
+                showAlert({ title: 'Error', message: "Failed to update status", type: 'danger', confirmText: 'OK', onConfirm: () => {} });
             }
         }
     });
@@ -376,8 +387,8 @@ watch(() => props.isOpen, (newVal) => {
                         </div>
                         <div class="actions-bar">
                             <template v-if="!isEditing">
-                                <button class="btn btn-primary" @click="markComplete" :disabled="task.status === 'done'">
-                                    {{ task.status === 'done' ? 'Completed' : 'Mark Complete' }}
+                                <button class="btn btn-primary" @click="markComplete">
+                                    {{ task.status === 'done' ? 'Mark In Progress' : 'Mark Complete' }}
                                 </button>
                                 <button v-if="isCreator" class="btn btn-secondary" @click="startEditTask">Edit</button>
                                 <button v-if="canDelete" class="btn btn-danger" @click="deleteTask">Delete</button>
@@ -1013,12 +1024,13 @@ watch(() => props.isOpen, (newVal) => {
     border-radius: 6px;
     padding: 5px 10px;
     width: 100%;
+    min-width: 0; /* Allow shrink */
     font-family: inherit;
     line-height: 1.2;
 }
 
 .edit-select {
-    padding: 4px 10px;
+    padding: 6px 12px;
     border-radius: 12px;
     font-size: 0.8rem;
     font-weight: 700;
@@ -1027,6 +1039,7 @@ watch(() => props.isOpen, (newVal) => {
     border: 1px solid var(--border-color);
     cursor: pointer;
     text-transform: uppercase;
+    max-width: 100%;
 }
 
 .edit-textarea {
@@ -1040,19 +1053,60 @@ watch(() => props.isOpen, (newVal) => {
     font-size: 1rem;
     line-height: 1.6;
     resize: vertical;
+    min-height: 100px;
 }
 
 .edit-date {
     background: var(--c-bg);
     border: 1px solid var(--border-color);
     color: var(--c-text-primary);
-    padding: 4px 8px;
+    padding: 6px 10px;
     border-radius: 6px;
     font-size: 0.9rem;
     font-family: inherit;
+    width: 100%; /* Full width in container */
 }
 .edit-date:focus {
     border-color: var(--c-accent);
     outline: none;
+}
+
+/* RESPONSIVE EDIT ADJUSTMENTS */
+@media (max-width: 500px) {
+    .timespan-section {
+        flex-direction: column;
+        align-items: stretch; /* Stretch children */
+        gap: 10px;
+    }
+    
+    .time-block {
+        width: 100%;
+    }
+    
+    .arrow {
+        display: none; /* Hide arrow in vertical stack */
+    }
+    
+    .title-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .edit-input-title {
+        font-size: 1.4rem;
+    }
+    
+    .edit-select {
+        align-self: flex-start;
+    }
+    
+    .meta-row {
+        flex-direction: column;
+    }
+    
+    .status-indicator {
+        width: 100%;
+    }
 }
 </style>

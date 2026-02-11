@@ -10,7 +10,22 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
+
+# Function to load .env file manually if python-dotenv is not installed
+def load_env_file(filepath):
+    if not os.path.exists(filepath):
+        return
+    with open(filepath) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                key, value = line.split('=', 1)
+                os.environ.setdefault(key.strip(), value.strip())
+
+# Load .env file from BASE_DIR
+load_env_file(Path(__file__).resolve().parent.parent / '.env')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,8 +42,14 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-# Email Backend for Development (Console)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Email Backend (SMTP)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER or 'webmaster@localhost'
 
 
 # Application definition
@@ -176,3 +197,4 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
+

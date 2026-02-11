@@ -51,8 +51,12 @@ const handleAlertConfirm = () => {
     closeAlert();
 };
 
-// New State for Date Filtering
+// New State for Date Filtering, Sorting, and Priority
 const selectedDate = ref(null);
+const sortBy = ref('date-desc'); // date-desc (newest), date-asc (oldest), due-asc, priority
+const filterPriority = ref('all'); // all, low, medium, high, urgent
+const showCompleted = ref(false); // Toggle for completed tasks
+const showMobileFilters = ref(false); // Toggle for mobile filter menu
 
 // --- COMPUTED ---
 const selectedGroup = computed(() => {
@@ -79,21 +83,101 @@ const canDeleteGroup = computed(() => {
     return group && group.myRole === 'leader';
 });
 
-// Filtered Tasks
-const filteredTasks = computed(() => {
-    if (!selectedDate.value) return tasks.value;
-    
-    return tasks.value.filter(task => {
-        if (!task.created_at && !task.start_date) return false;
-        
-        const rawStart = task.start_date || task.created_at;
-        const rawEnd = task.due_date || task.start_date || task.created_at;
-        
-        const start = rawStart.substring(0, 10);
-        const end = rawEnd.substring(0, 10);
-        
-        return selectedDate.value >= start && selectedDate.value <= end;
+// Priority Map for sorting
+const priorityMap = { 'urgent': 4, 'high': 3, 'medium': 2, 'low': 1 };
+
+// Helper to filter and sort
+const processTasks = (taskList) => {
+    let result = taskList;
+
+    // 1. Date Filter (Existing)
+    if (selectedDate.value) {
+        result = result.filter(task => {
+            if (!task.created_at && !task.start_date) return false;
+            
+            const rawStart = task.start_date || task.created_at;
+            const rawEnd = task.due_date || task.start_date || task.created_at;
+            
+            const start = rawStart.substring(0, 10);
+            const end = rawEnd.substring(0, 10);
+            
+            return selectedDate.value >= start && selectedDate.value <= end;
+        });
+    }
+
+    // 2. Priority Filter
+    if (filterPriority.value !== 'all') {
+        result = result.filter(task => task.priority === filterPriority.value);
+    }
+
+    // 3. Sorting
+    return result.sort((a, b) => {
+        switch (sortBy.value) {
+            case 'date-desc': // Newest first
+                return new Date(b.created_at) - new Date(a.created_at);
+            case 'date-asc': // Oldest first
+                return new Date(a.created_at) - new Date(b.created_at);
+            case 'due-asc': // Soonest due date
+                if (!a.due_date) return 1; // No due date at bottom
+                if (!b.due_date) return -1;
+                return new Date(a.due_date) - new Date(b.due_date);
+            case 'priority': // Highest priority first
+                const pA = priorityMap[a.priority] || 0;
+                const pB = priorityMap[b.priority] || 0;
+                return pB - pA;
+            default:
+                return 0;
+        }
     });
+};
+
+// Grouped Tasks
+const groupedTasks = computed(() => {
+    const all = tasks.value;
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const dueSoon = [];     // <= 7 days
+    const upcoming = [];    // > 7 days
+    const noDueDate = [];   // null
+    const overdue = [];     // < Today
+    const completed = [];   // status === 'done'
+
+    all.forEach(task => {
+        // Completed
+        if (task.status === 'done') {
+            completed.push(task);
+            return;
+        }
+
+        // No Due Date
+        if (!task.due_date) {
+            noDueDate.push(task);
+            return;
+        }
+
+        const due = new Date(task.due_date);
+        const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+        const diffTime = dueDay - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 0) {
+            overdue.push(task);
+        } else if (diffDays <= 7) {
+            dueSoon.push(task);
+        } else {
+            // > 7 days
+            upcoming.push(task);
+        }
+    });
+
+    return {
+        dueSoon: processTasks(dueSoon),
+        upcoming: processTasks(upcoming),
+        noDueDate: processTasks(noDueDate),
+        overdue: processTasks(overdue),
+        completed: processTasks(completed)
+    };
 });
 
 // --- API ACTIONS ---
@@ -331,6 +415,58 @@ onMounted(() => {
                         <div class="tasksSubheading">
                             <h2 class="sectionTitle">Tasks</h2>
                             <span v-if="selectedDate" class="dateBadge">{{ selectedDate }}</span>
+
+                            <!-- MOBILE TOGGLES -->
+                            <div class="mobileControls">
+                                <button class="control-btn mobile-only" @click="showMobileFilters = !showMobileFilters">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="4" y1="21" x2="4" y2="14"></line>
+                                        <line x1="4" y1="10" x2="4" y2="3"></line>
+                                        <line x1="12" y1="21" x2="12" y2="12"></line>
+                                        <line x1="12" y1="8" x2="12" y2="3"></line>
+                                        <line x1="20" y1="21" x2="20" y2="16"></line>
+                                        <line x1="20" y1="12" x2="20" y2="3"></line>
+                                        <line x1="1" y1="14" x2="7" y2="14"></line>
+                                        <line x1="9" y1="8" x2="15" y2="8"></line>
+                                        <line x1="17" y1="16" x2="23" y2="16"></line>
+                                    </svg>
+                                    Filters
+                                </button>
+                                <button class="control-btn mobile-only" @click="isCalendarModalOpen = true">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    </svg>
+                                    Calendar
+                                </button>
+                            </div>
+
+                            <!-- FILTER CONTROLS (Wrapped for Responsive) -->
+                            <div class="filter-group" :class="{ 'show-mobile': showMobileFilters }">
+                                <!-- Sorting Dropdown -->
+                                <select v-model="sortBy" class="control-select">
+                                    <option value="date-desc">Newest First</option>
+                                    <option value="date-asc">Oldest First</option>
+                                    <option value="due-asc">Due Soonest</option>
+                                    <option value="priority">Priority</option>
+                                </select>
+
+                                <!-- Priority Filter -->
+                                <select v-model="filterPriority" class="control-select">
+                                    <option value="all">All Priorities</option>
+                                    <option value="low">Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                    <option value="urgent">Urgent</option>
+                                </select>
+
+                                <!-- Show Completed Toggle -->
+                                <button class="control-btn" @click="showCompleted = !showCompleted">
+                                    {{ showCompleted ? 'Hide Completed' : 'Show Completed' }}
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -346,30 +482,137 @@ onMounted(() => {
                 </div>
 
                 <div class="taskScroll customScroll">
-                    <div v-if="!loading && filteredTasks.length === 0" style="padding: 20px; color:white;">
+                    <div v-if="!loading && tasks.length === 0" style="padding: 20px; color:white;">
                         <span v-if="selectedDate">No tasks for this date.</span>
                         <span v-else>No tasks found.</span>
                     </div>
 
-                    <list-task 
-                        v-else
-                        v-for="(task, index) in filteredTasks"
-                        :key="task.id"
-                        class="fadeInItem"
-                        :style="{ animationDelay: `${index * 50}ms` }"
-                        :id="task.id"
-                        :url="getTaskUrl(task)"
-                        :title="task.title"
-                        :desc="task.description"
-                        :isSelected="selectedTaskId === task.id"
-                        :priority="task.priority"
-                        :dueDate="task.due_date"
-                        :status="task.status"
-                        @hover="onTaskHover"
-                        @leave="onTaskLeave"
-                        @select="onTaskSelect"
-                        @click="goToDetails(task)"
-                    />
+                    <template v-else>
+                        <!-- 1. Due Soon (<= 7 days) -->
+                        <div v-if="groupedTasks.dueSoon.length > 0">
+                            <h3 class="group-header">Due Soon</h3>
+                            <list-task 
+                                v-for="(task, index) in groupedTasks.dueSoon"
+                                :key="task.id"
+                                class="fadeInItem"
+                                :style="{ animationDelay: `${index * 50}ms` }"
+                                :id="task.id"
+                                :url="getTaskUrl(task)"
+                                :title="task.title"
+                                :desc="task.description"
+                                :isSelected="selectedTaskId === task.id"
+                                :priority="task.priority"
+                                :dueDate="task.due_date"
+                                :status="task.status"
+                                @hover="onTaskHover"
+                                @leave="onTaskLeave"
+                                @select="onTaskSelect"
+                                @click="goToDetails(task)"
+                            />
+                        </div>
+
+                        <!-- Red Break Line (Only if Due Soon exists AND (Date not selected OR other tasks below exist)) -->
+                        <hr v-if="groupedTasks.dueSoon.length > 0 && (!selectedDate || (groupedTasks.upcoming.length > 0 || groupedTasks.noDueDate.length > 0 || groupedTasks.overdue.length > 0))" class="red-break">
+
+                        <!-- 2. Upcoming (> 7 days) -->
+                        <div v-if="groupedTasks.upcoming.length > 0">
+                            <h3 class="group-header">Upcoming</h3>
+                            <list-task 
+                                v-for="(task, index) in groupedTasks.upcoming"
+                                :key="task.id"
+                                class="fadeInItem"
+                                :style="{ animationDelay: `${index * 50}ms` }"
+                                :id="task.id"
+                                :url="getTaskUrl(task)"
+                                :title="task.title"
+                                :desc="task.description"
+                                :isSelected="selectedTaskId === task.id"
+                                :priority="task.priority"
+                                :dueDate="task.due_date"
+                                :status="task.status"
+                                @hover="onTaskHover"
+                                @leave="onTaskLeave"
+                                @select="onTaskSelect"
+                                @click="goToDetails(task)"
+                            />
+                        </div>
+
+                        <!-- 3. No Due Date -->
+                        <div v-if="groupedTasks.noDueDate.length > 0">
+                            <!-- Divider if Upcoming exists -->
+                            <hr v-if="groupedTasks.upcoming.length > 0" class="divider">
+                            
+                            <h3 class="group-header">No Due Date</h3>
+                            <list-task 
+                                v-for="(task, index) in groupedTasks.noDueDate"
+                                :key="task.id"
+                                class="fadeInItem"
+                                :style="{ animationDelay: `${index * 50}ms` }"
+                                :id="task.id"
+                                :url="getTaskUrl(task)"
+                                :title="task.title"
+                                :desc="task.description"
+                                :isSelected="selectedTaskId === task.id"
+                                :priority="task.priority"
+                                :dueDate="task.due_date"
+                                :status="task.status"
+                                @hover="onTaskHover"
+                                @leave="onTaskLeave"
+                                @select="onTaskSelect"
+                                @click="goToDetails(task)"
+                            />
+                        </div>
+
+                        <!-- 4. Overdue (< Today) -->
+                        <div v-if="groupedTasks.overdue.length > 0">
+                            <!-- Divider if Upcoming or NoDueDate exists. Note: DueSoon uses RedBreak. -->
+                            <hr v-if="groupedTasks.upcoming.length > 0 || groupedTasks.noDueDate.length > 0" class="divider">
+
+                            <h3 class="group-header text-danger">Overdue</h3>
+                            <list-task 
+                                v-for="(task, index) in groupedTasks.overdue"
+                                :key="task.id"
+                                class="fadeInItem"
+                                :style="{ animationDelay: `${index * 50}ms` }"
+                                :id="task.id"
+                                :url="getTaskUrl(task)"
+                                :title="task.title"
+                                :desc="task.description"
+                                :isSelected="selectedTaskId === task.id"
+                                :priority="task.priority"
+                                :dueDate="task.due_date"
+                                :status="task.status"
+                                @hover="onTaskHover"
+                                @leave="onTaskLeave"
+                                @select="onTaskSelect"
+                                @click="goToDetails(task)"
+                            />
+                        </div>
+
+                        <!-- 5. Completed -->
+                        <div v-if="showCompleted && groupedTasks.completed.length > 0">
+                            <hr class="divider">
+                            <h3 class="group-header text-muted">Completed</h3>
+                            <list-task 
+                                v-for="(task, index) in groupedTasks.completed"
+                                :key="task.id"
+                                class="fadeInItem opacity-75"
+                                :style="{ animationDelay: `${index * 50}ms` }"
+                                :id="task.id"
+                                :url="getTaskUrl(task)"
+                                :title="task.title"
+                                :desc="task.description"
+                                :isSelected="selectedTaskId === task.id"
+                                :priority="task.priority"
+                                :dueDate="task.due_date"
+                                :status="task.status"
+                                @hover="onTaskHover"
+                                @leave="onTaskLeave"
+                                @select="onTaskSelect"
+                                @click="goToDetails(task)"
+                            />
+                        </div>
+                    </template>
                 </div>
             </div>
 
@@ -650,7 +893,126 @@ onMounted(() => {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-wrap: wrap; /* Allow wrapping for controls */
 }
+
+.control-select {
+    background: var(--c-bg);
+    color: var(--c-text-primary);
+    border: 1px solid var(--border-color);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.control-select:hover, .control-select:focus {
+    border-color: var(--c-accent);
+}
+
+.control-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--c-text-primary);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+.control-btn:hover {
+    background: var(--c-surface-hover);
+    border-color: var(--c-accent);
+}
+
+/* RESPONSIVE HEADER CONTROLS */
+.mobile-only { display: none; } /* Hidden on desktop */
+.filter-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 1024px) {
+    /* Show Calendar button on tablet/mobile where calendar column is hidden */
+    /* Wait, calendar column is hidden at 768px in existing CSS, but let's check. 
+       Existing CSS: @media (max-width: 768px) { .calendarArea { display: none; } }
+       So we should show the button at 768px.
+    */
+}
+
+@media (max-width: 768px) {
+    .mobile-only { display: inline-flex; }
+    
+    .filter-group {
+        display: none; /* Hidden by default */
+        flex-direction: column;
+        width: 100%;
+        margin-top: 15px;
+        background: var(--c-bg); /* Contrast against header */
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+    }
+
+    .filter-group.show-mobile {
+        display: flex;
+        animation: fadeIn 0.2s ease;
+    }
+
+    .control-select, .control-btn {
+        width: 100%; /* Full width on mobile */
+        justify-content: center;
+    }
+
+    .tasksSubheading {
+        flex-wrap: wrap;
+    }
+    
+    .mobileControls {
+        display: flex;
+        gap: 8px;
+        margin-left: auto; /* Push to right */
+        flex-wrap: wrap; /* Allow wrapping to prevent cut-off */
+        justify-content: flex-end;
+    }
+}
+
+
+.red-break {
+    border: 0;
+    height: 1px;
+    background: #ef4444; /* Bright Red */
+    margin: 30px 0;
+    opacity: 0.6;
+}
+
+.divider {
+    border: 0;
+    height: 1px;
+    background: var(--border-color);
+    margin: 30px 0;
+}
+
+.group-header {
+    font-size: 1.1rem;
+    color: var(--c-text-primary);
+    margin: 0 0 15px 0;
+    font-weight: 600;
+    opacity: 0.8;
+}
+
+.text-danger { color: #ef4444 !important; }
+.text-muted { color: var(--c-text-secondary) !important; }
+.opacity-75 { opacity: 0.75; }
 
 .sectionTitle {
     margin: 0;

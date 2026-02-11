@@ -54,6 +54,21 @@
                 } else {
                     return { text: "More than a month", colorClass: "due-green" };
                 }
+            },
+            borderClass() {
+                if (this.status === 'done' || !this.dueDate) return '';
+
+                const now = new Date();
+                const due = new Date(this.dueDate);
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+
+                const diffTime = dueDay - today; 
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                if (diffDays <= 3) return 'border-red';
+                if (diffDays <= 7) return 'border-orange';
+                return '';
             }
         }
     }
@@ -62,7 +77,7 @@
 <template>
     <div 
         class="taskCard"
-        :class="{ 'isSelected': isSelected }"
+        :class="[{ 'isSelected': isSelected }, borderClass]"
         @mouseenter="$emit('hover', id)"
         @mouseleave="$emit('leave')"
         @click="$emit('select', id)"
@@ -140,10 +155,7 @@
     box-shadow: var(--shadow-md);
 }
 
-.taskCard.isSelected {
-    border-color: var(--c-accent);
-    box-shadow: var(--shadow-glow);
-}
+
 
 /* --- IMAGE --- */
 .cardImageWrapper {
@@ -358,5 +370,14 @@
         margin: 0 0 10px 0;
         width: 100%;
     }
+}
+
+/* --- CONDITIONAL BORDERS --- */
+.border-red {
+    border: 1px solid #ef4444 !important; /* Bright Red */
+}
+
+.border-orange {
+    border: 1px solid #f97316 !important; /* Bright Orange */
 }
 </style>
