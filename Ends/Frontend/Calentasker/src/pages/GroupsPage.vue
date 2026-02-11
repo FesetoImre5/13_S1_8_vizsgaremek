@@ -1,10 +1,13 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import axios from 'axios';
 import ListGroup from '../components/ListGroup.vue';
 import CreateGroupModal from '../components/CreateGroupModal.vue';
 import UserSearch from '../components/UserSearch.vue';
 import AlertModal from '../components/AlertModal.vue';
+
+const { t } = useI18n();
 
 // --- STATE ---
 const groups = ref([]);
@@ -112,10 +115,10 @@ const deleteGroup = async () => {
     if (!selectedGroup.value) return;
     
     showAlert({
-        title: 'Delete Group',
-        message: `Are you sure you want to delete "${selectedGroup.value.groupname}"?`,
+        title: t('groups.confirmDeleteTitle'),
+        message: t('groups.confirmDeleteMsg', { name: selectedGroup.value.groupname }),
         type: 'danger',
-        confirmText: 'Delete',
+        confirmText: t('groups.delete'),
         onConfirm: async () => {
             try {
                 await axios.delete(`http://127.0.0.1:8000/api/groups/${selectedGroup.value.id}/`);
@@ -125,7 +128,7 @@ const deleteGroup = async () => {
                 groupMembers.value = [];
             } catch (error) {
                  console.error("Failed to delete group", error);
-                 showAlert({ title: 'Error', message: 'Failed to delete group.', type: 'danger', confirmText: 'OK', onConfirm: () => {} });
+                 showAlert({ title: t('common.error'), message: t('groups.failedDelete'), type: 'danger', confirmText: t('common.ok'), onConfirm: () => {} });
             }
         }
     });
@@ -140,7 +143,7 @@ const addMember = async (user) => {
         const payload = { group: selectedGroup.value.id, user: user.id };
         const response = await axios.post('http://127.0.0.1:8000/api/group-members/', payload);
         groupMembers.value.push(response.data);
-        addMemberSuccess.value = `User added!`;
+        addMemberSuccess.value = t('groups.userAdded');
         
         setTimeout(() => {
             addMemberSuccess.value = '';
@@ -148,9 +151,9 @@ const addMember = async (user) => {
     } catch (error) {
         if (error.response && error.response.data) {
              const data = error.response.data;
-             addMemberError.value = data.detail || (data.user ? data.user[0] : "Failed to add.");
+             addMemberError.value = data.detail || (data.user ? data.user[0] : t('groups.failedAdd'));
         } else {
-            addMemberError.value = "Network error.";
+            addMemberError.value = t('errors.network');
         }
     }
 };
@@ -161,7 +164,7 @@ const updateMemberRole = async (member, newRole) => {
         member.role = newRole; // Optimistic update
     } catch (error) {
         console.error("Failed to update role", error);
-        showAlert({ title: 'Error', message: 'Failed to update role.', type: 'danger', confirmText: 'OK', onConfirm: () => {} });
+        showAlert({ title: t('common.error'), message: t('groups.failedRoleUpdate'), type: 'danger', confirmText: t('common.ok'), onConfirm: () => {} });
     }
 };
 
@@ -169,20 +172,20 @@ const transferLeadership = async (member) => {
     if (!member || !member.user_detail) return;
     
     showAlert({
-        title: 'Transfer Leadership',
-        message: `Are you sure you want to TRANSFER LEADERSHIP to ${member.user_detail.username}?\n\nYou will lose your Leader privileges and become a Reader.`,
+        title: t('groups.transferTitle'),
+        message: t('groups.transferMsg', { name: member.user_detail.username }),
         type: 'warning',
-        confirmText: 'Transfer',
+        confirmText: t('groups.transfer'),
         onConfirm: async () => {
             try {
                 await axios.post(`http://127.0.0.1:8000/api/groups/${selectedGroup.value.id}/transfer_leadership/`, {
                     new_leader_id: member.user_detail.id
                 });
-                showAlert({ title: 'Success', message: `Leadership transferred to ${member.user_detail.username}.`, type: 'success', confirmText: 'OK', onConfirm: () => {} });
+                showAlert({ title: t('common.success'), message: t('groups.transferSuccess', { name: member.user_detail.username }), type: 'success', confirmText: t('common.ok'), onConfirm: () => {} });
                 fetchMyGroups(); // Refresh everything as my permissions changed
             } catch (error) {
                 console.error("Failed to transfer leadership", error);
-                showAlert({ title: 'Error', message: error.response?.data?.detail || "Failed to transfer leadership.", type: 'danger', confirmText: 'OK', onConfirm: () => {} });
+                showAlert({ title: t('common.error'), message: error.response?.data?.detail || "Failed to transfer leadership.", type: 'danger', confirmText: t('common.ok'), onConfirm: () => {} });
             }
         }
     });
@@ -190,17 +193,17 @@ const transferLeadership = async (member) => {
 
 const removeMember = async (membershipId) => {
     showAlert({
-        title: 'Remove Member',
-        message: 'Remove this member?',
+        title: t('groups.removeTitle'),
+        message: t('groups.removeMsg'),
         type: 'danger',
-        confirmText: 'Remove',
+        confirmText: t('groups.remove'),
         onConfirm: async () => {
             try {
                 await axios.delete(`http://127.0.0.1:8000/api/group-members/${membershipId}/`);
                 groupMembers.value = groupMembers.value.filter(m => m.id !== membershipId);
                 fetchMyGroups(); // Refresh list in case I removed myself
             } catch (e) { 
-                showAlert({ title: 'Error', message: 'Failed to remove.', type: 'danger', confirmText: 'OK', onConfirm: () => {} });
+                showAlert({ title: t('common.error'), message: t('groups.failedRemove'), type: 'danger', confirmText: t('common.ok'), onConfirm: () => {} });
             }
         }
     });
@@ -277,8 +280,8 @@ onMounted(() => {
             
             <!-- Inner Sidebar: Group List -->
             <div class="col-md-4 groupListCol">
-                <h5 class="sectionTitle">My Groups</h5>
-                <div v-if="loading" class="p-3 text-muted">Loading...</div>
+                <h5 class="sectionTitle">{{ $t('groups.myGroups') }}</h5>
+                <div v-if="loading" class="p-3 text-muted">{{ $t('groups.loading') }}</div>
                 
                 <div class="listContainer customScroll">
                     <list-group
@@ -297,14 +300,14 @@ onMounted(() => {
                         <line x1="12" y1="5" x2="12" y2="19"></line>
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
-                    Create New Group
+                    {{ $t('groups.createBtn') }}
                 </button>
             </div>
 
             <!-- Inner Content: Group Details -->
             <div class="col-md-8 detailsCol">
                 <div v-if="!selectedGroup" class="emptyState">
-                    <center><p>Select a group to manage details</p></center>
+                    <center><p>{{ $t('groups.selectPlaceholder') }}</p></center>
                 </div>
                 <div v-else class="detailsInner">
                     <div class="header">
@@ -313,8 +316,8 @@ onMounted(() => {
                             <h3>{{ selectedGroup.groupname }}</h3>
                         </div>
                         <div v-if="canEditGroup" class="headerRight">
-                             <button class="editBtn" @click="openEditModal">Edit</button>
-                             <button class="deleteBtn" @click="deleteGroup">Delete</button>
+                             <button class="editBtn" @click="openEditModal">{{ $t('groups.edit') }}</button>
+                             <button class="deleteBtn" @click="deleteGroup">{{ $t('groups.delete') }}</button>
                         </div>
                     </div>
 
@@ -327,17 +330,17 @@ onMounted(() => {
                     
                     <!-- Add Member -->
                     <div class="actionBox">
-                        <label>Add New Member</label>
+                        <label>{{ $t('groups.addNewMember') }}</label>
                         <div class="searchWrapper d-flex gap-2">
                              <div style="flex: 1;">
                                 <UserSearch 
-                                    placeholder="Search by email or name..." 
+                                    :placeholder="$t('groups.searchPlaceholder')" 
                                     :exclude="excludedUserIds" 
                                     @select="addMember" 
                                 />
                              </div>
                              <!-- Visual Add Button (Functional via search selection) -->
-                             <button class="addBtn" disabled>Add</button>
+                             <button class="addBtn" disabled>{{ $t('groups.addBtn') }}</button>
                         </div>
                         <small v-if="addMemberError" class="text-danger mt-2 d-block">{{ addMemberError }}</small>
                         <small v-if="addMemberSuccess" class="text-success mt-2 d-block">{{ addMemberSuccess }}</small>
@@ -345,7 +348,7 @@ onMounted(() => {
 
                     <!-- Unified Member List -->
                     <div v-if="groupMembers.length > 0">
-                        <h6 class="listHeader">All Members ({{ groupMembers.length }})</h6>
+                        <h6 class="listHeader">{{ $t('groups.allMembers') }} ({{ groupMembers.length }})</h6>
                         <ul class="memberList">
                             <li v-for="m in groupMembers" :key="m.id" class="memberItem">
                                 <div class="memberInfo">
@@ -360,15 +363,15 @@ onMounted(() => {
                                             :value="m.role" 
                                             @change="updateMemberRole(m, $event.target.value)"
                                         >
-                                            <option value="reader">Reader</option>
-                                            <option value="operator">Operator</option>
-                                            <option value="moderator">Moderator</option>
+                                            <option value="reader">{{ $t('groups.roles.reader') }}</option>
+                                            <option value="operator">{{ $t('groups.roles.operator') }}</option>
+                                            <option value="moderator">{{ $t('groups.roles.moderator') }}</option>
                                         </select>
                                     </div>
                                     <div v-else class="roleDisplay">
-                                        <span v-if="m.role === 'leader'" class="roleBadge leader">LEADER</span>
-                                        <span v-else-if="m.role === 'moderator'" class="roleBadge moderator">MOD</span>
-                                        <span v-else-if="m.role === 'operator'" class="roleBadge operator">OP</span>
+                                        <span v-if="m.role === 'leader'" class="roleBadge leader">{{ $t('groups.roles.leader') }}</span>
+                                        <span v-else-if="m.role === 'moderator'" class="roleBadge moderator">{{ $t('groups.roles.moderator') }}</span>
+                                        <span v-else-if="m.role === 'operator'" class="roleBadge operator">{{ $t('groups.roles.operator') }}</span>
                                         <!-- Reader Role Badge Omitted -->
                                     </div>
                                 </div>
@@ -376,17 +379,17 @@ onMounted(() => {
                                     <button 
                                         v-if="isCurrentUserLeader && m.user_detail.id !== currentUserId" 
                                         class="transferBtn" 
-                                        title="Transfer Leadership"
+                                        :title="$t('groups.transfer')"
                                         @click="transferLeadership(m)"
                                     >
-                                        Transfer Leadership
+                                        {{ $t('groups.transfer') }}
                                     </button>
                                     <button 
                                         v-if="isCurrentUserLeader && m.user_detail.id !== currentUserId" 
                                         class="removeBtn" 
                                         @click="removeMember(m.id)"
                                     >
-                                        Remove
+                                        {{ $t('groups.remove') }}
                                     </button>
                                 </div>
                             </li>

@@ -43,9 +43,9 @@ export default {
             if (/[A-Z]/.test(this.password)) score++;
             if (/[0-9]/.test(this.password)) score++;
             if (/[^A-Za-z0-9]/.test(this.password)) score++;
-            if (score <= 1) return { label: 'Weak', color: '#dc2626', width: '33%' };
-            if (score === 2) return { label: 'Medium', color: '#f59e0b', width: '66%' };
-            return { label: 'Strong', color: '#16a34a', width: '100%' };
+            if (score <= 1) return { label: this.$t('auth.weak'), color: '#dc2626', width: '33%' };
+            if (score === 2) return { label: this.$t('auth.medium'), color: '#f59e0b', width: '66%' };
+            return { label: this.$t('auth.strong'), color: '#16a34a', width: '100%' };
         },
         isFormValid() {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -106,7 +106,7 @@ export default {
         // --- Validation Methods ---
         validateFirstName() {
             if (this.firstName.trim() === '') {
-                this.firstNameError = 'First Name is required.';
+                this.firstNameError = this.$t('errors.firstNameRequired');
                 return false;
             }
             this.firstNameError = '';
@@ -114,7 +114,7 @@ export default {
         },
         validateLastName() {
             if (this.lastName.trim() === '') {
-                this.lastNameError = 'Last Name is required.';
+                this.lastNameError = this.$t('errors.lastNameRequired');
                 return false;
             }
             this.lastNameError = '';
@@ -123,7 +123,7 @@ export default {
         validateEmail() {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(this.email)) {
-                this.emailError = 'Please enter a valid email address.';
+                this.emailError = this.$t('errors.invalidEmail');
                 return false;
             }
             this.emailError = '';
@@ -136,7 +136,7 @@ export default {
         },
         validatePassword() {
             if (this.password.length < 6) {
-                this.passwordError = 'Password must be at least 6 characters.';
+                this.passwordError = this.$t('errors.passwordLength');
                 return false;
             }
             this.passwordError = '';
@@ -156,7 +156,7 @@ export default {
             // 1. Run local validation
             if (!this.validateForm()) {
                 console.log('Validation failed locally.');
-                this.addToast('Please fix the errors in the form.', 'warning');
+                this.addToast(this.$t('errors.fixErrors'), 'warning');
                 return;
             }
 
@@ -184,7 +184,7 @@ export default {
 
                 // 4. On Success
                 // Show message instead of auto-login
-                this.addToast('Registration successful! Please check your email to activate your account.', 'success');
+                this.addToast(this.$t('errors.successReg'), 'success');
                 this.$emit('switchMode', 'login');
 
             } catch (error) {
@@ -201,12 +201,12 @@ export default {
                     if (data.last_name) { this.lastNameError = data.last_name[0]; hasError = true; }
 
                     if (hasError) {
-                         this.addToast('Please check the form for errors.', 'error');
+                         this.addToast(this.$t('errors.fixErrors'), 'error');
                     } else {
-                         this.addToast('An unknown error occurred.', 'error');
+                         this.addToast(this.$t('errors.unknown'), 'error');
                     }
                 } else {
-                    this.addToast('Network error or server is down.', 'error');
+                    this.addToast(this.$t('errors.network'), 'error');
                 }
             }
         }
@@ -216,19 +216,17 @@ export default {
 
 <template>
     <div class="authCard">
-        <h2 class="title">Register</h2>
-
-
+        <h2 class="title">{{ $t('auth.registerTitle') }}</h2>
 
         <form @submit.prevent="register">
             
             <!-- Profile Image Section -->
             <div class="profile-image-section">
                 <div class="label-row">
-                    <label>Profile Picture</label>
+                    <label>{{ $t('auth.profilePic') }}</label>
                     <div class="toggle-switch">
-                        <span :class="{ active: imageMode === 'upload' }" @click="imageMode = 'upload'">Upload</span>
-                        <span :class="{ active: imageMode === 'url' }" @click="imageMode = 'url'">URL</span>
+                        <span :class="{ active: imageMode === 'upload' }" @click="imageMode = 'upload'">{{ $t('auth.upload') }}</span>
+                        <span :class="{ active: imageMode === 'url' }" @click="imageMode = 'url'">{{ $t('auth.url') }}</span>
                     </div>
                 </div>
 
@@ -238,7 +236,7 @@ export default {
                         <input type="file" id="pfpInput" accept="image/*" @change="handleImageUpload" hidden>
                         <label for="pfpInput" class="upload-label">
                             <span class="plus-icon">+</span>
-                            <span>Upload</span>
+                            <span>{{ $t('auth.upload') }}</span>
                         </label>
                     </div>
                     <div v-else class="image-preview">
@@ -255,7 +253,7 @@ export default {
                         @focus="isProfileImageUrlFocused = true" 
                         @blur="isProfileImageUrlFocused = false" 
                     />
-                    <label>Image URL</label>
+                    <label>{{ $t('auth.imageUrl') }}</label>
                 </div>
                  <div v-if="imageMode === 'url' && profileImageUrl" class="url-preview-small">
                     <img :src="profileImageUrl" @error="$event.target.style.display='none'" onload="this.style.display='block'">
@@ -272,7 +270,7 @@ export default {
                     @focus="isFirstNameFocused = true" 
                     @blur="handleFirstNameBlur" 
                 />
-                <label>First Name</label>
+                <label>{{ $t('auth.firstName') }}</label>
             </div>
 
             <!-- Last Name Input Group -->
@@ -285,7 +283,7 @@ export default {
                     @focus="isLastNameFocused = true" 
                     @blur="handleLastNameBlur" 
                 />
-                <label>Last Name</label>
+                <label>{{ $t('auth.lastName') }}</label>
             </div>
 
             <!-- Email Input Group -->
@@ -298,7 +296,7 @@ export default {
                     @focus="isEmailFocused = true" 
                     @blur="handleEmailBlur" 
                 />
-                <label>Email</label>
+                <label>{{ $t('auth.email') }}</label>
             </div>
 
             <!-- Username Input Group -->
@@ -311,7 +309,7 @@ export default {
                     @focus="isUsernameFocused = true" 
                     @blur="handleUsernameBlur" 
                 />
-                <label>Username (Optional)</label>
+                <label>{{ $t('auth.username') }}</label>
             </div>
 
             <!-- Password Input Group -->
@@ -328,12 +326,12 @@ export default {
                     @focus="isPasswordFocused = true"
                     @blur="handlePasswordBlur"
                 />
-                <label>Password</label>
+                <label>{{ $t('auth.password') }}</label>
                 <button type="button" class="toggle" @click="showPassword = !showPassword">
-                    {{ showPassword ? 'Hide' : 'Show' }}
+                    {{ showPassword ? $t('auth.hide') : $t('auth.show') }}
                 </button>
             </div>
-            <p v-if="capsLockOn" class="capsWarning">Caps Lock is ON</p>
+            <p v-if="capsLockOn" class="capsWarning">{{ $t('auth.capsLock') }}</p>
             
 
             <div class="strengthMeter" v-if="password">
@@ -342,11 +340,11 @@ export default {
             </div>
 
             <!-- Button disabled if computed form validity fails -->
-            <button type="submit" class="primaryBtn" :disabled="!isFormValid">Create Account</button>
+            <button type="submit" class="primaryBtn" :disabled="!isFormValid">{{ $t('auth.createAccountBtn') }}</button>
         </form>
 
         <!-- Only the word "Login" is clickable -->
-        <p class="switchText">Already have an account? <span class="switch" @click="$emit('switchMode', 'login')">Login</span></p>
+        <p class="switchText">{{ $t('auth.hasAccount') }} <span class="switch" @click="$emit('switchMode', 'login')">{{ $t('auth.loginLink') }}</span></p>
     </div>
 </template>
 

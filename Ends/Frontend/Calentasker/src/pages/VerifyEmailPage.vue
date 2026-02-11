@@ -6,7 +6,7 @@ export default {
     data() {
         return {
             status: 'verifying', // verifying, success, error
-            message: 'Verifying your email...',
+            message: this.$t('auth.verifying'),
         };
     },
     setup() {
@@ -18,7 +18,7 @@ export default {
         
         if (!uid || !token) {
             this.status = 'error';
-            this.message = 'Invalid verification link.';
+            this.message = this.$t('auth.invalidLink');
             return;
         }
 
@@ -28,8 +28,8 @@ export default {
                 token
             });
             this.status = 'success';
-            this.message = 'Email verified successfully! You can now login.';
-            this.addToast('Account activated!', 'success');
+            this.message = this.$t('auth.verified');
+            this.addToast(this.$t('auth.accountActivated'), 'success');
             
             // Optional: Redirect after a few seconds
             setTimeout(() => {
@@ -38,7 +38,7 @@ export default {
 
         } catch (error) {
             this.status = 'error';
-            this.message = error.response?.data?.detail || 'Verification failed. The link may be invalid or expired.';
+            this.message = error.response?.data?.detail || this.$t('auth.verificationFailed');
             this.addToast(this.message, 'error');
         }
     }
@@ -48,14 +48,14 @@ export default {
 <template>
     <div class="verify-container">
         <div class="card">
-            <h2 v-if="status === 'verifying'">Verifying...</h2>
-            <h2 v-if="status === 'success'" class="success">Success!</h2>
-            <h2 v-if="status === 'error'" class="error">Error</h2>
+            <h2 v-if="status === 'verifying'">{{ $t('auth.verifying') }}</h2>
+            <h2 v-if="status === 'success'" class="success">{{ $t('auth.successTitle') }}</h2>
+            <h2 v-if="status === 'error'" class="error">{{ $t('auth.errorTitle') }}</h2>
 
             <p>{{ message }}</p>
 
             <button v-if="status !== 'verifying'" @click="$router.push({ name: 'Auth', query: { mode: 'login' } })" class="primaryBtn">
-                Go to Login
+                {{ $t('auth.goToLogin') }}
             </button>
         </div>
     </div>

@@ -1,77 +1,84 @@
-<script>
-    export default {
-        props: {
-            id: { type: [Number, String], required: true },
-            url: { type: String, default: "" },
-            title: { type: String, default: "" },
-            desc: { type: String, default: "" },
-            isSelected: { type: Boolean, default: false },
-            priority: { type: String, default: "low" },
-            dueDate: { type: String, default: null },
-            status: { type: String, default: "todo" }
-        },
-        emits: ['click', 'hover', 'leave', 'select'],
-        computed: {
-            formattedPriority() {
-                if (!this.priority) return "Priority: Low";
-                // Capitalize first letter
-                const p = this.priority.charAt(0).toUpperCase() + this.priority.slice(1);
-                return `Task Priority: ${p}`;
-            },
-            priorityColorClass() {
-                const p = this.priority ? this.priority.toLowerCase() : 'low';
-                return `priority-${p}`;
-            },
-            dueStatus() {
-                // If task is done, show Completed regardless of date
-                if (this.status === 'done') {
-                    return { text: "Completed", colorClass: "due-green" };
-                }
+<script setup>
+import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 
-                if (!this.dueDate) return { text: "No Due Date", colorClass: "due-gray" };
+const props = defineProps({
+    id: { type: [Number, String], required: true },
+    url: { type: String, default: "" },
+    title: { type: String, default: "" },
+    desc: { type: String, default: "" },
+    isSelected: { type: Boolean, default: false },
+    priority: { type: String, default: "low" },
+    dueDate: { type: String, default: null },
+    status: { type: String, default: "todo" }
+});
 
-                const now = new Date();
-                const due = new Date(this.dueDate);
-                
-                // Reset times to compare dates only
-                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+const emit = defineEmits(['click', 'hover', 'leave', 'select']);
 
-                const diffTime = dueDay - today; 
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+const { t } = useI18n();
 
-                if (diffDays < 0) {
-                    return { text: "Overdue", colorClass: "due-red" };
-                } else if (diffDays === 0) {
-                    return { text: "Today", colorClass: "due-red" };
-                } else if (diffDays === 1) {
-                    return { text: "Tomorrow", colorClass: "due-orange" };
-                } else if (diffDays < 7) {
-                    return { text: `In ${diffDays} days`, colorClass: "due-yellow" };
-                } else if (diffDays < 28) {
-                    const weeks = Math.ceil(diffDays / 7);
-                    return { text: `In ${weeks} week${weeks > 1 ? 's' : ''}`, colorClass: "due-blue" };
-                } else {
-                    return { text: "More than a month", colorClass: "due-green" };
-                }
-            },
-            borderClass() {
-                if (this.status === 'done' || !this.dueDate) return '';
+const formattedPriority = computed(() => {
+    if (!props.priority) return `${t('tasks.priority')}: ${t('tasks.priorities.low')}`;
+    const pKey = props.priority.toLowerCase();
+    // Fallback if priority is not standard
+    const pLabel = t(`tasks.priorities.${pKey}`) || props.priority;
+    return `${t('tasks.priority')}: ${pLabel}`;
+});
 
-                const now = new Date();
-                const due = new Date(this.dueDate);
-                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+const priorityColorClass = computed(() => {
+    const p = props.priority ? props.priority.toLowerCase() : 'low';
+    return `priority-${p}`;
+});
 
-                const diffTime = dueDay - today; 
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                if (diffDays <= 3) return 'border-red';
-                if (diffDays <= 7) return 'border-orange';
-                return '';
-            }
-        }
+const dueStatus = computed(() => {
+    // If task is done, show Completed regardless of date
+    if (props.status === 'done') {
+        return { text: t('tasks.time.completed'), colorClass: "due-green" };
     }
+
+    if (!props.dueDate) return { text: t('tasks.time.noDueDate'), colorClass: "due-gray" };
+
+    const now = new Date();
+    const due = new Date(props.dueDate);
+    
+    // Reset times to compare dates only
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+
+    const diffTime = dueDay - today; 
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) {
+        return { text: t('tasks.time.overdue'), colorClass: "due-red" };
+    } else if (diffDays === 0) {
+        return { text: t('tasks.time.today'), colorClass: "due-red" };
+    } else if (diffDays === 1) {
+        return { text: t('tasks.time.tomorrow'), colorClass: "due-orange" };
+    } else if (diffDays < 7) {
+        return { text: t('tasks.time.inDays', { n: diffDays }), colorClass: "due-yellow" };
+    } else if (diffDays < 28) {
+        const weeks = Math.ceil(diffDays / 7);
+        return { text: t('tasks.time.inWeeks', { n: weeks }), colorClass: "due-blue" };
+    } else {
+        return { text: t('tasks.time.moreThanMonth'), colorClass: "due-green" };
+    }
+});
+
+const borderClass = computed(() => {
+    if (props.status === 'done' || !props.dueDate) return '';
+
+    const now = new Date();
+    const due = new Date(props.dueDate);
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+
+    const diffTime = dueDay - today; 
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays <= 3) return 'border-red';
+    if (diffDays <= 7) return 'border-orange';
+    return '';
+});
 </script>
 
 <template>
@@ -103,7 +110,7 @@
                 </span>
             </div>
             
-            <p class="cardDesc">{{ desc || "No description provided." }}</p>
+            <p class="cardDesc">{{ desc || $t('tasks.noDesc') }}</p>
             
             <!-- Optional: Date or Metadata (Hidden if using badge, or keep as extra info) -->
             <!-- <div class="cardMeta">
@@ -114,7 +121,7 @@
         <!-- Right: Action Area -->
         <div class="cardAction">
             <button class="viewBtn" @click.stop="$emit('click')">
-                View
+                {{ $t('tasks.view') }}
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="9 18 15 12 9 6"></polyline>
                 </svg>

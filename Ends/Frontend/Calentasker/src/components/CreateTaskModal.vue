@@ -1,6 +1,8 @@
 <script setup>
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import axios from 'axios';
+import CustomDatePicker from './CustomDatePicker.vue';
 
 const props = defineProps({
     groupId: {
@@ -13,6 +15,8 @@ const props = defineProps({
         default: false
     }
 });
+
+const { t } = useI18n();
 
 const emit = defineEmits(['close', 'task-created']);
 
@@ -137,9 +141,13 @@ const isSubmitting = ref(false);
         imageFile.value = null;
     };
 
+
+
+    const creating = computed(() => isSubmitting.value); 
+
     const createTask = async () => {
         if (!title.value.trim()) {
-            error.value = 'Task title is required';
+            error.value = t('tasks.errors.titleRequired');
             return;
         }
 
@@ -188,7 +196,7 @@ const isSubmitting = ref(false);
             if (err.response && err.response.data) {
                 error.value = JSON.stringify(err.response.data); // Better error debug
             } else {
-                error.value = 'Network error. Please try again.';
+                error.value = t('errors.network');
             }
         } finally {
             isSubmitting.value = false;
@@ -197,159 +205,161 @@ const isSubmitting = ref(false);
 </script>
 
 <template>
-    <div v-if="isOpen" class="modalOverlay" @click.self="closeModal" @click="closeDropdown">
-        <div class="modalContent">
-            <div class="modalHeader">
-                <h3>Create New Task</h3>
-                <button class="closeBtn" @click="closeModal">&times;</button>
-            </div>
-            
-            <div class="modalBody">
-                <!-- Title -->
-                <div class="formGroup">
-                    <label>Title *</label>
-                    <input 
-                        v-model="title" 
-                        type="text" 
-                        placeholder="What needs to be done?"
-                        autofocus
-                    >
+    <Teleport to="body">
+        <div v-if="isOpen" class="modalOverlay" @click.self="closeModal" @click="closeDropdown">
+            <div class="modalContent">
+                <div class="modalHeader">
+                    <h3>{{ $t('tasks.createTitle') }}</h3>
+                    <button class="closeBtn" @click="closeModal">&times;</button>
                 </div>
+                
+                <div class="modalBody">
+                    <!-- Title -->
+                    <div class="formGroup">
+                        <label>{{ $t('tasks.taskTitle') }} *</label>
+                        <input 
+                            v-model="title" 
+                            type="text" 
+                            :placeholder="$t('tasks.placeholderTitle')"
+                            autofocus
+                        >
+                    </div>
 
-                <!-- Description -->
-                <div class="formGroup">
-                    <label>Description</label>
-                    <textarea 
-                        v-model="description" 
-                        rows="3" 
-                        placeholder="Add more details..."
-                    ></textarea>
-                </div>
+                    <!-- Description -->
+                    <div class="formGroup">
+                        <label>{{ $t('tasks.description') }}</label>
+                        <textarea 
+                            v-model="description" 
+                            rows="3" 
+                            :placeholder="$t('tasks.placeholderDesc')"
+                        ></textarea>
+                    </div>
 
-                <div class="row">
                     <!-- Priority -->
                     <div class="formGroup">
-                        <label>Priority</label>
+                        <label>{{ $t('tasks.priority') }}</label>
                         <select v-model="priority">
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
-                            <option value="urgent">Urgent</option>
+                            <option value="low">{{ $t('tasks.priorities.low') }}</option>
+                            <option value="medium">{{ $t('tasks.priorities.medium') }}</option>
+                            <option value="high">{{ $t('tasks.priorities.high') }}</option>
+                            <option value="urgent">{{ $t('tasks.priorities.urgent') }}</option>
                         </select>
                     </div>
 
-                    <!-- Start Date -->
-                    <div class="formGroup">
-                        <label>Start Date</label>
-                        <input 
-                            v-model="startDate" 
-                            type="date" 
-                        >
+                    <div class="row">
+                        <!-- Start Date -->
+                        <div class="formGroup">
+                            <label>{{ $t('tasks.startDate') }}</label>
+                            <CustomDatePicker 
+                                v-model="startDate" 
+                                :placeholder="$t('tasks.startDate')"
+                            />
+                        </div>
+
+                        <!-- Due Date -->
+                        <div class="formGroup">
+                            <label>{{ $t('tasks.dueDate') }}</label>
+                            <CustomDatePicker 
+                                v-model="dueDate" 
+                                :placeholder="$t('tasks.dueDate')"
+                                :min="minDate"
+                            />
+                        </div>
                     </div>
 
-                    <!-- Due Date -->
+                    <!-- NEW: Assign To (Multiple) -->
                     <div class="formGroup">
-                        <label>Due Date</label>
-                        <input 
-                            v-model="dueDate" 
-                            type="date" 
-                            :min="minDate"
-                        >
-                    </div>
-                </div>
-
-                <!-- NEW: Assign To (Multiple) -->
-                <div class="formGroup">
-                    <label>Assign To</label>
-                    <div class="multi-select-container" :class="{ disabled: loadingMembers }" @click.stop>
-                        <!-- Selected Chips -->
-                        <div class="chips-area">
-                            <div v-for="user in selectedAssignees" :key="user.id" class="user-chip">
-                                <img 
-                                    v-if="user.user_detail.profile_picture" 
-                                    :src="user.user_detail.profile_picture.startsWith('http') ? user.user_detail.profile_picture : 'http://127.0.0.1:8000' + user.user_detail.profile_picture" 
-                                    class="chip-avatar"
-                                >
-                                <div v-else class="chip-avatar-placeholder">
-                                    {{ (user.user_detail.username?.[0] || '?').toUpperCase() }}
+                        <label>{{ $t('tasks.assignTo') }}</label>
+                        <div class="multi-select-container" :class="{ disabled: loadingMembers }" @click.stop>
+                            <!-- Selected Chips -->
+                            <div class="chips-area">
+                                <div v-for="user in selectedAssignees" :key="user.id" class="user-chip">
+                                    <img 
+                                        v-if="user.user_detail.profile_picture" 
+                                        :src="user.user_detail.profile_picture.startsWith('http') ? user.user_detail.profile_picture : 'http://127.0.0.1:8000' + user.user_detail.profile_picture" 
+                                        class="chip-avatar"
+                                    >
+                                    <div v-else class="chip-avatar-placeholder">
+                                        {{ (user.user_detail.username?.[0] || '?').toUpperCase() }}
+                                    </div>
+                                    <span>{{ user.user_detail.username }}</span>
+                                    <button class="chip-remove" @click.stop="removeAssignee(user.id)">&times;</button>
                                 </div>
-                                <span>{{ user.user_detail.username }}</span>
-                                <button class="chip-remove" @click.stop="removeAssignee(user.id)">&times;</button>
+                                
+                                <!-- Search Input -->
+                                <input 
+                                    type="text" 
+                                    v-model="assigneeSearch" 
+                                    :placeholder="$t('tasks.searchMembers')" 
+                                    class="assign-input"
+                                    @focus="showAssignDropdown = true"
+                                    :disabled="loadingMembers"
+                                >
                             </div>
                             
-                            <!-- Search Input -->
-                            <input 
-                                type="text" 
-                                v-model="assigneeSearch" 
-                                placeholder="Search members..." 
-                                class="assign-input"
-                                @focus="showAssignDropdown = true"
-                                :disabled="loadingMembers"
-                            >
-                        </div>
-                        
-                        <!-- Dropdown Options -->
-                        <div v-if="showAssignDropdown && filteredMembers.length > 0" class="assign-dropdown" @click.stop>
-                            <div 
-                                v-for="member in filteredMembers" 
-                                :key="member.id" 
-                                class="assign-option"
-                                @click="selectAssignee(member)"
-                            >
-                                <img 
-                                    v-if="member.user_detail.profile_picture" 
-                                    :src="member.user_detail.profile_picture.startsWith('http') ? member.user_detail.profile_picture : 'http://127.0.0.1:8000' + member.user_detail.profile_picture" 
-                                    class="option-avatar"
+                            <!-- Dropdown Options -->
+                            <div v-if="showAssignDropdown && filteredMembers.length > 0" class="assign-dropdown" @click.stop>
+                                <div 
+                                    v-for="member in filteredMembers" 
+                                    :key="member.id" 
+                                    class="assign-option"
+                                    @click="selectAssignee(member)"
                                 >
-                                <div v-else class="option-avatar-placeholder">
-                                    {{ (member.user_detail.username?.[0] || '?').toUpperCase() }}
+                                    <img 
+                                        v-if="member.user_detail.profile_picture" 
+                                        :src="member.user_detail.profile_picture.startsWith('http') ? member.user_detail.profile_picture : 'http://127.0.0.1:8000' + member.user_detail.profile_picture" 
+                                        class="option-avatar"
+                                    >
+                                    <div v-else class="option-avatar-placeholder">
+                                        {{ (member.user_detail.username?.[0] || '?').toUpperCase() }}
+                                    </div>
+                                    <span class="option-name">{{ member.user_detail.username }}</span>
+                                    <span class="option-role">{{ $t('groups.roles.' + member.role.toLowerCase()) }}</span>
                                 </div>
-                                <span class="option-name">{{ member.user_detail.username }}</span>
-                                <span class="option-role">{{ member.role }}</span>
+                            </div>
+                            <div v-if="showAssignDropdown && filteredMembers.length === 0 && assigneeSearch" class="assign-dropdown">
+                                 <div class="no-results">{{ $t('tasks.noMembers') }}</div>
                             </div>
                         </div>
-                        <div v-if="showAssignDropdown && filteredMembers.length === 0 && assigneeSearch" class="assign-dropdown">
-                             <div class="no-results">No members found</div>
+                    </div>
+
+                    <!-- NEW: Cover Image -->
+                    <div class="formGroup">
+                        <div class="label-row">
+                            <label>{{ $t('tasks.coverImage') }}</label>
+                            <div class="toggle-switch">
+                                <span :class="{ active: imageMode === 'upload' }" @click="imageMode = 'upload'">{{ $t('auth.upload') }}</span>
+                                <span :class="{ active: imageMode === 'url' }" @click="imageMode = 'url'">{{ $t('auth.url') }}</span>
+                            </div>
+                        </div>
+
+                        <div v-if="imageMode === 'url'">
+                            <input type="text" v-model="imageUrl" :placeholder="$t('auth.imageUrl')" class="url-input">
+                        </div>
+                        
+                        <div v-else>
+                            <div class="file-upload-wrapper">
+                                <label for="cover-upload" class="file-label">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                    {{ imageFile ? imageFile.name : $t('tasks.uploadFile') }}
+                                </label>
+                                <input id="cover-upload" type="file" @change="handleFileChange" accept="image/*" style="display: none;">
+                            </div>
                         </div>
                     </div>
+
+                    <div v-if="error" class="errorMessage">{{ error }}</div>
                 </div>
 
-                <!-- NEW: Cover Image -->
-                <div class="formGroup">
-                    <div class="label-row">
-                        <label>Cover Image</label>
-                        <div class="toggle-switch">
-                            <span :class="{ active: imageMode === 'upload' }" @click="imageMode = 'upload'">Upload</span>
-                            <span :class="{ active: imageMode === 'url' }" @click="imageMode = 'url'">URL</span>
-                        </div>
-                    </div>
-
-                    <div v-if="imageMode === 'url'">
-                        <input type="text" v-model="imageUrl" placeholder="Image URL (http://...)" class="url-input">
-                    </div>
-                    
-                    <div v-else>
-                        <div class="file-upload-wrapper">
-                            <label for="cover-upload" class="file-label">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                                {{ imageFile ? imageFile.name : 'Upload File' }}
-                            </label>
-                            <input id="cover-upload" type="file" @change="handleFileChange" accept="image/*" style="display: none;">
-                        </div>
-                    </div>
+                <div class="modalFooter">
+                    <button class="btnCancel" @click="closeModal" :disabled="isSubmitting">{{ $t('tasks.cancelBtn') }}</button>
+                    <button class="btnCreate" @click="createTask" :disabled="isSubmitting">
+                        {{ isSubmitting ? $t('tasks.creating') : $t('tasks.createBtn') }}
+                    </button>
                 </div>
-
-                <div v-if="error" class="errorMessage">{{ error }}</div>
-            </div>
-
-            <div class="modalFooter">
-                <button class="btnCancel" @click="closeModal" :disabled="isSubmitting">Cancel</button>
-                <button class="btnCreate" @click="createTask" :disabled="isSubmitting">
-                    {{ isSubmitting ? 'Creating...' : 'Create Task' }}
-                </button>
             </div>
         </div>
-    </div>
+    </Teleport>
 </template>
 
 <style scoped>
@@ -359,7 +369,7 @@ const isSubmitting = ref(false);
     width: 100vw; height: 100vh;
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(5px);
-    z-index: 2000;
+    z-index: 2100; /* Increased to be above NavBar (2000) */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -370,12 +380,13 @@ const isSubmitting = ref(false);
     background: var(--c-surface);
     width: 90%;
     max-width: 500px;
+    max-height: 90vh; /* Ensure it fits on mobile screens */
     border-radius: 16px;
     border: 1px solid var(--border-color);
     box-shadow: 0 20px 50px rgba(0,0,0,0.5);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow: hidden; /* Hide overflow of the container, let body scroll */
     animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -385,6 +396,7 @@ const isSubmitting = ref(false);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0; /* Header shouldn't shrink */
 }
 
 .modalHeader h3 {
@@ -409,6 +421,8 @@ const isSubmitting = ref(false);
     display: flex;
     flex-direction: column;
     gap: 20px;
+    overflow-y: auto; /* Enable scrolling for the body */
+    flex: 1; /* Take remaining space */
 }
 
 .formGroup {

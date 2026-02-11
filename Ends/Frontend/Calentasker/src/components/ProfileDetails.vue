@@ -1,8 +1,10 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
+import { useI18n } from 'vue-i18n';
 import AlertModal from './AlertModal.vue';
 
+const { t } = useI18n();
 const userData = ref({});
 const editableUsername = ref('');
 const loading = ref(true);
@@ -29,8 +31,16 @@ const alertConfig = ref({
 
 const closeAlert = () => { isAlertOpen.value = false; };
 
-const showAlert = ({ title, message, type = 'info', confirmText = 'Confirm', onConfirm }) => {
-    alertConfig.value = { title, message, type, confirmText, onConfirm };
+const showAlert = ({ title, message, type = 'info', confirmText, onConfirm }) => {
+    // If confirmText is not provided, we let AlertModal handle it or set a default via t() 
+    // But since we pass it to config, let's explicitly set it if missing
+    alertConfig.value = { 
+        title, 
+        message, 
+        type, 
+        confirmText: confirmText || t('common.confirm'), 
+        onConfirm 
+    };
     isAlertOpen.value = true;
 };
 
@@ -50,7 +60,7 @@ const fetchUserProfile = async () => {
         editableUsername.value = userData.value.username || '';
     } catch (err) {
         console.error(err);
-        error.value = "Failed to load user data.";
+        error.value = t('profile.loadError');
     } finally {
         loading.value = false;
     }
@@ -71,7 +81,7 @@ const saveUsername = async () => {
         
         userData.value = response.data;
         editableUsername.value = userData.value.username || '';
-        saveSuccess.value = 'Username updated successfully!';
+        saveSuccess.value = t('profile.updateUsernameSuccess');
         isEditing.value = false;
         
         // Hide success message after 3 seconds
@@ -84,7 +94,7 @@ const saveUsername = async () => {
         if (err.response && err.response.data && err.response.data.username) {
             saveError.value = err.response.data.username[0];
         } else {
-            saveError.value = "Failed to update username.";
+            saveError.value = t('profile.updateUsernameError');
         }
     }
 };
@@ -114,7 +124,7 @@ const handleFileChange = async (event) => {
         userData.value = response.data;
     } catch (e) {
         console.error("Failed to upload image", e);
-        showAlert({ title: 'Error', message: "Failed to upload profile picture.", type: 'danger', confirmText: 'OK', onConfirm: () => {} });
+        showAlert({ title: t('auth.errorTitle'), message: t('profile.uploadError'), type: 'danger', confirmText: t('common.ok'), onConfirm: () => {} });
     }
 };
 
@@ -122,7 +132,7 @@ const handleFileChange = async (event) => {
 
 const updatePassword = async () => {
     if (newPassword.value !== confirmPassword.value) {
-        pwError.value = "Passwords do not match.";
+        pwError.value = t('profile.pwMismatch');
         return;
     }
     if (!newPassword.value) return;
@@ -135,13 +145,13 @@ const updatePassword = async () => {
         await axios.patch(`http://127.0.0.1:8000/api/users/${userId}/`, {
             password: newPassword.value
         });
-        pwSuccess.value = "Password changed successfully!";
+        pwSuccess.value = t('profile.pwSuccess');
         newPassword.value = '';
         confirmPassword.value = '';
         setTimeout(() => pwSuccess.value = '', 3000);
     } catch (e) {
         console.error(e);
-        pwError.value = "Failed to update password.";
+        pwError.value = t('profile.pwError');
     }
 };
 
@@ -164,23 +174,23 @@ onMounted(() => {
                         <input type="file" ref="fileInput" @change="handleFileChange" accept="image/*" style="display: none;">
                     </div>
                     <div>
-                        <h2 class="sectionTitle">Profile Details</h2>
-                        <p class="sectionSubtitle">Manage your personal account information</p>
+                        <h2 class="sectionTitle">{{ $t('profile.title') }}</h2>
+                        <p class="sectionSubtitle">{{ $t('profile.subtitle') }}</p>
                     </div>
                 </div>
             </div>
             
             <div class="divider"></div>
             
-            <div v-if="loading" class="statusMsg">Loading user data...</div>
+            <div v-if="loading" class="statusMsg">{{ $t('profile.loading') }}</div>
             <div v-else-if="error" class="statusMsg error">{{ error }}</div>
             
             <div v-else class="formContainer">
                 <!-- Username Field (Editable) -->
                 <div class="infoGroup">
-                    <label>Username (Optional)</label>
+                    <label>{{ $t('profile.username') }}</label>
                     <div v-if="!isEditing" class="valueFieldWrapper">
-                        <div class="valueField">{{ userData.username || 'Not set (using fallback name)' }}</div>
+                        <div class="valueField">{{ userData.username || $t('profile.notSet') }}</div>
                         <button class="editBtn" @click="isEditing = true">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
@@ -189,36 +199,36 @@ onMounted(() => {
                         <input 
                             v-model="editableUsername" 
                             type="text" 
-                            placeholder="Enter username" 
+                            :placeholder="$t('profile.enterUsername')" 
                             class="editInput"
                         >
                         <div class="editActions">
-                            <button class="saveBtn" @click="saveUsername">Save</button>
-                            <button class="cancelBtn" @click="cancelEdit">Cancel</button>
+                            <button class="saveBtn" @click="saveUsername">{{ $t('profile.save') }}</button>
+                            <button class="cancelBtn" @click="cancelEdit">{{ $t('profile.cancel') }}</button>
                         </div>
                     </div>
                     <p v-if="saveError" class="errorMessage">{{ saveError }}</p>
                     <p v-if="saveSuccess" class="successMessage">{{ saveSuccess }}</p>
-                    <small class="helpText" v-if="isEditing">Leave empty to use First Name + Last Name as your display name.</small>
+                    <small class="helpText" v-if="isEditing">{{ $t('profile.leaveEmpty') }}</small>
                 </div>
                 
                 <div class="infoGroup">
-                    <label>Display Name Preview</label>
+                    <label>{{ $t('profile.displayName') }}</label>
                     <div class="valueField dim">{{ userData.display_username }}</div>
                 </div>
 
                 <div class="infoGroup">
-                    <label>Email</label>
+                    <label>{{ $t('profile.email') }}</label>
                     <div class="valueField">{{ userData.email }}</div>
                 </div>
                 
                 <div class="row">
                     <div class="col-md-6 infoGroup">
-                        <label>First Name</label>
+                        <label>{{ $t('profile.firstName') }}</label>
                         <div class="valueField">{{ userData.first_name }}</div>
                     </div>
                     <div class="col-md-6 infoGroup">
-                        <label>Last Name</label>
+                        <label>{{ $t('profile.lastName') }}</label>
                         <div class="valueField">{{ userData.last_name }}</div>
                     </div>
                 </div>
@@ -227,17 +237,17 @@ onMounted(() => {
 
                 <!-- Password Section -->
                 <div class="infoGroup">
-                    <label>Change Password</label>
+                    <label>{{ $t('profile.changePassword') }}</label>
                     <div class="row g-2">
                         <div class="col-md-6">
-                            <input type="password" v-model="newPassword" placeholder="New Password" class="valueField">
+                            <input type="password" v-model="newPassword" :placeholder="$t('profile.newPassword')" class="valueField">
                         </div>
                         <div class="col-md-6">
-                            <input type="password" v-model="confirmPassword" placeholder="Confirm Password" class="valueField">
+                            <input type="password" v-model="confirmPassword" :placeholder="$t('profile.confirmPassword')" class="valueField">
                         </div>
                     </div>
                     <div class="mt-3">
-                         <button class="saveBtn" @click="updatePassword" :disabled="!newPassword">Update Password</button>
+                         <button class="saveBtn" @click="updatePassword" :disabled="!newPassword">{{ $t('profile.updatePassword') }}</button>
                     </div>
                     <p v-if="pwError" class="errorMessage">{{ pwError }}</p>
                     <p v-if="pwSuccess" class="successMessage">{{ pwSuccess }}</p>
