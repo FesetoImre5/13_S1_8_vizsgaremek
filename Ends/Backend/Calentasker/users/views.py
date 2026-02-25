@@ -107,3 +107,12 @@ class UserViewSet(viewsets.ModelViewSet):
         if instance != request.user:
             return Response({"detail": "You can only edit your own profile."}, status=status.HTTP_403_FORBIDDEN)
         return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance != request.user:
+            return Response({"detail": "You can only delete your own profile."}, status=status.HTTP_403_FORBIDDEN)
+        
+        instance.is_active = False
+        instance.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)

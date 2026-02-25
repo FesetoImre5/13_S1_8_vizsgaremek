@@ -99,6 +99,18 @@ class CalentaskerAPITests(APITestCase):
         self.assertEqual(res_detail.data['id'], self.user2.id)
         self.assertEqual(res_detail.data['username'], self.user2.username)
 
+    def test_user_soft_deletion(self):
+        """Test that deleting a user marks them as inactive"""
+        self.client.force_authenticate(user=self.user2)
+        
+        # We delete user2 to test soft deletion
+        res = self.client.delete(f"{self.users_url}{self.user2.id}/")
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+
+        # Retrieve from DB to check soft delete
+        self.user2.refresh_from_db()
+        self.assertFalse(self.user2.is_active)
+
     def test_group_creation(self):
         """Test group creation automatically adds creator as leader"""
         self.client.force_authenticate(user=self.user1)
