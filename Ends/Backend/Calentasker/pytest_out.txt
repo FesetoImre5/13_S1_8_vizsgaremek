@@ -1,0 +1,23 @@
+Creating test database for alias 'default'...
+
+.F.....
+======================================================================
+FAIL: test_group_task_creation (test_api.CalentaskerAPITests.test_group_task_creation)
+Test creating a group task
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\FesetoImre\Documents\GitHub\13_S1_8_vizsgaremek\Ends\Backend\Calentasker\test_api.py", line 158, in test_group_task_creation
+    self.assertEqual(assigned_count, 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 != 1
+
+----------------------------------------------------------------------
+Ran 7 tests in 6.563s
+
+FAILED (failures=1)
+Destroying test database for alias 'default'...
+
+
+---
+Found 7 test(s).
+System check identified no issues (0 silenced).
