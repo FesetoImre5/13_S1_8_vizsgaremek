@@ -752,10 +752,12 @@ onMounted(() => {
     flex-direction: column;
     align-items: center;
     z-index: 100;
+    overflow: hidden;
 }
 
 .sidebarScroll {
     width: 100%;
+    flex-grow: 1;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
