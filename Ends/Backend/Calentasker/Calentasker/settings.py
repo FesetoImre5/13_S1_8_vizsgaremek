@@ -198,3 +198,6 @@ REST_FRAMEWORK = {
     ],
 }
 
+TEST_RUNNER = 'Calentasker.test_runner.JSONDiscoverRunner'
+
+TEST_RUNNER = 'Calentasker.test_runner.JSONDiscoverRunner'

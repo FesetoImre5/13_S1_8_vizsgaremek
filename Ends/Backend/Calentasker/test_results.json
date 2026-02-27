@@ -1,0 +1,810 @@
+{
+    "testsRun": 30,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "results": [
+        {
+            "test": "tasks.tests_editing.TaskEditingTest.test_update_task_clear_dates",
+            "status": "success",
+            "message": {
+                "id": 1,
+                "title": "Old Title",
+                "description": "Old Desc",
+                "priority": "low",
+                "status": "todo",
+                "start_date": null,
+                "due_date": null,
+                "completed_at": null,
+                "created_at": "2026-02-27T08:01:38.897556Z",
+                "updated_at": "2026-02-27T08:01:38.905406Z",
+                "active": true,
+                "group_detail": null,
+                "created_by": {
+                    "id": 1,
+                    "username": "testuser",
+                    "display_username": "testuser",
+                    "profile_picture": null,
+                    "first_name": "",
+                    "last_name": "",
+                    "email": "",
+                    "password": "pbkdf2_sha256$1200000$i0p4hJ46xST9UHpURI4Cd9$UdV8kjWb0FyxhsLdjyTFH1L5zUa3mOO8mW8HYecypms="
+                },
+                "assigned_to": null,
+                "assignments": [],
+                "comments": [],
+                "attachments": [],
+                "imageUrl": null,
+                "image": null
+            }
+        },
+        {
+            "test": "tasks.tests_editing.TaskEditingTest.test_update_task_details",
+            "status": "success",
+            "message": {
+                "id": 1,
+                "title": "New Title",
+                "description": "New Desc",
+                "priority": "high",
+                "status": "todo",
+                "start_date": "2026-02-27",
+                "due_date": "2026-03-04",
+                "completed_at": null,
+                "created_at": "2026-02-27T08:01:39.660475Z",
+                "updated_at": "2026-02-27T08:01:39.663714Z",
+                "active": true,
+                "group_detail": null,
+                "created_by": {
+                    "id": 1,
+                    "username": "testuser",
+                    "display_username": "testuser",
+                    "profile_picture": null,
+                    "first_name": "",
+                    "last_name": "",
+                    "email": "",
+                    "password": "pbkdf2_sha256$1200000$oKK03y5mgSoZPbNzHUHl2M$BM7rE4T6NeIyEheiwUKKeG9YeX0TPB++5SDTdkLTkQA="
+                },
+                "assigned_to": null,
+                "assignments": [],
+                "comments": [],
+                "attachments": [],
+                "imageUrl": null,
+                "image": null
+            }
+        },
+        {
+            "test": "tasks.tests_editing.TaskEditingTest.test_update_task_partial",
+            "status": "success",
+            "message": {
+                "id": 1,
+                "title": "Only Title Changed",
+                "description": "Old Desc",
+                "priority": "low",
+                "status": "todo",
+                "start_date": null,
+                "due_date": null,
+                "completed_at": null,
+                "created_at": "2026-02-27T08:01:40.417890Z",
+                "updated_at": "2026-02-27T08:01:40.420730Z",
+                "active": true,
+                "group_detail": null,
+                "created_by": {
+                    "id": 1,
+                    "username": "testuser",
+                    "display_username": "testuser",
+                    "profile_picture": null,
+                    "first_name": "",
+                    "last_name": "",
+                    "email": "",
+                    "password": "pbkdf2_sha256$1200000$LVgKIoFpqJZQW2zabcJIec$bddyGsUuGhElC6z5JR6gBjzqqxOeAacvJPT7MCUK4Q8="
+                },
+                "assigned_to": null,
+                "assignments": [],
+                "comments": [],
+                "attachments": [],
+                "imageUrl": null,
+                "image": null
+            }
+        },
+        {
+            "test": "test_api.CalentaskerAPITests.test_filter_tasks",
+            "status": "success",
+            "message": [
+                [
+                    {
+                        "id": 1,
+                        "title": "T1",
+                        "description": "",
+                        "priority": "low",
+                        "status": "todo",
+                        "start_date": null,
+                        "due_date": null,
+                        "completed_at": null,
+                        "created_at": "2026-02-27T08:01:41.925226Z",
+                        "updated_at": "2026-02-27T08:01:41.925237Z",
+                        "active": true,
+                        "group_detail": null,
+                        "created_by": {
+                            "id": 1,
+                            "username": "user1",
+                            "display_username": "user1",
+                            "profile_picture": null,
+                            "first_name": "User",
+                            "last_name": "One",
+                            "email": "user1@example.com",
+                            "password": "pbkdf2_sha256$1200000$VT5fQ8jqULaKH5oq1I4n9i$L/2rcqtAdQaXrtXiHS3qsi7RixWQl1O/x645Lkou6w4="
+                        },
+                        "assigned_to": null,
+                        "assignments": [],
+                        "comments": [],
+                        "attachments": [],
+                        "imageUrl": null,
+                        "image": null
+                    }
+                ],
+                [
+                    {
+                        "id": 3,
+                        "title": "T3",
+                        "description": "",
+                        "priority": "low",
+                        "status": "done",
+                        "start_date": null,
+                        "due_date": null,
+                        "completed_at": "2026-02-27T08:01:41.925674Z",
+                        "created_at": "2026-02-27T08:01:41.925806Z",
+                        "updated_at": "2026-02-27T08:01:41.925813Z",
+                        "active": true,
+                        "group_detail": {
+                            "id": 1,
+                            "groupname": "Filter Group",
+                            "description": "",
+                            "created_by": {
+                                "id": 1,
+                                "username": "user1",
+                                "display_username": "user1",
+                                "profile_picture": null,
+                                "first_name": "User",
+                                "last_name": "One",
+                                "email": "user1@example.com",
+                                "password": "pbkdf2_sha256$1200000$VT5fQ8jqULaKH5oq1I4n9i$L/2rcqtAdQaXrtXiHS3qsi7RixWQl1O/x645Lkou6w4="
+                            },
+                            "created_at": "2026-02-27T08:01:41.924604Z",
+                            "active": true,
+                            "imageUrl": null,
+                            "image": null,
+                            "parent_group": null
+                        },
+                        "created_by": {
+                            "id": 1,
+                            "username": "user1",
+                            "display_username": "user1",
+                            "profile_picture": null,
+                            "first_name": "User",
+                            "last_name": "One",
+                            "email": "user1@example.com",
+                            "password": "pbkdf2_sha256$1200000$VT5fQ8jqULaKH5oq1I4n9i$L/2rcqtAdQaXrtXiHS3qsi7RixWQl1O/x645Lkou6w4="
+                        },
+                        "assigned_to": null,
+                        "assignments": [],
+                        "comments": [],
+                        "attachments": [],
+                        "imageUrl": null,
+                        "image": null
+                    }
+                ],
+                [
+                    {
+                        "id": 1,
+                        "title": "T1",
+                        "description": "",
+                        "priority": "low",
+                        "status": "todo",
+                        "start_date": null,
+                        "due_date": null,
+                        "completed_at": null,
+                        "created_at": "2026-02-27T08:01:41.925226Z",
+                        "updated_at": "2026-02-27T08:01:41.925237Z",
+                        "active": true,
+                        "group_detail": null,
+                        "created_by": {
+                            "id": 1,
+                            "username": "user1",
+                            "display_username": "user1",
+                            "profile_picture": null,
+                            "first_name": "User",
+                            "last_name": "One",
+                            "email": "user1@example.com",
+                            "password": "pbkdf2_sha256$1200000$VT5fQ8jqULaKH5oq1I4n9i$L/2rcqtAdQaXrtXiHS3qsi7RixWQl1O/x645Lkou6w4="
+                        },
+                        "assigned_to": null,
+                        "assignments": [],
+                        "comments": [],
+                        "attachments": [],
+                        "imageUrl": null,
+                        "image": null
+                    },
+                    {
+                        "id": 2,
+                        "title": "T2",
+                        "description": "",
+                        "priority": "low",
+                        "status": "in_progress",
+                        "start_date": null,
+                        "due_date": null,
+                        "completed_at": null,
+                        "created_at": "2026-02-27T08:01:41.925507Z",
+                        "updated_at": "2026-02-27T08:01:41.925518Z",
+                        "active": true,
+                        "group_detail": null,
+                        "created_by": {
+                            "id": 1,
+                            "username": "user1",
+                            "display_username": "user1",
+                            "profile_picture": null,
+                            "first_name": "User",
+                            "last_name": "One",
+                            "email": "user1@example.com",
+                            "password": "pbkdf2_sha256$1200000$VT5fQ8jqULaKH5oq1I4n9i$L/2rcqtAdQaXrtXiHS3qsi7RixWQl1O/x645Lkou6w4="
+                        },
+                        "assigned_to": null,
+                        "assignments": [],
+                        "comments": [],
+                        "attachments": [],
+                        "imageUrl": null,
+                        "image": null
+                    }
+                ]
+            ]
+        },
+        {
+            "test": "test_api.CalentaskerAPITests.test_group_creation",
+            "status": "success",
+            "message": {
+                "id": 1,
+                "groupname": "Test Project Group",
+                "description": "A descriptive group",
+                "created_by": {
+                    "id": 1,
+                    "username": "user1",
+                    "display_username": "user1",
+                    "profile_picture": null,
+                    "first_name": "User",
+                    "last_name": "One",
+                    "email": "user1@example.com",
+                    "password": "pbkdf2_sha256$1200000$P9K7hmtAhO7GtKD2Y5WqEJ$pVg5WHSVTks+bYo8sS0gc5hfCmw5Vot4I/O/rNezmAo="
+                },
+                "created_at": "2026-02-27T08:01:43.453394Z",
+                "active": true,
+                "imageUrl": null,
+                "image": null,
+                "parent_group": null
+            }
+        },
+        {
+            "test": "test_api.CalentaskerAPITests.test_group_soft_deletion",
+            "status": "success",
+            "message": "API returned 204 No Content (Successful empty response)."
+        },
+        {
+            "test": "test_api.CalentaskerAPITests.test_group_task_creation",
+            "status": "success",
+            "message": {
+                "id": 1,
+                "title": "Finish Backend Tests",
+                "description": "Write comprehensive unit tests",
+                "priority": "high",
+                "status": "todo",
+                "start_date": null,
+                "due_date": null,
+                "completed_at": null,
+                "created_at": "2026-02-27T08:01:46.460669Z",
+                "updated_at": "2026-02-27T08:01:46.460681Z",
+                "active": true,
+                "group_detail": {
+                    "id": 1,
+                    "groupname": "Work",
+                    "description": "Work tasks",
+                    "created_by": {
+                        "id": 1,
+                        "username": "user1",
+                        "display_username": "user1",
+                        "profile_picture": null,
+                        "first_name": "User",
+                        "last_name": "One",
+                        "email": "user1@example.com",
+                        "password": "pbkdf2_sha256$1200000$PguJCEWXTMbtyuatJXg2M1$WQVQUlZwzP1Wf+y6kfzJmbHkpmiPmlHvZLQosMgWMes="
+                    },
+                    "created_at": "2026-02-27T08:01:46.456791Z",
+                    "active": true,
+                    "imageUrl": null,
+                    "image": null,
+                    "parent_group": null
+                },
+                "created_by": {
+                    "id": 1,
+                    "username": "user1",
+                    "display_username": "user1",
+                    "profile_picture": null,
+                    "first_name": "User",
+                    "last_name": "One",
+                    "email": "user1@example.com",
+                    "password": "pbkdf2_sha256$1200000$PguJCEWXTMbtyuatJXg2M1$WQVQUlZwzP1Wf+y6kfzJmbHkpmiPmlHvZLQosMgWMes="
+                },
+                "assigned_to": {
+                    "id": 1,
+                    "username": "user1",
+                    "display_username": "user1",
+                    "profile_picture": null,
+                    "first_name": "User",
+                    "last_name": "One",
+                    "email": "user1@example.com",
+                    "password": "pbkdf2_sha256$1200000$PguJCEWXTMbtyuatJXg2M1$WQVQUlZwzP1Wf+y6kfzJmbHkpmiPmlHvZLQosMgWMes="
+                },
+                "assignments": [],
+                "comments": [],
+                "attachments": [],
+                "imageUrl": null,
+                "image": null
+            }
+        },
+        {
+            "test": "test_api.CalentaskerAPITests.test_list_groups",
+            "status": "success",
+            "message": [
+                {
+                    "id": 1,
+                    "groupname": "Global Group 1",
+                    "description": "",
+                    "created_by": {
+                        "id": 1,
+                        "username": "user1",
+                        "display_username": "user1",
+                        "profile_picture": null,
+                        "first_name": "User",
+                        "last_name": "One",
+                        "email": "user1@example.com",
+                        "password": "pbkdf2_sha256$1200000$WpmcWhQFVBPKUX7z8HfMzO$CS20yzj3BNQ4hx3RlgKvnfpuEQDjVW/A0UViplNHhoQ="
+                    },
+                    "created_at": "2026-02-27T08:01:47.969112Z",
+                    "active": true,
+                    "imageUrl": null,
+                    "image": null,
+                    "parent_group": null
+                },
+                {
+                    "id": 2,
+                    "groupname": "Global Group 2",
+                    "description": "",
+                    "created_by": {
+                        "id": 1,
+                        "username": "user1",
+                        "display_username": "user1",
+                        "profile_picture": null,
+                        "first_name": "User",
+                        "last_name": "One",
+                        "email": "user1@example.com",
+                        "password": "pbkdf2_sha256$1200000$WpmcWhQFVBPKUX7z8HfMzO$CS20yzj3BNQ4hx3RlgKvnfpuEQDjVW/A0UViplNHhoQ="
+                    },
+                    "created_at": "2026-02-27T08:01:47.969335Z",
+                    "active": true,
+                    "imageUrl": null,
+                    "image": null,
+                    "parent_group": null
+                }
+            ]
+        },
+        {
+            "test": "test_api.CalentaskerAPITests.test_list_tasks",
+            "status": "success",
+            "message": [
+                {
+                    "id": 1,
+                    "title": "Task A",
+                    "description": "",
+                    "priority": "low",
+                    "status": "todo",
+                    "start_date": null,
+                    "due_date": null,
+                    "completed_at": null,
+                    "created_at": "2026-02-27T08:01:49.467091Z",
+                    "updated_at": "2026-02-27T08:01:49.467102Z",
+                    "active": true,
+                    "group_detail": null,
+                    "created_by": {
+                        "id": 1,
+                        "username": "user1",
+                        "display_username": "user1",
+                        "profile_picture": null,
+                        "first_name": "User",
+                        "last_name": "One",
+                        "email": "user1@example.com",
+                        "password": "pbkdf2_sha256$1200000$CzrqAZ5uHC52dEjntitXzr$Bv1GlI858SP3kp2po7nxfn0x1fJPGEWR7Fi84VeT1hQ="
+                    },
+                    "assigned_to": null,
+                    "assignments": [],
+                    "comments": [],
+                    "attachments": [],
+                    "imageUrl": null,
+                    "image": null
+                },
+                {
+                    "id": 2,
+                    "title": "Task B",
+                    "description": "",
+                    "priority": "low",
+                    "status": "in_progress",
+                    "start_date": null,
+                    "due_date": null,
+                    "completed_at": null,
+                    "created_at": "2026-02-27T08:01:49.467367Z",
+                    "updated_at": "2026-02-27T08:01:49.467378Z",
+                    "active": true,
+                    "group_detail": null,
+                    "created_by": {
+                        "id": 1,
+                        "username": "user1",
+                        "display_username": "user1",
+                        "profile_picture": null,
+                        "first_name": "User",
+                        "last_name": "One",
+                        "email": "user1@example.com",
+                        "password": "pbkdf2_sha256$1200000$CzrqAZ5uHC52dEjntitXzr$Bv1GlI858SP3kp2po7nxfn0x1fJPGEWR7Fi84VeT1hQ="
+                    },
+                    "assigned_to": null,
+                    "assignments": [],
+                    "comments": [],
+                    "attachments": [],
+                    "imageUrl": null,
+                    "image": null
+                }
+            ]
+        },
+        {
+            "test": "test_api.CalentaskerAPITests.test_list_users",
+            "status": "success",
+            "message": [
+                {
+                    "id": 1,
+                    "username": "user1",
+                    "display_username": "user1",
+                    "profile_picture": null,
+                    "first_name": "User",
+                    "last_name": "One",
+                    "email": "user1@example.com",
+                    "password": "pbkdf2_sha256$1200000$Tb4y1CQkoLHWkIVIGHCIjk$HRz2POm+IyX2yhELCuoZbmZjXviNKGWqGFBJ0gEH4KU="
+                },
+                {
+                    "id": 2,
+                    "username": "user2",
+                    "display_username": "user2",
+                    "profile_picture": null,
+                    "first_name": "User",
+                    "last_name": "Two",
+                    "email": "user2@example.com",
+                    "password": "pbkdf2_sha256$1200000$2kgC4RdyEP1cGoeYgGwRo1$oheElgiBs4aYo77Jelf4S/yKN2KsAe92CdsGzFLbqhE="
+                }
+            ]
+        },
+        {
+            "test": "test_api.CalentaskerAPITests.test_member_addition",
+            "status": "success",
+            "message": {
+                "id": 2,
+                "user_detail": {
+                    "id": 2,
+                    "username": "user2",
+                    "display_username": "user2",
+                    "profile_picture": null,
+                    "first_name": "User",
+                    "last_name": "Two",
+                    "email": "user2@example.com",
+                    "password": "pbkdf2_sha256$1200000$tsXMImZVm6mQKVNxbSEGeh$XatcLZDO5yQ1Xe+E4zjenppf92VMtyijnRgHNcRjD9k="
+                },
+                "group_detail": {
+                    "id": 1,
+                    "groupname": "Test Add Member Group",
+                    "description": "",
+                    "created_by": {
+                        "id": 1,
+                        "username": "user1",
+                        "display_username": "user1",
+                        "profile_picture": null,
+                        "first_name": "User",
+                        "last_name": "One",
+                        "email": "user1@example.com",
+                        "password": "pbkdf2_sha256$1200000$RSqrhWSDKlplJF6IllNME7$F6tfhWvZBHzMEj5xEE6JhA4VFwMwe+HQtZGft9H34XI="
+                    },
+                    "created_at": "2026-02-27T08:01:52.522308Z",
+                    "active": true,
+                    "imageUrl": null,
+                    "image": null,
+                    "parent_group": null
+                },
+                "role": "operator",
+                "joined_at": "2026-02-27T08:01:52.525643Z"
+            }
+        },
+        {
+            "test": "test_api.CalentaskerAPITests.test_personal_task_creation",
+            "status": "success",
+            "message": {
+                "id": 1,
+                "title": "Buy groceries",
+                "description": "Milk, Eggs, Bread",
+                "priority": "medium",
+                "status": "todo",
+                "start_date": null,
+                "due_date": null,
+                "completed_at": null,
+                "created_at": "2026-02-27T08:01:54.139829Z",
+                "updated_at": "2026-02-27T08:01:54.139861Z",
+                "active": true,
+                "group_detail": null,
+                "created_by": {
+                    "id": 1,
+                    "username": "user1",
+                    "display_username": "user1",
+                    "profile_picture": null,
+                    "first_name": "User",
+                    "last_name": "One",
+                    "email": "user1@example.com",
+                    "password": "pbkdf2_sha256$1200000$6TwDP6LIdNysffFjELoLM7$pbbC8FEOUnTNI94lcpEI6cZbOR0HKUDcLCWV6A5iccY="
+                },
+                "assigned_to": {
+                    "id": 1,
+                    "username": "user1",
+                    "display_username": "user1",
+                    "profile_picture": null,
+                    "first_name": "User",
+                    "last_name": "One",
+                    "email": "user1@example.com",
+                    "password": "pbkdf2_sha256$1200000$6TwDP6LIdNysffFjELoLM7$pbbC8FEOUnTNI94lcpEI6cZbOR0HKUDcLCWV6A5iccY="
+                },
+                "assignments": [],
+                "comments": [],
+                "attachments": [],
+                "imageUrl": null,
+                "image": null
+            }
+        },
+        {
+            "test": "test_api.CalentaskerAPITests.test_retrieve_group",
+            "status": "success",
+            "message": {
+                "id": 1,
+                "groupname": "Specific Group 1",
+                "description": "",
+                "created_by": {
+                    "id": 1,
+                    "username": "user1",
+                    "display_username": "user1",
+                    "profile_picture": null,
+                    "first_name": "User",
+                    "last_name": "One",
+                    "email": "user1@example.com",
+                    "password": "pbkdf2_sha256$1200000$FRyZq3axK3wOXVvE10hgHp$7iNyVGuijpbWU/9adO5n84ZLzfWvR9bII3IzTOs2kpU="
+                },
+                "created_at": "2026-02-27T08:01:55.689837Z",
+                "active": true,
+                "imageUrl": null,
+                "image": null,
+                "parent_group": null
+            }
+        },
+        {
+            "test": "test_api.CalentaskerAPITests.test_retrieve_task",
+            "status": "success",
+            "message": {
+                "id": 1,
+                "title": "Task A",
+                "description": "",
+                "priority": "low",
+                "status": "todo",
+                "start_date": null,
+                "due_date": null,
+                "completed_at": null,
+                "created_at": "2026-02-27T08:01:57.201119Z",
+                "updated_at": "2026-02-27T08:01:57.201130Z",
+                "active": true,
+                "group_detail": null,
+                "created_by": {
+                    "id": 1,
+                    "username": "user1",
+                    "display_username": "user1",
+                    "profile_picture": null,
+                    "first_name": "User",
+                    "last_name": "One",
+                    "email": "user1@example.com",
+                    "password": "pbkdf2_sha256$1200000$wFes7Frw9aqwnyogKpLo6Y$u+jklmxMedVczIitkVBC79UGmFanOeuKK7Z+TIv/vwg="
+                },
+                "assigned_to": null,
+                "assignments": [],
+                "comments": [],
+                "attachments": [],
+                "imageUrl": null,
+                "image": null
+            }
+        },
+        {
+            "test": "test_api.CalentaskerAPITests.test_retrieve_user",
+            "status": "success",
+            "message": {
+                "id": 2,
+                "username": "user2",
+                "display_username": "user2",
+                "profile_picture": null,
+                "profile_picture_url": null,
+                "first_name": "User",
+                "last_name": "Two",
+                "email": "user2@example.com",
+                "is_active": true,
+                "date_joined": "2026-02-27T08:01:58.711373Z"
+            }
+        },
+        {
+            "test": "test_api.CalentaskerAPITests.test_task_edit",
+            "status": "success",
+            "message": {
+                "id": 1,
+                "title": "Updated Title",
+                "description": "Initial Description",
+                "priority": "medium",
+                "status": "in_progress",
+                "start_date": null,
+                "due_date": null,
+                "completed_at": null,
+                "created_at": "2026-02-27T08:02:00.220113Z",
+                "updated_at": "2026-02-27T08:02:00.223050Z",
+                "active": true,
+                "group_detail": null,
+                "created_by": {
+                    "id": 1,
+                    "username": "user1",
+                    "display_username": "user1",
+                    "profile_picture": null,
+                    "first_name": "User",
+                    "last_name": "One",
+                    "email": "user1@example.com",
+                    "password": "pbkdf2_sha256$1200000$9hkqQWCbWscT7KYFvtrzpb$3263Eg5PsvJew4K3Pamam/p+w90F4eHTR6sswVmQWME="
+                },
+                "assigned_to": null,
+                "assignments": [],
+                "comments": [],
+                "attachments": [],
+                "imageUrl": null,
+                "image": null
+            }
+        },
+        {
+            "test": "test_api.CalentaskerAPITests.test_task_soft_deletion",
+            "status": "success",
+            "message": "API returned 204 No Content (Successful empty response)."
+        },
+        {
+            "test": "test_api.CalentaskerAPITests.test_user_activation",
+            "status": "success",
+            "message": {
+                "detail": "Account successfully activated."
+            }
+        },
+        {
+            "test": "test_api.CalentaskerAPITests.test_user_login",
+            "status": "success",
+            "message": {
+                "token": "be0c59309af70f5f1957d25a69da928b298538fa",
+                "user_id": 1,
+                "username": "user1",
+                "display_username": "user1"
+            }
+        },
+        {
+            "test": "test_api.CalentaskerAPITests.test_user_registration",
+            "status": "success",
+            "message": {
+                "id": 3,
+                "username": "newuser",
+                "display_username": "newuser",
+                "profile_picture": null,
+                "profile_picture_url": null,
+                "first_name": "New",
+                "last_name": "User",
+                "email": "newuser@example.com",
+                "is_active": false,
+                "date_joined": "2026-02-27T08:02:08.779449Z"
+            }
+        },
+        {
+            "test": "test_api.CalentaskerAPITests.test_user_soft_deletion",
+            "status": "success",
+            "message": "API returned 204 No Content (Successful empty response)."
+        },
+        {
+            "test": "users.tests.UserCreationTest.test_create_user_with_names_no_username",
+            "status": "success",
+            "message": "No API calls were made during this test (e.g. Model/Serializer unit test)."
+        },
+        {
+            "test": "users.tests.UserCreationTest.test_update_user_clearing_username",
+            "status": "success",
+            "message": "No API calls were made during this test (e.g. Model/Serializer unit test)."
+        },
+        {
+            "test": "users.tests.UserModelTest.test_display_username_fallback_email",
+            "status": "success",
+            "message": "No API calls were made during this test (e.g. Model/Serializer unit test)."
+        },
+        {
+            "test": "users.tests.UserModelTest.test_display_username_with_username",
+            "status": "success",
+            "message": "No API calls were made during this test (e.g. Model/Serializer unit test)."
+        },
+        {
+            "test": "users.tests.UserModelTest.test_display_username_without_username",
+            "status": "success",
+            "message": "No API calls were made during this test (e.g. Model/Serializer unit test)."
+        },
+        {
+            "test": "users.tests.UserSearchViewTest.test_search_email_exact",
+            "status": "success",
+            "message": [
+                {
+                    "id": 1,
+                    "email": "specific@example.com",
+                    "username": "user1",
+                    "display_username": "user1",
+                    "first_name": "",
+                    "last_name": "",
+                    "profile_picture": null
+                }
+            ]
+        },
+        {
+            "test": "users.tests.UserSearchViewTest.test_search_partial",
+            "status": "success",
+            "message": [
+                {
+                    "id": 1,
+                    "email": "specific@example.com",
+                    "username": "user1",
+                    "display_username": "user1",
+                    "first_name": "",
+                    "last_name": "",
+                    "profile_picture": null
+                },
+                {
+                    "id": 2,
+                    "email": "other@example.com",
+                    "username": "other",
+                    "display_username": "other",
+                    "first_name": "Specific",
+                    "last_name": "",
+                    "profile_picture": null
+                }
+            ]
+        },
+        {
+            "test": "users.tests.UserUpdateTest.test_update_other_fails",
+            "status": "success",
+            "message": {
+                "detail": "You can only edit your own profile."
+            }
+        },
+        {
+            "test": "users.tests.UserUpdateTest.test_update_self",
+            "status": "success",
+            "message": {
+                "id": 1,
+                "username": "me",
+                "display_username": "me",
+                "profile_picture": null,
+                "profile_picture_url": null,
+                "first_name": "NewName",
+                "last_name": "",
+                "email": "",
+                "is_active": true,
+                "date_joined": "2026-02-27T08:02:17.537188Z"
+            }
+        }
+    ]
+}
