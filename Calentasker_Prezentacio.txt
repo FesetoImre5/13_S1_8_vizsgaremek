@@ -1,0 +1,74 @@
+1. Címlap
+- Projekt neve: Calentasker
+- Készítették: Kapus Kevin Kamill és Fesető Imre
+[Kép javaslat: A Calentasker logója, vagy egy szép, letisztult kép a főoldalról bejelentkezés elött.]
+
+2. A probléma és a megoldás
+- Probléma: A feladatok kezelése gyakran átláthatatlan.
+- Probléma: Több különálló alkalmazásra van szükség.
+- Megoldás: Calentasker - központi platform a teendőkhöz.
+- Személyes és csoportos feladatok egy helyen.
+- Zökkenőmentes csoportos együttműködés.
+[Kép javaslat: Egy osztott képernyős grafika: bal oldalon káosz (sok ikon, letapadó cetli), jobb oldalon a Calentasker rendszerezett, tiszta felülete.]
+
+3. A program fő funkciói (1. rész)
+- Felhasználókezelés (regisztráció, bejelentkezés)
+- E-mail megerősítés rendszere
+- Profilkezelés
+- Személyes feladatok létrehozása
+- Feladatok folyamatának (státuszának) követése
+[Kép javaslat: Képernyőkép a bejelentkezési vagy a regisztrációs űrlapról, esetleg a felhasználó profil oldaláról.]
+
+4. A program fő funkciói (2. rész)
+- Csoportok létrehozása és kezelése
+- Tagok és jogosultságok adminisztrálása
+- Csoportos feladatok kiosztása
+- Fájlok és mellékletek csatolása a feladatokhoz
+- Keresés és szűrés a teendők között
+[Kép javaslat: Képernyőkép a csoportkezelő nézetről, ahol látszanak a csoporttagok és a kiosztott feladatok listája.]
+
+5. Backend Technológiák
+- Python & Django 5.2
+- Django REST Framework (DRF)
+- Token-alapú hitelesítés és CORS
+- SMTP szolgáltatás e-mail megerősítéshez
+- SQLite3 adatbáziskezelő
+[Kép javaslat: A használt technológiák logói (Python, Django, SQLite) szépen elrendezve, esetleg egy rövid kódrészlet a háttérben.]
+
+6. Modellek és Adatbázis
+- Users (Felhasználók)
+- Groups (Csoportok)
+- Tasks (Feladatok)
+- Attachments (Mellékletek)
+- Django ORM (Objektum-relációs leképzés)
+- Idegen kulcsok és Many-To-Many kapcsolatok
+[Kép javaslat: Egy adatbázis sémadiagram (ER diagram), ami vizuálisan megmutatja a főbb táblákat és a köztük lévő kapcsolatokat.]
+
+7. API és Végpontok
+- RESTful HTTP metódusok (GET, POST, PUT, DELETE)
+- DRF Serializerek használata a JSON formátumhoz
+- Biztonságos adatcsere a frontend és backend között
+[Kép javaslat: Swagger UI vagy Postman képernyőkép, ami egy sikeres API hívást és annak JSON válaszát mutatja.]
+
+8. Reszponzivitás és Frontend
+- Vue.js 3 (Vite alapokon)
+- Bootstrap 5 keretrendszer
+- "Minden eszközre optimalizálva" (Mobil, Tablet, PC)
+- Vue Router a navigációhoz
+- Axios az API hívásokhoz, Vue-i18n a lokalizációhoz
+[Kép javaslat: Ugyanaz a Calentasker oldal három különböző eszközön (mobil, tablet, laptop képernyőjén) egymás mellett bemutatva.]
+
+9. Fejlesztői és E2E (End-to-End) tesztelés
+- Backend tesztelés: Django beépített tesztjei (JSON Test Runner)
+- API végpontok automatikus ellenőrzése
+- E2E és UI tesztelés: Robot Framework
+- Böngészőautomatizálás Selenium segítségével
+- Funkciók teljeskörű, felhasználói szintű tesztelése
+[Kép javaslat: Terminálablak egy sikeres Robot Framework vagy Django tesztfutásról zöld "PASS" vagy "OK" felirattal.]
+
+10. Applikáció bemutatása (Live Demo)
+- A webalkalmazás élő bemutatása
+- Regisztráció folyamatának követése
+- Csoport létrehozása és kezelése
+- Feladat kiosztása és melléklet feltöltése
+[Kép javaslat: Nincs feltétlenül szükség képre a demó miatt, de opcionálisan "Live Demo" vagy "Köszönjük a figyelmet!" felirat rakható ide, a Calentasker logójával középen.]
