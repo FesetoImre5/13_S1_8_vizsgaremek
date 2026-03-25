@@ -66,7 +66,18 @@
 - Funkciók teljeskörű, felhasználói szintű tesztelése
 [Kép javaslat: Terminálablak egy sikeres Robot Framework vagy Django tesztfutásról zöld "PASS" vagy "OK" felirattal.]
 
-10. Applikáció bemutatása (Live Demo)
+10. Csapatmunka és kommunikáció
+- Közös kódolás és verziókövetés: GitHub
+- Folyamatos kapcsolattartás és egyeztetés: Discord
+[Kép javaslat: GitHub platform és a Discord logója egymás mellett.]
+
+11. Munkamegosztás
+- Kapus Kevin Kamill: [ide jöhetnek a specifikus feladatok, pl. Frontend, UI tesztek]
+- Fesető Imre: [ide jöhetnek a specifikus feladatok, pl. Backend, Adatbázis]
+- Közös feladatok terhelésének elosztása, egymás kódjának átnézése
+[Kép javaslat: Két fős csapat bemutatása felsorolással, vagy egy tortadiagram a munka eloszlásáról.]
+
+12. Applikáció bemutatása (Live Demo)
 - A webalkalmazás élő bemutatása
 - Regisztráció folyamatának követése
 - Csoport létrehozása és kezelése
