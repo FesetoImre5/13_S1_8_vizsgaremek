@@ -3,8 +3,10 @@ import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { useI18n } from 'vue-i18n';
 import AlertModal from './AlertModal.vue';
+import { useAuth } from '../composables/UseAuth';
 
 const { t } = useI18n();
+const { updateUser } = useAuth();
 const userData = ref({});
 const editableUsername = ref('');
 const loading = ref(true);
@@ -81,6 +83,7 @@ const saveUsername = async () => {
         
         userData.value = response.data;
         editableUsername.value = userData.value.username || '';
+        updateUser(userData.value);
         saveSuccess.value = t('profile.updateUsernameSuccess');
         isEditing.value = false;
         

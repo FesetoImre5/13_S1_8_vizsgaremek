@@ -245,6 +245,7 @@
         "descriptionPlaceholder": "Add meg a csoport leírását...",
         "addMembersOptional": "Tagok hozzáadása (opcionális)",
         "creating": "Létrehozás...",
+        "save": "Mentés",
         "saving": "Mentés...",
         "created": "Csoport sikeresen létrehozva!",
         "updated": "Csoport frissítve!"

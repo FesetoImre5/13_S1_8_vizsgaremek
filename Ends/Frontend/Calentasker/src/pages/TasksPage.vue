@@ -193,11 +193,7 @@ const fetchGroups = async () => {
             myRole: item.role // Add the role to the group object
         }));
 
-        // Logic to default to something if needed, but 'own' might be default if route says so
-        if (!route.query.group && groups.value.length > 0) {
-             // Maybe default to Own tasks? Or first group. Keeping first group for now.
-             handleGroupClick(groups.value[0].id);
-        }
+        // Logic to default to own if not set is now fully handled in watch()
     } catch (error) {
         console.error("Failed to load groups", error);
     }
@@ -514,8 +510,8 @@ onMounted(() => {
                             />
                         </div>
 
-                        <!-- Red Break Line (Only if Due Soon exists AND (Date not selected OR other tasks below exist)) -->
-                        <hr v-if="groupedTasks.dueSoon.length > 0 && (!selectedDate || (groupedTasks.upcoming.length > 0 || groupedTasks.noDueDate.length > 0 || groupedTasks.overdue.length > 0))" class="red-break">
+                        <!-- Red Break Line between Due Soon and anything else -->
+                        <hr v-if="groupedTasks.dueSoon.length > 0 && (groupedTasks.upcoming.length > 0 || groupedTasks.noDueDate.length > 0 || groupedTasks.overdue.length > 0 || (showCompleted && groupedTasks.completed.length > 0))" class="red-break">
 
                         <!-- 2. Upcoming (> 7 days) -->
                         <div v-if="groupedTasks.upcoming.length > 0">
@@ -594,7 +590,7 @@ onMounted(() => {
 
                         <!-- 5. Completed -->
                         <div v-if="showCompleted && groupedTasks.completed.length > 0">
-                            <hr class="divider">
+                            <hr v-if="groupedTasks.upcoming.length > 0 || groupedTasks.noDueDate.length > 0 || groupedTasks.overdue.length > 0" class="divider">
                             <h3 class="group-header text-muted">{{ $t('tasks.groups.completed') }}</h3>
                             <list-task 
                                 v-for="(task, index) in groupedTasks.completed"

@@ -35,7 +35,7 @@ const handleLogout = () => {
             <!-- GROUP 1 (LEFT): Logo + Tasks Button -->
             <div class="navLeft">
                 <div class="logo">
-                    <router-link to="/tasks">
+                    <router-link to="/tasks?group=own">
                         <img src="../assets/logo-with-text.svg" alt="Calentasker" class="logo-full">
                         <img src="../assets/logo.svg" alt="Calentasker" class="logo-icon">
                     </router-link>
@@ -55,8 +55,8 @@ const handleLogout = () => {
                 <button class="langBtn" @click="toggleLanguage">
                     <img 
                         :src="locale === 'en' 
-                            ? 'https://hatscripts.github.io/circle-flags/flags/hu.svg' 
-                            : 'https://hatscripts.github.io/circle-flags/flags/gb.svg'" 
+                            ? 'https://hatscripts.github.io/circle-flags/flags/gb.svg' 
+                            : 'https://hatscripts.github.io/circle-flags/flags/hu.svg'" 
                         alt="Switch Language"
                         class="flag-icon"
                     >
@@ -80,8 +80,8 @@ const handleLogout = () => {
                 <button class="mobileLangBtn" @click="toggleLanguage">
                     <img 
                         :src="locale === 'en' 
-                            ? 'https://hatscripts.github.io/circle-flags/flags/hu.svg' 
-                            : 'https://hatscripts.github.io/circle-flags/flags/gb.svg'" 
+                            ? 'https://hatscripts.github.io/circle-flags/flags/gb.svg' 
+                            : 'https://hatscripts.github.io/circle-flags/flags/hu.svg'" 
                         alt="Switch Language"
                         class="flag-icon"
                     >

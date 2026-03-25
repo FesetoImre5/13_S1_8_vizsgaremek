@@ -245,6 +245,7 @@
         "descriptionPlaceholder": "Enter group description...",
         "addMembersOptional": "Add Members (optional)",
         "creating": "Creating...",
+        "save": "Save Changes",
         "saving": "Saving...",
         "created": "Group created successfully!",
         "updated": "Group updated!"
