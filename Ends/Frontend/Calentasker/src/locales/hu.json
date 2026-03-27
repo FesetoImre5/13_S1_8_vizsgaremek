@@ -164,7 +164,14 @@
         "verificationFailed": "Sikertelen ellenőrzés. A link érvénytelen vagy lejárt.",
         "successTitle": "Siker!",
         "errorTitle": "Hiba",
-        "goToLogin": "Tovább a bejelentkezéshez"
+        "goToLogin": "Tovább a bejelentkezéshez",
+        "verifyAccountTitle": "Fiók hitelesítése",
+        "redirectingLogin": "A fiókod aktiválva lett! Átirányítás a bejelentkezéshez...",
+        "verifyInstructions": "Kérlek add meg az emailedet és a kapott 6 jegyű ellenőrző kódot.",
+        "verifyCodeLabel": "Ellenőrző kód",
+        "verifyBtn": "Kód ellenőrzése",
+        "invalidCode": "Érvénytelen kód",
+        "enterBoth": "Kérlek add meg az email címedet és a kódot is."
     },
     "profile": {
         "title": "Profil Adatai",

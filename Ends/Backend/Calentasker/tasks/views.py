@@ -128,6 +128,23 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 class CustomAuthToken(ObtainAuthToken):
     def post(self, request, *args, **kwargs):
+        from django.contrib.auth import get_user_model
+        from django.db.models import Q
+        from rest_framework import status
+        
+        User = get_user_model()
+        username = request.data.get('username')
+        password = request.data.get('password')
+        
+        if username and password:
+            try:
+                # Custom check before default serializer (to catch inactive users since authenticate() hides them)
+                userForCheck = User.objects.get(Q(username=username) | Q(email=username))
+                if not userForCheck.is_active and userForCheck.check_password(password):
+                    return Response({'detail': 'inactive_account'}, status=status.HTTP_401_UNAUTHORIZED)
+            except User.DoesNotExist:
+                pass
+
         serializer = self.serializer_class(data=request.data,
                                            context={'request': request})
         serializer.is_valid(raise_exception=True)

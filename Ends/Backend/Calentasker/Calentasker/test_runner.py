@@ -1,4 +1,5 @@
 import json
+import traceback
 import unittest
 from django.test.runner import DiscoverRunner
 from django.test.client import Client
@@ -74,12 +75,12 @@ class JsonTestResult(unittest.TextTestResult):
 
     def addFailure(self, test, err):
         super().addFailure(test, err)
-        error_msg = self._exc_info_to_string(err, test)
+        error_msg = "".join(traceback.format_exception(*err))
         self.json_data.append({"test": self.get_test_name(test), "status": "failure", "message": self._get_api_message(test, error_msg)})
 
     def addError(self, test, err):
         super().addError(test, err)
-        error_msg = self._exc_info_to_string(err, test)
+        error_msg = "".join(traceback.format_exception(*err))
         self.json_data.append({"test": self.get_test_name(test), "status": "error", "message": self._get_api_message(test, error_msg)})
 
     def addSkip(self, test, reason):

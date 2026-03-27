@@ -60,29 +60,32 @@ class CalentaskerAPITests(APITestCase):
         res = self.client.post(self.users_url, data)
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.assertFalse(res.data['is_active'])
+        
+        # Verify code was generated
+        user = User.objects.get(username='newuser')
+        self.assertTrue(user.verification_code)
+        self.assertEqual(len(user.verification_code), 6)
 
     def test_user_activation(self):
-        """Test token activation for a newly registered user"""
+        """Test code activation for a newly registered user"""
         # Create an inactive user manually
         new_user = User.objects.create_user(
             username='inactive_user', 
             email='inactive@example.com', 
             password='password123',
-            is_active=False
+            is_active=False,
+            verification_code='123456'
         )
         
-        # Simulate clicking email link
-        uid = urlsafe_base64_encode(force_bytes(new_user.pk))
-        token = default_token_generator.make_token(new_user)
-        
         activate_res = self.client.post(f"{self.users_url}activate/", {
-            'uid': uid,
-            'token': token
+            'email': 'inactive@example.com',
+            'code': '123456'
         })
         self.assertEqual(activate_res.status_code, status.HTTP_200_OK)
         
         new_user.refresh_from_db()
         self.assertTrue(new_user.is_active)
+        self.assertEqual(new_user.verification_code, '')
 
     def test_list_users(self):
         """Test retrieving all active users"""

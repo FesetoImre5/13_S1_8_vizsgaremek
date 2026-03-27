@@ -183,9 +183,9 @@ export default {
                 });
 
                 // 4. On Success
-                // Show message instead of auto-login
+                // Navigate to code verification page
                 this.addToast(this.$t('errors.successReg'), 'success');
-                this.$emit('switchMode', 'login');
+                this.$router.push({ path: '/verify', query: { email: this.email } });
 
             } catch (error) {
                 // 5. Handle Django Backend Errors

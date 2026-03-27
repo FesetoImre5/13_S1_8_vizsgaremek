@@ -164,7 +164,14 @@
         "verificationFailed": "Verification failed. The link may be invalid or expired.",
         "successTitle": "Success!",
         "errorTitle": "Error",
-        "goToLogin": "Go to Login"
+        "goToLogin": "Go to Login",
+        "verifyAccountTitle": "Verify Your Account",
+        "redirectingLogin": "Your account has been activated! Redirecting to login...",
+        "verifyInstructions": "Please enter your email and the 6-digit verification code you received.",
+        "verifyCodeLabel": "Verification Code",
+        "verifyBtn": "Verify Code",
+        "invalidCode": "Invalid Code",
+        "enterBoth": "Please enter both email and code."
     },
     "profile": {
         "title": "Profile Details",

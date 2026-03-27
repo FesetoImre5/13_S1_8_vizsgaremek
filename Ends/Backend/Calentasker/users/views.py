@@ -1,3 +1,4 @@
+import random
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -31,17 +32,14 @@ class UserViewSet(viewsets.ModelViewSet):
         # Save user as inactive initially
         user = serializer.save(is_active=False)
         
-        # Generate token and uid
-        token = default_token_generator.make_token(user)
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        
-        # Build verification URL
-        # Assuming frontend runs on localhost:5173 as per user context
-        verification_url = f"http://localhost:5173/verify-email/{uid}/{token}"
+        # Generate 6-digit code
+        code = f"{random.randint(0, 999999):06d}"
+        user.verification_code = code
+        user.save()
         
         # Send email
         subject = 'Activate your Calentasker account'
-        message = f'Hi {user.username},\n\nPlease click the link below to activate your account:\n\n{verification_url}\n\nThanks!'
+        message = f'Hi {user.username},\n\nYour verification code is: {code}\n\nPlease enter this code to activate your account.\n\nThanks!'
         
         send_mail(
             subject,
@@ -53,24 +51,24 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def activate(self, request):
-        uid = request.data.get('uid')
-        token = request.data.get('token')
+        email = request.data.get('email')
+        code = request.data.get('code')
         
-        if not uid or not token:
-            return Response({'detail': 'Missing uid or token.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not email or not code:
+            return Response({'detail': 'Missing email or code.'}, status=status.HTTP_400_BAD_REQUEST)
             
         try:
-            uid_decoded = force_str(urlsafe_base64_decode(uid))
-            user = User.objects.get(pk=uid_decoded)
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
             user = None
             
-        if user is not None and default_token_generator.check_token(user, token):
+        if user is not None and user.verification_code == code:
             user.is_active = True
+            user.verification_code = ''
             user.save()
             return Response({'detail': 'Account successfully activated.'}, status=status.HTTP_200_OK)
         else:
-            return Response({'detail': 'Invalid confirmation link.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': 'Invalid email or code.'}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['get'])
     def search(self, request):
