@@ -37,10 +37,10 @@ const routes = [
         meta: { title: 'User Profile' }
     },
     {
-        path: '/verify-email/:uid/:token',
-        name: 'VerifyEmail',
-        component: () => import('./pages/VerifyEmailPage.vue'),
-        meta: { title: 'Verify Email' }
+        path: '/verify',
+        name: 'VerifyCode',
+        component: () => import('./pages/VerifyCodePage.vue'),
+        meta: { title: 'Verify Account' }
     },
     // 2. ADD THIS CATCH-ALL ROUTE AT THE END
     {
@@ -73,7 +73,10 @@ router.beforeEach((to, from, next) => {
     // Currently, if a user is NOT logged in and types a random URL, they will be redirected to Login.
     // If they ARE logged in and type a random URL, they will see the 404 page.
 
-    if (to.name !== 'Auth' && !isAuthenticated) {
+    // Allow access to Auth and VerifyCode without being logged in
+    const publicPages = ['Auth', 'VerifyCode'];
+
+    if (!publicPages.includes(to.name) && !isAuthenticated) {
         next({ name: 'Auth' });
     }
     else if (to.name === 'Auth' && isAuthenticated) {

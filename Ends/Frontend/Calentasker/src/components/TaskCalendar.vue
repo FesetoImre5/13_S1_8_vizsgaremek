@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const props = defineProps({
@@ -21,8 +21,8 @@ const emit = defineEmits(['date-selected']);
 const { t, tm } = useI18n();
 
 const currentDate = new Date();
-const currentYear = currentDate.getFullYear();
-const currentMonth = currentDate.getMonth();
+const currentYear = ref(currentDate.getFullYear());
+const currentMonth = ref(currentDate.getMonth());
 
 const monthNames = computed(() => tm('calendar.months'));
 const daysOfWeek = computed(() => tm('calendar.days'));
@@ -39,15 +39,15 @@ const todayStr = formatDate(new Date());
 
 const calendarDays = computed(() => {
     const days = [];
-    const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const firstDay = new Date(currentYear.value, currentMonth.value, 1).getDay();
+    const daysInMonth = new Date(currentYear.value, currentMonth.value + 1, 0).getDate();
 
     for (let i = 0; i < firstDay; i++) {
         days.push({ id: `pad-${i}`, isEmpty: true });
     }
 
     for (let i = 1; i <= daysInMonth; i++) {
-        const dateObj = new Date(currentYear, currentMonth, i);
+        const dateObj = new Date(currentYear.value, currentMonth.value, i);
         const dateString = formatDate(dateObj);
         
         days.push({
@@ -76,12 +76,32 @@ const handleDayClick = (day) => {
     if (day.isEmpty) return;
     emit('date-selected', day.dateStr);
 };
+
+const prevMonth = () => {
+    if (currentMonth.value === 0) {
+        currentMonth.value = 11;
+        currentYear.value--;
+    } else {
+        currentMonth.value--;
+    }
+};
+
+const nextMonth = () => {
+    if (currentMonth.value === 11) {
+        currentMonth.value = 0;
+        currentYear.value++;
+    } else {
+        currentMonth.value++;
+    }
+};
 </script>
 
 <template>
     <div class="calendarContainer">
         <div class="calendarHeader">
+            <button class="navBtn" @click="prevMonth">&lt;</button>
             <h3>{{ monthNames[currentMonth] }} {{ currentYear }}</h3>
+            <button class="navBtn" @click="nextMonth">&gt;</button>
         </div>
 
         <div class="calendarGrid">
@@ -129,7 +149,8 @@ const handleDayClick = (day) => {
 .calendarHeader {
     margin-bottom: 20px;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .calendarHeader h3 {
@@ -139,6 +160,21 @@ const handleDayClick = (day) => {
     font-weight: 800;
     margin: 0;
     letter-spacing: 1px;
+}
+
+.navBtn {
+    background: transparent;
+    border: none;
+    color: var(--c-text-primary);
+    cursor: pointer;
+    font-size: 1.5rem;
+    font-weight: bold;
+    padding: 0 15px;
+    transition: color 0.2s;
+}
+
+.navBtn:hover {
+    color: var(--c-accent);
 }
 
 /* GRID LAYOUT */

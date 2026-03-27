@@ -16,8 +16,8 @@
                 "start_date": null,
                 "due_date": null,
                 "completed_at": null,
-                "created_at": "2026-02-27T08:01:38.897556Z",
-                "updated_at": "2026-02-27T08:01:38.905406Z",
+                "created_at": "2026-03-27T06:28:13.414923Z",
+                "updated_at": "2026-03-27T06:28:13.422885Z",
                 "active": true,
                 "group_detail": null,
                 "created_by": {
@@ -28,7 +28,7 @@
                     "first_name": "",
                     "last_name": "",
                     "email": "",
-                    "password": "pbkdf2_sha256$1200000$i0p4hJ46xST9UHpURI4Cd9$UdV8kjWb0FyxhsLdjyTFH1L5zUa3mOO8mW8HYecypms="
+                    "password": "pbkdf2_sha256$1200000$fpERPPWjrd8VbwDG1T1RDK$4OxvOHbd+NKHrJfLfHG9RcxCTMu6kLo1qUZTgsaw9W4="
                 },
                 "assigned_to": null,
                 "assignments": [],
@@ -47,11 +47,11 @@
                 "description": "New Desc",
                 "priority": "high",
                 "status": "todo",
-                "start_date": "2026-02-27",
-                "due_date": "2026-03-04",
+                "start_date": "2026-03-27",
+                "due_date": "2026-04-01",
                 "completed_at": null,
-                "created_at": "2026-02-27T08:01:39.660475Z",
-                "updated_at": "2026-02-27T08:01:39.663714Z",
+                "created_at": "2026-03-27T06:28:14.195538Z",
+                "updated_at": "2026-03-27T06:28:14.199232Z",
                 "active": true,
                 "group_detail": null,
                 "created_by": {
@@ -62,7 +62,7 @@
                     "first_name": "",
                     "last_name": "",
                     "email": "",
-                    "password": "pbkdf2_sha256$1200000$oKK03y5mgSoZPbNzHUHl2M$BM7rE4T6NeIyEheiwUKKeG9YeX0TPB++5SDTdkLTkQA="
+                    "password": "pbkdf2_sha256$1200000$6t1vlsihBjIUhGhC7ntLCj$qYSFxL3tOlt3ro3wz0pwo70BuPXt+JftZ7sCLugPuRQ="
                 },
                 "assigned_to": null,
                 "assignments": [],
@@ -84,8 +84,8 @@
                 "start_date": null,
                 "due_date": null,
                 "completed_at": null,
-                "created_at": "2026-02-27T08:01:40.417890Z",
-                "updated_at": "2026-02-27T08:01:40.420730Z",
+                "created_at": "2026-03-27T06:28:14.982393Z",
+                "updated_at": "2026-03-27T06:28:14.985829Z",
                 "active": true,
                 "group_detail": null,
                 "created_by": {
@@ -96,7 +96,7 @@
                     "first_name": "",
                     "last_name": "",
                     "email": "",
-                    "password": "pbkdf2_sha256$1200000$LVgKIoFpqJZQW2zabcJIec$bddyGsUuGhElC6z5JR6gBjzqqxOeAacvJPT7MCUK4Q8="
+                    "password": "pbkdf2_sha256$1200000$CXDr1VMsSYqGwgwalr50rw$oxV8oV+1LAFjIrKoLpSrVr6FP8bMPPbM6Zh2qD7mD/A="
                 },
                 "assigned_to": null,
                 "assignments": [],
@@ -120,8 +120,8 @@
                         "start_date": null,
                         "due_date": null,
                         "completed_at": null,
-                        "created_at": "2026-02-27T08:01:41.925226Z",
-                        "updated_at": "2026-02-27T08:01:41.925237Z",
+                        "created_at": "2026-03-27T06:28:16.694380Z",
+                        "updated_at": "2026-03-27T06:28:16.694390Z",
                         "active": true,
                         "group_detail": null,
                         "created_by": {
@@ -132,7 +132,7 @@
                             "first_name": "User",
                             "last_name": "One",
                             "email": "user1@example.com",
-                            "password": "pbkdf2_sha256$1200000$VT5fQ8jqULaKH5oq1I4n9i$L/2rcqtAdQaXrtXiHS3qsi7RixWQl1O/x645Lkou6w4="
+                            "password": "pbkdf2_sha256$1200000$tsUtqYEGtmug6s29xCmrFy$OJbgoG/WqvECmJSyEqWkoqwyDDZTHftqhYRQ78/te4E="
                         },
                         "assigned_to": null,
                         "assignments": [],
@@ -151,9 +151,9 @@
                         "status": "done",
                         "start_date": null,
                         "due_date": null,
-                        "completed_at": "2026-02-27T08:01:41.925674Z",
-                        "created_at": "2026-02-27T08:01:41.925806Z",
-                        "updated_at": "2026-02-27T08:01:41.925813Z",
+                        "completed_at": "2026-03-27T06:28:16.694848Z",
+                        "created_at": "2026-03-27T06:28:16.694972Z",
+                        "updated_at": "2026-03-27T06:28:16.694978Z",
                         "active": true,
                         "group_detail": {
                             "id": 1,
@@ -167,9 +167,9 @@
                                 "first_name": "User",
                                 "last_name": "One",
                                 "email": "user1@example.com",
-                                "password": "pbkdf2_sha256$1200000$VT5fQ8jqULaKH5oq1I4n9i$L/2rcqtAdQaXrtXiHS3qsi7RixWQl1O/x645Lkou6w4="
+                                "password": "pbkdf2_sha256$1200000$tsUtqYEGtmug6s29xCmrFy$OJbgoG/WqvECmJSyEqWkoqwyDDZTHftqhYRQ78/te4E="
                             },
-                            "created_at": "2026-02-27T08:01:41.924604Z",
+                            "created_at": "2026-03-27T06:28:16.693719Z",
                             "active": true,
                             "imageUrl": null,
                             "image": null,
@@ -183,7 +183,7 @@
                             "first_name": "User",
                             "last_name": "One",
                             "email": "user1@example.com",
-                            "password": "pbkdf2_sha256$1200000$VT5fQ8jqULaKH5oq1I4n9i$L/2rcqtAdQaXrtXiHS3qsi7RixWQl1O/x645Lkou6w4="
+                            "password": "pbkdf2_sha256$1200000$tsUtqYEGtmug6s29xCmrFy$OJbgoG/WqvECmJSyEqWkoqwyDDZTHftqhYRQ78/te4E="
                         },
                         "assigned_to": null,
                         "assignments": [],
@@ -203,8 +203,8 @@
                         "start_date": null,
                         "due_date": null,
                         "completed_at": null,
-                        "created_at": "2026-02-27T08:01:41.925226Z",
-                        "updated_at": "2026-02-27T08:01:41.925237Z",
+                        "created_at": "2026-03-27T06:28:16.694380Z",
+                        "updated_at": "2026-03-27T06:28:16.694390Z",
                         "active": true,
                         "group_detail": null,
                         "created_by": {
@@ -215,7 +215,7 @@
                             "first_name": "User",
                             "last_name": "One",
                             "email": "user1@example.com",
-                            "password": "pbkdf2_sha256$1200000$VT5fQ8jqULaKH5oq1I4n9i$L/2rcqtAdQaXrtXiHS3qsi7RixWQl1O/x645Lkou6w4="
+                            "password": "pbkdf2_sha256$1200000$tsUtqYEGtmug6s29xCmrFy$OJbgoG/WqvECmJSyEqWkoqwyDDZTHftqhYRQ78/te4E="
                         },
                         "assigned_to": null,
                         "assignments": [],
@@ -233,8 +233,8 @@
                         "start_date": null,
                         "due_date": null,
                         "completed_at": null,
-                        "created_at": "2026-02-27T08:01:41.925507Z",
-                        "updated_at": "2026-02-27T08:01:41.925518Z",
+                        "created_at": "2026-03-27T06:28:16.694675Z",
+                        "updated_at": "2026-03-27T06:28:16.694685Z",
                         "active": true,
                         "group_detail": null,
                         "created_by": {
@@ -245,7 +245,7 @@
                             "first_name": "User",
                             "last_name": "One",
                             "email": "user1@example.com",
-                            "password": "pbkdf2_sha256$1200000$VT5fQ8jqULaKH5oq1I4n9i$L/2rcqtAdQaXrtXiHS3qsi7RixWQl1O/x645Lkou6w4="
+                            "password": "pbkdf2_sha256$1200000$tsUtqYEGtmug6s29xCmrFy$OJbgoG/WqvECmJSyEqWkoqwyDDZTHftqhYRQ78/te4E="
                         },
                         "assigned_to": null,
                         "assignments": [],
@@ -272,9 +272,9 @@
                     "first_name": "User",
                     "last_name": "One",
                     "email": "user1@example.com",
-                    "password": "pbkdf2_sha256$1200000$P9K7hmtAhO7GtKD2Y5WqEJ$pVg5WHSVTks+bYo8sS0gc5hfCmw5Vot4I/O/rNezmAo="
+                    "password": "pbkdf2_sha256$1200000$smYgOSuSCEjEwYBcbhNPfW$rUBc7Csr9PnjFKuBgg5V0XuuJ1/CHiP16Mbd7vMgF7U="
                 },
-                "created_at": "2026-02-27T08:01:43.453394Z",
+                "created_at": "2026-03-27T06:28:18.381733Z",
                 "active": true,
                 "imageUrl": null,
                 "image": null,
@@ -298,8 +298,8 @@
                 "start_date": null,
                 "due_date": null,
                 "completed_at": null,
-                "created_at": "2026-02-27T08:01:46.460669Z",
-                "updated_at": "2026-02-27T08:01:46.460681Z",
+                "created_at": "2026-03-27T06:28:21.629017Z",
+                "updated_at": "2026-03-27T06:28:21.629028Z",
                 "active": true,
                 "group_detail": {
                     "id": 1,
@@ -313,9 +313,9 @@
                         "first_name": "User",
                         "last_name": "One",
                         "email": "user1@example.com",
-                        "password": "pbkdf2_sha256$1200000$PguJCEWXTMbtyuatJXg2M1$WQVQUlZwzP1Wf+y6kfzJmbHkpmiPmlHvZLQosMgWMes="
+                        "password": "pbkdf2_sha256$1200000$vXC8hXwDAdFvzhMp6u0aVK$sPzZT69o061R5tebVQ7AlxtlYGneqYNWtdZC97fYV24="
                     },
-                    "created_at": "2026-02-27T08:01:46.456791Z",
+                    "created_at": "2026-03-27T06:28:21.625161Z",
                     "active": true,
                     "imageUrl": null,
                     "image": null,
@@ -329,7 +329,7 @@
                     "first_name": "User",
                     "last_name": "One",
                     "email": "user1@example.com",
-                    "password": "pbkdf2_sha256$1200000$PguJCEWXTMbtyuatJXg2M1$WQVQUlZwzP1Wf+y6kfzJmbHkpmiPmlHvZLQosMgWMes="
+                    "password": "pbkdf2_sha256$1200000$vXC8hXwDAdFvzhMp6u0aVK$sPzZT69o061R5tebVQ7AlxtlYGneqYNWtdZC97fYV24="
                 },
                 "assigned_to": {
                     "id": 1,
@@ -339,7 +339,7 @@
                     "first_name": "User",
                     "last_name": "One",
                     "email": "user1@example.com",
-                    "password": "pbkdf2_sha256$1200000$PguJCEWXTMbtyuatJXg2M1$WQVQUlZwzP1Wf+y6kfzJmbHkpmiPmlHvZLQosMgWMes="
+                    "password": "pbkdf2_sha256$1200000$vXC8hXwDAdFvzhMp6u0aVK$sPzZT69o061R5tebVQ7AlxtlYGneqYNWtdZC97fYV24="
                 },
                 "assignments": [],
                 "comments": [],
@@ -364,9 +364,9 @@
                         "first_name": "User",
                         "last_name": "One",
                         "email": "user1@example.com",
-                        "password": "pbkdf2_sha256$1200000$WpmcWhQFVBPKUX7z8HfMzO$CS20yzj3BNQ4hx3RlgKvnfpuEQDjVW/A0UViplNHhoQ="
+                        "password": "pbkdf2_sha256$1200000$wH8OR5JR3tgOmRA6k0lemQ$+BmhEVwwvclnfSmzmLyb1d4XPgzBs8D50LIDzVgnDJI="
                     },
-                    "created_at": "2026-02-27T08:01:47.969112Z",
+                    "created_at": "2026-03-27T06:28:23.146418Z",
                     "active": true,
                     "imageUrl": null,
                     "image": null,
@@ -384,9 +384,9 @@
                         "first_name": "User",
                         "last_name": "One",
                         "email": "user1@example.com",
-                        "password": "pbkdf2_sha256$1200000$WpmcWhQFVBPKUX7z8HfMzO$CS20yzj3BNQ4hx3RlgKvnfpuEQDjVW/A0UViplNHhoQ="
+                        "password": "pbkdf2_sha256$1200000$wH8OR5JR3tgOmRA6k0lemQ$+BmhEVwwvclnfSmzmLyb1d4XPgzBs8D50LIDzVgnDJI="
                     },
-                    "created_at": "2026-02-27T08:01:47.969335Z",
+                    "created_at": "2026-03-27T06:28:23.146642Z",
                     "active": true,
                     "imageUrl": null,
                     "image": null,
@@ -407,8 +407,8 @@
                     "start_date": null,
                     "due_date": null,
                     "completed_at": null,
-                    "created_at": "2026-02-27T08:01:49.467091Z",
-                    "updated_at": "2026-02-27T08:01:49.467102Z",
+                    "created_at": "2026-03-27T06:28:24.677308Z",
+                    "updated_at": "2026-03-27T06:28:24.677319Z",
                     "active": true,
                     "group_detail": null,
                     "created_by": {
@@ -419,7 +419,7 @@
                         "first_name": "User",
                         "last_name": "One",
                         "email": "user1@example.com",
-                        "password": "pbkdf2_sha256$1200000$CzrqAZ5uHC52dEjntitXzr$Bv1GlI858SP3kp2po7nxfn0x1fJPGEWR7Fi84VeT1hQ="
+                        "password": "pbkdf2_sha256$1200000$Cpq41DlzUvIzeWHxd76V0D$2DrR9dwh6qvtS43HjHrZaa+40AztBYb9wbhT23GiewA="
                     },
                     "assigned_to": null,
                     "assignments": [],
@@ -437,8 +437,8 @@
                     "start_date": null,
                     "due_date": null,
                     "completed_at": null,
-                    "created_at": "2026-02-27T08:01:49.467367Z",
-                    "updated_at": "2026-02-27T08:01:49.467378Z",
+                    "created_at": "2026-03-27T06:28:24.677601Z",
+                    "updated_at": "2026-03-27T06:28:24.677611Z",
                     "active": true,
                     "group_detail": null,
                     "created_by": {
@@ -449,7 +449,7 @@
                         "first_name": "User",
                         "last_name": "One",
                         "email": "user1@example.com",
-                        "password": "pbkdf2_sha256$1200000$CzrqAZ5uHC52dEjntitXzr$Bv1GlI858SP3kp2po7nxfn0x1fJPGEWR7Fi84VeT1hQ="
+                        "password": "pbkdf2_sha256$1200000$Cpq41DlzUvIzeWHxd76V0D$2DrR9dwh6qvtS43HjHrZaa+40AztBYb9wbhT23GiewA="
                     },
                     "assigned_to": null,
                     "assignments": [],
@@ -472,7 +472,7 @@
                     "first_name": "User",
                     "last_name": "One",
                     "email": "user1@example.com",
-                    "password": "pbkdf2_sha256$1200000$Tb4y1CQkoLHWkIVIGHCIjk$HRz2POm+IyX2yhELCuoZbmZjXviNKGWqGFBJ0gEH4KU="
+                    "password": "pbkdf2_sha256$1200000$MEBF0LhZuptCFLMw6QBaNo$ffJdDLjU5KzQ5LaD5qx2mAlMJL12ODFyBo6OTVvgx8E="
                 },
                 {
                     "id": 2,
@@ -482,7 +482,7 @@
                     "first_name": "User",
                     "last_name": "Two",
                     "email": "user2@example.com",
-                    "password": "pbkdf2_sha256$1200000$2kgC4RdyEP1cGoeYgGwRo1$oheElgiBs4aYo77Jelf4S/yKN2KsAe92CdsGzFLbqhE="
+                    "password": "pbkdf2_sha256$1200000$o7DBBm8KNIUfqB5B4nwgO6$25JoMKeFkQ7eFX0COzfY4hFNznRW4zh619A3MbxLlM8="
                 }
             ]
         },
@@ -499,7 +499,7 @@
                     "first_name": "User",
                     "last_name": "Two",
                     "email": "user2@example.com",
-                    "password": "pbkdf2_sha256$1200000$tsXMImZVm6mQKVNxbSEGeh$XatcLZDO5yQ1Xe+E4zjenppf92VMtyijnRgHNcRjD9k="
+                    "password": "pbkdf2_sha256$1200000$QRrDP5LE0dCkfuelOjgVNV$IJQ3yfjGeM2QfidU/pNOthHURDJiZmBx4tEjQm1/Ff8="
                 },
                 "group_detail": {
                     "id": 1,
@@ -513,16 +513,16 @@
                         "first_name": "User",
                         "last_name": "One",
                         "email": "user1@example.com",
-                        "password": "pbkdf2_sha256$1200000$RSqrhWSDKlplJF6IllNME7$F6tfhWvZBHzMEj5xEE6JhA4VFwMwe+HQtZGft9H34XI="
+                        "password": "pbkdf2_sha256$1200000$WvEVBev04HqfNu1gsBrlcY$UAazh/f3StX8Hy7FH7A586AjdxX4vGs5S4Lf7Ye8VeE="
                     },
-                    "created_at": "2026-02-27T08:01:52.522308Z",
+                    "created_at": "2026-03-27T06:28:27.754738Z",
                     "active": true,
                     "imageUrl": null,
                     "image": null,
                     "parent_group": null
                 },
                 "role": "operator",
-                "joined_at": "2026-02-27T08:01:52.525643Z"
+                "joined_at": "2026-03-27T06:28:27.757444Z"
             }
         },
         {
@@ -537,8 +537,8 @@
                 "start_date": null,
                 "due_date": null,
                 "completed_at": null,
-                "created_at": "2026-02-27T08:01:54.139829Z",
-                "updated_at": "2026-02-27T08:01:54.139861Z",
+                "created_at": "2026-03-27T06:28:29.284637Z",
+                "updated_at": "2026-03-27T06:28:29.284648Z",
                 "active": true,
                 "group_detail": null,
                 "created_by": {
@@ -549,7 +549,7 @@
                     "first_name": "User",
                     "last_name": "One",
                     "email": "user1@example.com",
-                    "password": "pbkdf2_sha256$1200000$6TwDP6LIdNysffFjELoLM7$pbbC8FEOUnTNI94lcpEI6cZbOR0HKUDcLCWV6A5iccY="
+                    "password": "pbkdf2_sha256$1200000$csJBWc7M35DqrWLGZ5buXV$tePPpCu2tMR7jLTweAkBKfjlNUPEA/3JwaE7nTKml0Q="
                 },
                 "assigned_to": {
                     "id": 1,
@@ -559,7 +559,7 @@
                     "first_name": "User",
                     "last_name": "One",
                     "email": "user1@example.com",
-                    "password": "pbkdf2_sha256$1200000$6TwDP6LIdNysffFjELoLM7$pbbC8FEOUnTNI94lcpEI6cZbOR0HKUDcLCWV6A5iccY="
+                    "password": "pbkdf2_sha256$1200000$csJBWc7M35DqrWLGZ5buXV$tePPpCu2tMR7jLTweAkBKfjlNUPEA/3JwaE7nTKml0Q="
                 },
                 "assignments": [],
                 "comments": [],
@@ -583,9 +583,9 @@
                     "first_name": "User",
                     "last_name": "One",
                     "email": "user1@example.com",
-                    "password": "pbkdf2_sha256$1200000$FRyZq3axK3wOXVvE10hgHp$7iNyVGuijpbWU/9adO5n84ZLzfWvR9bII3IzTOs2kpU="
+                    "password": "pbkdf2_sha256$1200000$devBVYCkJnXJaMKARUeTqh$cjErGHjErt0xhriV0ekauvFdQ7rUZMF3ArbDT/qoUIA="
                 },
-                "created_at": "2026-02-27T08:01:55.689837Z",
+                "created_at": "2026-03-27T06:28:30.806218Z",
                 "active": true,
                 "imageUrl": null,
                 "image": null,
@@ -604,8 +604,8 @@
                 "start_date": null,
                 "due_date": null,
                 "completed_at": null,
-                "created_at": "2026-02-27T08:01:57.201119Z",
-                "updated_at": "2026-02-27T08:01:57.201130Z",
+                "created_at": "2026-03-27T06:28:32.345988Z",
+                "updated_at": "2026-03-27T06:28:32.345999Z",
                 "active": true,
                 "group_detail": null,
                 "created_by": {
@@ -616,7 +616,7 @@
                     "first_name": "User",
                     "last_name": "One",
                     "email": "user1@example.com",
-                    "password": "pbkdf2_sha256$1200000$wFes7Frw9aqwnyogKpLo6Y$u+jklmxMedVczIitkVBC79UGmFanOeuKK7Z+TIv/vwg="
+                    "password": "pbkdf2_sha256$1200000$wUMIhDMD7UHmarxwG1nH61$41AvLqDme7ILZUgbr8LMsUyBiyMsvd62sAqrKHFZK2o="
                 },
                 "assigned_to": null,
                 "assignments": [],
@@ -639,7 +639,7 @@
                 "last_name": "Two",
                 "email": "user2@example.com",
                 "is_active": true,
-                "date_joined": "2026-02-27T08:01:58.711373Z"
+                "date_joined": "2026-03-27T06:28:33.868019Z"
             }
         },
         {
@@ -654,8 +654,8 @@
                 "start_date": null,
                 "due_date": null,
                 "completed_at": null,
-                "created_at": "2026-02-27T08:02:00.220113Z",
-                "updated_at": "2026-02-27T08:02:00.223050Z",
+                "created_at": "2026-03-27T06:28:35.384324Z",
+                "updated_at": "2026-03-27T06:28:35.387093Z",
                 "active": true,
                 "group_detail": null,
                 "created_by": {
@@ -666,7 +666,7 @@
                     "first_name": "User",
                     "last_name": "One",
                     "email": "user1@example.com",
-                    "password": "pbkdf2_sha256$1200000$9hkqQWCbWscT7KYFvtrzpb$3263Eg5PsvJew4K3Pamam/p+w90F4eHTR6sswVmQWME="
+                    "password": "pbkdf2_sha256$1200000$yDc9N7VkVNAO5sbrovzuJ6$2gsUbcDDZ/OEF+m00cyfm0ShDLN4DikzQjpE9ay16js="
                 },
                 "assigned_to": null,
                 "assignments": [],
@@ -692,7 +692,7 @@
             "test": "test_api.CalentaskerAPITests.test_user_login",
             "status": "success",
             "message": {
-                "token": "be0c59309af70f5f1957d25a69da928b298538fa",
+                "token": "3726b558025225d4230aa157a374974858b133dd",
                 "user_id": 1,
                 "username": "user1",
                 "display_username": "user1"
@@ -711,7 +711,7 @@
                 "last_name": "User",
                 "email": "newuser@example.com",
                 "is_active": false,
-                "date_joined": "2026-02-27T08:02:08.779449Z"
+                "date_joined": "2026-03-27T06:28:43.716413Z"
             }
         },
         {
@@ -803,7 +803,7 @@
                 "last_name": "",
                 "email": "",
                 "is_active": true,
-                "date_joined": "2026-02-27T08:02:17.537188Z"
+                "date_joined": "2026-03-27T06:28:52.361851Z"
             }
         }
     ]

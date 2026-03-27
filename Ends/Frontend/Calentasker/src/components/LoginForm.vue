@@ -81,6 +81,11 @@ export default {
                     if (data.non_field_errors) {
                         this.passwordError = this.$t('errors.loginFailed');
                     } else if (data.detail) {
+                        // CustomAuthToken returns this for inactive accounts
+                        if (data.detail === 'inactive_account') {
+                            this.$router.push({ path: '/verify', query: { email: this.identifier } });
+                            return;
+                        }
                         this.passwordError = data.detail;
                     } else {
                         this.passwordError = this.$t('errors.loginFailed');

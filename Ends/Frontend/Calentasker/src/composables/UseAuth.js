@@ -49,6 +49,19 @@ export function useAuth() {
         axios.defaults.headers.common['Authorization'] = `Token ${data.token}`;
     };
 
+    const updateUser = (data) => {
+        if (user.value) {
+            if (data.username !== undefined && data.username !== null) {
+                user.value.username = data.username;
+                localStorage.setItem('username', data.username);
+            }
+            if (data.display_username !== undefined) {
+                user.value.display_username = data.display_username;
+                localStorage.setItem('display_username', data.display_username);
+            }
+        }
+    };
+
     // 3. Logout Action
     const logout = () => {
         token.value = null;
@@ -62,6 +75,7 @@ export function useAuth() {
         token,
         checkAuth,
         loginUser,
-        logout
+        logout,
+        updateUser
     };
 }
