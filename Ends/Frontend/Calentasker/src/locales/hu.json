@@ -171,7 +171,11 @@
         "verifyCodeLabel": "Ellenőrző kód",
         "verifyBtn": "Kód ellenőrzése",
         "invalidCode": "Érvénytelen kód",
-        "enterBoth": "Kérlek add meg az email címedet és a kódot is."
+        "enterBoth": "Kérlek add meg az email címedet és a kódot is.",
+        "resendCode": "Újraküldés",
+        "resending": "Küldés...",
+        "codeResent": "Kód sikeresen újraküldve!",
+        "resendCooldown": "Várj {s}mp-t"
     },
     "profile": {
         "title": "Profil Adatai",
@@ -208,7 +212,8 @@
         "warning": "Figyelmeztetés",
         "delete": "Törlés",
         "save": "Mentés",
-        "close": "Bezárás"
+        "close": "Bezárás",
+        "noImage": "Nincs kép"
     },
     "groups": {
         "myGroups": "Csoportjaim",

@@ -91,3 +91,34 @@ class UserCreationTest(TestCase):
         user.save()
         user.refresh_from_db()
         self.assertEqual(user.username, 'John_Doe')
+
+class UserResendCodeTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create(email='test@example.com', password='password', is_active=False)
+
+    def test_resend_code_success(self):
+        url = '/api/users/resend_code/'
+        from django.core import mail
+        response = self.client.post(url, {'email': 'test@example.com'})
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn('Your new verification code is:', mail.outbox[0].body)
+        
+        self.user.refresh_from_db()
+        self.assertTrue(len(self.user.verification_code) > 0)
+
+    def test_resend_code_already_active(self):
+        self.user.is_active = True
+        self.user.save()
+        url = '/api/users/resend_code/'
+        response = self.client.post(url, {'email': 'test@example.com'})
+        
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_resend_code_not_found(self):
+        url = '/api/users/resend_code/'
+        response = self.client.post(url, {'email': 'nonexistent@example.com'})
+        
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
