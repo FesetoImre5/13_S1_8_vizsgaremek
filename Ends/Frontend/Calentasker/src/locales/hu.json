@@ -224,8 +224,8 @@
         "members": "Tagok",
         "roles": {
             "leader": "VEZETŐ",
-            "moderator": "MOD",
-            "operator": "OP",
+            "moderator": "Moderátor",
+            "operator": "Operátor",
             "reader": "Olvasó",
             "admin": "ADMIN"
         },

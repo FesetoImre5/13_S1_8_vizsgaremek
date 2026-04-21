@@ -224,8 +224,8 @@
         "members": "Members",
         "roles": {
             "leader": "LEADER",
-            "moderator": "MOD",
-            "operator": "OP",
+            "moderator": "Moderator",
+            "operator": "Operator",
             "reader": "Reader",
             "admin": "ADMIN"
         },

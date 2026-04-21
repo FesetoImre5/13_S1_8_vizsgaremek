@@ -841,7 +841,7 @@ onMounted(() => {
     flex-wrap: wrap; /* Allow wrapping */
 }
 
-@media (max-width: 600px) {
+@media (max-width: 800px) {
     .stickyHeader {
         flex-direction: column;
         align-items: stretch; 

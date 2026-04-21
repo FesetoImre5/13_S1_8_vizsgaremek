@@ -217,6 +217,7 @@ const handleLogout = () => {
     cursor: pointer;
     font-weight: 500;
     transition: all 0.2s;
+    white-space: nowrap;
 }
 
 .logoutBtn:hover {
