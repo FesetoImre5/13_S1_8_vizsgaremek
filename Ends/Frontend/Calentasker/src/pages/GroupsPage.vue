@@ -81,7 +81,7 @@ const fetchMyGroups = async () => {
     try {
         const currentUserId = parseInt(localStorage.getItem('user_id'));
         // Updated to use server-side filtering
-        const response = await axios.get(`http://127.0.0.1:8000/api/group-members/?user=${currentUserId}`);
+        const response = await axios.get(`/api/group-members/?user=${currentUserId}`);
         // Store group details AND the role
         groups.value = response.data.map(item => ({
             ...item.group_detail,
@@ -102,7 +102,7 @@ const selectGroup = async (group) => {
     
     memberLoading.value = true;
     try {
-        const response = await axios.get(`http://127.0.0.1:8000/api/group-members/?group=${group.id}`);
+        const response = await axios.get(`/api/group-members/?group=${group.id}`);
         groupMembers.value = response.data;
     } catch (error) {
         console.error("Failed to load members", error);
@@ -121,7 +121,7 @@ const deleteGroup = async () => {
         confirmText: t('groups.delete'),
         onConfirm: async () => {
             try {
-                await axios.delete(`http://127.0.0.1:8000/api/groups/${selectedGroup.value.id}/`);
+                await axios.delete(`/api/groups/${selectedGroup.value.id}/`);
                 // Refresh and clear selection
                 await fetchMyGroups();
                 selectedGroup.value = null;
@@ -141,7 +141,7 @@ const addMember = async (user) => {
 
     try {
         const payload = { group: selectedGroup.value.id, user: user.id };
-        const response = await axios.post('http://127.0.0.1:8000/api/group-members/', payload);
+        const response = await axios.post('/api/group-members/', payload);
         groupMembers.value.push(response.data);
         addMemberSuccess.value = t('groups.userAdded');
         
@@ -160,7 +160,7 @@ const addMember = async (user) => {
 
 const updateMemberRole = async (member, newRole) => {
     try {
-        await axios.patch(`http://127.0.0.1:8000/api/group-members/${member.id}/`, { role: newRole });
+        await axios.patch(`/api/group-members/${member.id}/`, { role: newRole });
         member.role = newRole; // Optimistic update
     } catch (error) {
         console.error("Failed to update role", error);
@@ -178,7 +178,7 @@ const transferLeadership = async (member) => {
         confirmText: t('groups.transfer'),
         onConfirm: async () => {
             try {
-                await axios.post(`http://127.0.0.1:8000/api/groups/${selectedGroup.value.id}/transfer_leadership/`, {
+                await axios.post(`/api/groups/${selectedGroup.value.id}/transfer_leadership/`, {
                     new_leader_id: member.user_detail.id
                 });
                 showAlert({ title: t('common.success'), message: t('groups.transferSuccess', { name: member.user_detail.username }), type: 'success', confirmText: t('common.ok'), onConfirm: () => {} });
@@ -199,7 +199,7 @@ const removeMember = async (membershipId) => {
         confirmText: t('groups.remove'),
         onConfirm: async () => {
             try {
-                await axios.delete(`http://127.0.0.1:8000/api/group-members/${membershipId}/`);
+                await axios.delete(`/api/group-members/${membershipId}/`);
                 groupMembers.value = groupMembers.value.filter(m => m.id !== membershipId);
                 fetchMyGroups(); // Refresh list in case I removed myself
             } catch (e) { 
