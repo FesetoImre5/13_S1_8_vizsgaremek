@@ -171,11 +171,7 @@
         "verifyCodeLabel": "Verification Code",
         "verifyBtn": "Verify Code",
         "invalidCode": "Invalid Code",
-        "enterBoth": "Please enter both email and code.",
-        "resendCode": "Resend Code",
-        "resending": "Resending...",
-        "codeResent": "Verification code resent successfully!",
-        "resendCooldown": "Wait {s}s"
+        "enterBoth": "Please enter both email and code."
     },
     "profile": {
         "title": "Profile Details",
@@ -212,8 +208,7 @@
         "warning": "Warning",
         "delete": "Delete",
         "save": "Save",
-        "close": "Close",
-        "noImage": "No Image"
+        "close": "Close"
     },
     "groups": {
         "myGroups": "My Groups",

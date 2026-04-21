@@ -104,7 +104,7 @@ const submitComment = async () => {
         await fetchComments(); // Refresh list
     } catch (error) {
         console.error("Failed to post comment", error);
-        showAlert({ title: t('common.error'), message: t('tasks.errors.failedComment'), type: 'danger', confirmText: t('common.ok') || 'OK', onConfirm: () => {} });
+        alert("Failed to post comment");
     } finally {
         isSubmitting.value = false;
     }

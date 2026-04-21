@@ -13,9 +13,6 @@ export default {
             isEmailFocused: false,
             isCodeFocused: false,
             isLoading: false,
-            isResending: false,
-            resendCooldown: 0,
-            resendTimer: null,
         };
     },
     setup() {
@@ -51,43 +48,6 @@ export default {
             } finally {
                 this.isLoading = false;
             }
-        },
-        startCooldown() {
-            this.resendCooldown = 60;
-            this.resendTimer = setInterval(() => {
-                if (this.resendCooldown > 0) {
-                    this.resendCooldown--;
-                } else {
-                    clearInterval(this.resendTimer);
-                    this.resendTimer = null;
-                }
-            }, 1000);
-        },
-        async resendCode() {
-            if (!this.email) {
-                this.addToast(this.$t('auth.email') || 'Email required', 'error');
-                return;
-            }
-            if (this.resendCooldown > 0) return;
-
-            this.isResending = true;
-            try {
-                await axios.post('http://127.0.0.1:8000/api/users/resend_code/', {
-                    email: this.email
-                });
-                this.addToast(this.$t('auth.codeResent') || 'Verification code resent successfully!', 'success');
-                this.startCooldown();
-            } catch (error) {
-                const errorMsg = error.response?.data?.detail || this.$t('errors.unknown') || 'Error resending code';
-                this.addToast(errorMsg, 'error');
-            } finally {
-                this.isResending = false;
-            }
-        }
-    },
-    beforeUnmount() {
-        if (this.resendTimer) {
-            clearInterval(this.resendTimer);
         }
     }
 };
@@ -127,26 +87,10 @@ export default {
                     <label>{{ $t('auth.verifyCodeLabel') || 'Verification Code' }}</label>
                 </div>
 
-                <button type="submit" class="primaryBtn" :disabled="isLoading || isResending">
+                <button type="submit" class="primaryBtn" :disabled="isLoading">
                     {{ isLoading ? ($t('auth.verifying') || 'Verifying...') : ($t('auth.verifyBtn') || 'Verify Code') }}
                 </button>
             </form>
-
-            <div v-if="status !== 'success'" class="resend-section">
-                <button 
-                    @click="resendCode" 
-                    type="button" 
-                    class="linkBtn resendBtn" 
-                    :disabled="isResending || resendCooldown > 0">
-                    {{ 
-                        isResending 
-                            ? ($t('auth.resending') || 'Resending...') 
-                            : (resendCooldown > 0 
-                                ? ($t('auth.resendCooldown')?.replace('{s}', resendCooldown.toString()) || `Wait ${resendCooldown}s`)
-                                : ($t('auth.resendCode') || 'Resend Code'))
-                    }}
-                </button>
-            </div>
 
             <button v-if="status === 'error'" @click="$router.push({ name: 'Auth', query: { mode: 'login' } })" class="linkBtn">
                 {{ $t('auth.goToLogin') || 'Back to Login' }}
@@ -293,15 +237,6 @@ form {
 }
 .linkBtn:hover {
     text-decoration: underline;
-}
-
-.resend-section {
-    margin-top: 15px;
-}
-.resendBtn:disabled {
-    color: var(--c-text-secondary, #9CA3AF);
-    cursor: not-allowed;
-    text-decoration: none;
 }
 
 @keyframes popIn {
