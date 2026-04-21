@@ -56,7 +56,7 @@ const fetchMyGroups = async () => {
     try {
         const currentUserId = parseInt(localStorage.getItem('user_id'));
         // Updated to use server-side filtering
-        const response = await axios.get(`http://127.0.0.1:8000/api/group-members/?user=${currentUserId}`);
+        const response = await axios.get(`/api/group-members/?user=${currentUserId}`);
         // Store group details AND the role
         groups.value = response.data.map(item => ({
             ...item.group_detail,
@@ -78,7 +78,7 @@ const selectGroup = async (group) => {
     
     memberLoading.value = true;
     try {
-        const response = await axios.get(`http://127.0.0.1:8000/api/group-members/?group=${group.id}`);
+        const response = await axios.get(`/api/group-members/?group=${group.id}`);
         groupMembers.value = response.data;
     } catch (error) {
         console.error("Failed to load members", error);
@@ -105,7 +105,7 @@ const addMember = async (user) => {
     try {
         // Use user ID instead of username
         const payload = { group: selectedGroup.value.id, user: user.id }; 
-        const response = await axios.post('http://127.0.0.1:8000/api/group-members/', payload);
+        const response = await axios.post('/api/group-members/', payload);
         groupMembers.value.push(response.data);
         addMemberSuccess.value = `User added!`;
         
@@ -133,7 +133,7 @@ const removeMember = async (membershipId) => {
         confirmText: 'Remove',
         onConfirm: async () => {
             try {
-                await axios.delete(`http://127.0.0.1:8000/api/group-members/${membershipId}/`);
+                await axios.delete(`/api/group-members/${membershipId}/`);
                 groupMembers.value = groupMembers.value.filter(m => m.id !== membershipId);
                 fetchMyGroups(); // Refresh list in case I removed myself
             } catch (e) { 
@@ -188,7 +188,7 @@ const deleteGroup = async () => {
         confirmText: 'Delete',
         onConfirm: async () => {
             try {
-                await axios.delete(`http://127.0.0.1:8000/api/groups/${selectedGroup.value.id}/`);
+                await axios.delete(`/api/groups/${selectedGroup.value.id}/`);
                 // Refresh and clear selection
                 await fetchMyGroups();
                 selectedGroup.value = null;

@@ -28,7 +28,7 @@ export default {
 
             this.isLoading = true;
             try {
-                await axios.post('http://127.0.0.1:8000/api/users/activate/', {
+                await axios.post('/api/users/activate/', {
                     email: this.email,
                     code: this.code
                 });

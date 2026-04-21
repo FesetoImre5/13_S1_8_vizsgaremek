@@ -134,7 +134,7 @@ const handleSubmit = async () => {
 
         if (isEditMode.value) {
             // EDIT GROUP
-            const response = await axios.patch(`http://127.0.0.1:8000/api/groups/${props.group.id}/`, formData, {
+            const response = await axios.patch(`/api/groups/${props.group.id}/`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             success.value = t('groups.updated');
@@ -145,7 +145,7 @@ const handleSubmit = async () => {
 
         } else {
             // CREATE GROUP
-            const response = await axios.post('http://127.0.0.1:8000/api/groups/', formData, {
+            const response = await axios.post('/api/groups/', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             
@@ -155,7 +155,7 @@ const handleSubmit = async () => {
             if (selectedMembers.value.length > 0) {
                 for (const member of selectedMembers.value) {
                     try {
-                        await axios.post('http://127.0.0.1:8000/api/group-members/', {
+                        await axios.post('/api/group-members/', {
                             group: newGroup.id,
                             user: member.id 
                         });
@@ -188,7 +188,7 @@ const imageLoadErrors = ref({});
 const getProfilePictureUrl = (url) => {
     if (!url) return '';
     if (url.startsWith('http')) return url;
-    return `http://127.0.0.1:8000${url}`;
+    return `${url}`;
 };
 
 const handleImageError = (userId) => {
