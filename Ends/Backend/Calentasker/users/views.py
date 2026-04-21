@@ -24,7 +24,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-        if self.action in ['create', 'activate']:
+        if self.action in ['create', 'activate', 'resend_code']:
             permission_classes = [permissions.AllowAny]
         return [permission() for permission in permission_classes]
         
@@ -69,6 +69,40 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Account successfully activated.'}, status=status.HTTP_200_OK)
         else:
             return Response({'detail': 'Invalid email or code.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['post'])
+    def resend_code(self, request):
+        email = request.data.get('email')
+        
+        if not email:
+            return Response({'detail': 'Email is required.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({'detail': 'User with this email does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+            
+        if user.is_active:
+            return Response({'detail': 'Account is already active.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        # Generate new 6-digit code
+        code = f"{random.randint(0, 999999):06d}"
+        user.verification_code = code
+        user.save()
+        
+        # Send email
+        subject = 'Activate your Calentasker account'
+        message = f'Hi {user.username},\n\nYour new verification code is: {code}\n\nPlease enter this code to activate your account.\n\nThanks!'
+        
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            fail_silently=False,
+        )
+        
+        return Response({'detail': 'Verification code resent successfully.'}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'])
     def search(self, request):
