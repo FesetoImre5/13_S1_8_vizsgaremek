@@ -36,7 +36,7 @@ const performSearch = async () => {
 
     isLoading.value = true;
     try {
-        const response = await axios.get(`/api/users/search/?q=${encodeURIComponent(searchQuery.value)}`);
+        const response = await axios.get(`http://127.0.0.1:8000/api/users/search/?q=${encodeURIComponent(searchQuery.value)}`);
         console.log('UserSearch: API response', response.data);
         // Filter out excluded users
         results.value = response.data.filter(user => !props.exclude.includes(user.id));
@@ -75,7 +75,7 @@ const imageLoadErrors = ref({});
 const getProfilePictureUrl = (url) => {
     if (!url) return '';
     if (url.startsWith('http')) return url;
-    return `${url}`;
+    return `http://127.0.0.1:8000${url}`;
 };
 
 const handleImageError = (userId) => {

@@ -186,7 +186,7 @@ const groupedTasks = computed(() => {
 const fetchGroups = async () => {
     try {
         const currentUserId = parseInt(localStorage.getItem('user_id'));
-        const response = await axios.get(`/api/group-members/?user=${currentUserId}`);
+        const response = await axios.get(`http://127.0.0.1:8000/api/group-members/?user=${currentUserId}`);
         // Store group details AND the role from the membership object
         groups.value = response.data.map(item => ({
             ...item.group_detail,
@@ -204,7 +204,7 @@ const fetchTasks = async (groupId = null) => {
     tasks.value = []; // Clear current tasks to avoid confusion
 
     try {
-        let url = '/api/tasks/';
+        let url = 'http://127.0.0.1:8000/api/tasks/';
         const currentUserId = parseInt(localStorage.getItem('user_id'));
 
         if (groupId === 'own') {
@@ -341,7 +341,7 @@ const deleteGroup = async () => {
         confirmText: t('common.delete'),
         onConfirm: async () => {
             try {
-                await axios.delete(`/api/groups/${selectedGroupId.value}/`);
+                await axios.delete(`http://127.0.0.1:8000/api/groups/${selectedGroupId.value}/`);
                 // Refresh groups list
                 await fetchGroups();
                 // Redirect to Own Tasks or first available

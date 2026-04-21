@@ -85,7 +85,7 @@ const isSubmitting = ref(false);
             imageMode.value = 'upload';
             
             try {
-                const response = await axios.get(`/api/group-members/?group=${props.groupId}`);
+                const response = await axios.get(`http://127.0.0.1:8000/api/group-members/?group=${props.groupId}`);
                 groupMembers.value = response.data;
             } catch (e) {
                 console.error("Failed to fetch members", e);
@@ -98,7 +98,7 @@ const isSubmitting = ref(false);
             try {
                 const userId = parseInt(localStorage.getItem('user_id'));
                 if (userId) {
-                    const response = await axios.get(`/api/users/${userId}/`);
+                    const response = await axios.get(`http://127.0.0.1:8000/api/users/${userId}/`);
                     const user = response.data;
                     const meMember = {
                         id: 'self',
@@ -184,7 +184,7 @@ const isSubmitting = ref(false);
                 formData.append('imageUrl', imageUrl.value);
             }
 
-            const response = await axios.post('/api/tasks/', formData, {
+            const response = await axios.post('http://127.0.0.1:8000/api/tasks/', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             
@@ -276,7 +276,7 @@ const isSubmitting = ref(false);
                                 <div v-for="user in selectedAssignees" :key="user.id" class="user-chip">
                                     <img 
                                         v-if="user.user_detail.profile_picture" 
-                                        :src="user.user_detail.profile_picture.startsWith('http') ? user.user_detail.profile_picture : '' + user.user_detail.profile_picture" 
+                                        :src="user.user_detail.profile_picture.startsWith('http') ? user.user_detail.profile_picture : 'http://127.0.0.1:8000' + user.user_detail.profile_picture" 
                                         class="chip-avatar"
                                     >
                                     <div v-else class="chip-avatar-placeholder">
@@ -307,7 +307,7 @@ const isSubmitting = ref(false);
                                 >
                                     <img 
                                         v-if="member.user_detail.profile_picture" 
-                                        :src="member.user_detail.profile_picture.startsWith('http') ? member.user_detail.profile_picture : '' + member.user_detail.profile_picture" 
+                                        :src="member.user_detail.profile_picture.startsWith('http') ? member.user_detail.profile_picture : 'http://127.0.0.1:8000' + member.user_detail.profile_picture" 
                                         class="option-avatar"
                                     >
                                     <div v-else class="option-avatar-placeholder">

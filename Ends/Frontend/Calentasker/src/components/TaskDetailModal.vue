@@ -81,7 +81,7 @@ const fetchComments = async () => {
     if (!props.task) return;
     isLoadingComments.value = true;
     try {
-        const response = await axios.get(`/api/comments/?task=${props.task.id}`);
+        const response = await axios.get(`http://127.0.0.1:8000/api/comments/?task=${props.task.id}`);
         comments.value = response.data;
     } catch (error) {
         console.error("Failed to load comments", error);
@@ -95,7 +95,7 @@ const submitComment = async () => {
     
     isSubmitting.value = true;
     try {
-        await axios.post('/api/comments/', {
+        await axios.post('http://127.0.0.1:8000/api/comments/', {
             task: props.task.id,
             user: currentUserId.value, 
             content: newComment.value
@@ -134,7 +134,7 @@ const markComplete = async () => {
                     payload.completed_at = null; // Clear completion date if reverting
                 }
 
-                const response = await axios.patch(`/api/tasks/${props.task.id}/`, payload);
+                const response = await axios.patch(`http://127.0.0.1:8000/api/tasks/${props.task.id}/`, payload);
                 emit('task-updated', response.data);
                 emit('close');
             } catch (error) {
@@ -155,7 +155,7 @@ const deleteTask = async () => {
         confirmText: t('common.delete'),
         onConfirm: async () => {
             try {
-                await axios.delete(`/api/tasks/${props.task.id}/`);
+                await axios.delete(`http://127.0.0.1:8000/api/tasks/${props.task.id}/`);
                 emit('task-deleted', props.task.id); // Emit specific delete event
                 emit('close');
             } catch (error) {
@@ -206,7 +206,7 @@ const saveTask = async () => {
             due_date: editableTask.value.due_date || null,
         };
 
-        const response = await axios.patch(`/api/tasks/${props.task.id}/`, payload);
+        const response = await axios.patch(`http://127.0.0.1:8000/api/tasks/${props.task.id}/`, payload);
         
         // Update local data via emit, or parent re-fetches. 
         // Best to emit updated task
@@ -253,7 +253,7 @@ const saveEdit = async (commentId) => {
     if (!editContent.value.trim()) return;
     
     try {
-        await axios.patch(`/api/comments/${commentId}/`, {
+        await axios.patch(`http://127.0.0.1:8000/api/comments/${commentId}/`, {
             content: editContent.value
         });
         await fetchComments();
@@ -272,7 +272,7 @@ const deleteComment = async (commentId) => {
         confirmText: t('common.delete'),
         onConfirm: async () => {
            try {
-                await axios.delete(`/api/comments/${commentId}/`);
+                await axios.delete(`http://127.0.0.1:8000/api/comments/${commentId}/`);
                 // Remove locally to be snappy, or refresh
                 comments.value = comments.value.filter(c => c.id !== commentId);
             } catch (error) {

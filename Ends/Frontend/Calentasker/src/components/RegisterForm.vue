@@ -178,7 +178,7 @@ export default {
 
                 // 3. Send Request to your Django API
                 // Assuming your screenshot endpoint: /api/users/
-                await axios.post('/api/users/', formData, {
+                await axios.post('http://127.0.0.1:8000/api/users/', formData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
 

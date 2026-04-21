@@ -57,7 +57,7 @@ const fetchUserProfile = async () => {
         const userId = localStorage.getItem('user_id');
         if (!userId) throw new Error("User ID not found locally.");
 
-        const response = await axios.get(`/api/users/${userId}/`);
+        const response = await axios.get(`http://127.0.0.1:8000/api/users/${userId}/`);
         userData.value = response.data;
         editableUsername.value = userData.value.username || '';
     } catch (err) {
@@ -79,7 +79,7 @@ const saveUsername = async () => {
             username: editableUsername.value.trim() ? editableUsername.value.trim() : null
         };
 
-        const response = await axios.patch(`/api/users/${userId}/`, payload);
+        const response = await axios.patch(`http://127.0.0.1:8000/api/users/${userId}/`, payload);
         
         userData.value = response.data;
         editableUsername.value = userData.value.username || '';
@@ -121,7 +121,7 @@ const handleFileChange = async (event) => {
 
     try {
         const userId = localStorage.getItem('user_id');
-        const response = await axios.patch(`/api/users/${userId}/`, formData, {
+        const response = await axios.patch(`http://127.0.0.1:8000/api/users/${userId}/`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
         userData.value = response.data;
@@ -145,7 +145,7 @@ const updatePassword = async () => {
 
     try {
         const userId = localStorage.getItem('user_id');
-        await axios.patch(`/api/users/${userId}/`, {
+        await axios.patch(`http://127.0.0.1:8000/api/users/${userId}/`, {
             password: newPassword.value
         });
         pwSuccess.value = t('profile.pwSuccess');
